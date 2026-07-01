@@ -1,137 +1,171 @@
-import React, { useState } from "react";
-import AskEngineer from "./components/AskEngineer";
-import { useRaceStore } from "./store/useRaceStore"; // Import our Zustand store
-import PaddockChat from "./components/PaddockChat";
+// import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+// import AuthPage from './components/AuthPage';
+// import Dashboard from './Dashboard';
 
-// Mock race list (can be moved to a separate config file later)
-const AVAILABLE_RACES = [
-  { id: '2021-esp', title: '🇪🇸 Spanish GP', year: '2021' },
-  { id: '2021-abu', title: '🇦🇪 Abu Dhabi GP', year: '2021' },
-];
+// // A simple protector component
+// const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
+//   return localStorage.getItem('token') ? children : <Navigate to="/auth" />;
+// };
 
-export default function App() {
-  const [activeChannel, setActiveChannel] = useState("ask-engineer"); // Defaulted to engineer to test RAG
-  
-  // Zustand State
-  const activeRaceId = useRaceStore((state) => state.activeRaceId);
-  const setActiveRaceId = useRaceStore((state) => state.setActiveRaceId);
+// export default function App() {
+//   return (
+//     <BrowserRouter>
+//       <Routes>
+//         <Route path="/auth" element={<AuthPage />} />
+//         <Route 
+//           path="/" 
+//           element={
+//             <ProtectedRoute>
+//               <Dashboard />
+//             </ProtectedRoute>
+//           } 
+//         />
+//         {/* Redirect any unknown routes to the dashboard */}
+//         <Route path="*" element={<Navigate to="/" />} />
+//       </Routes>
+//     </BrowserRouter>
+//   );
+// }
 
-  return (
-    <div className="flex h-screen w-full bg-neutral-950 text-white font-sans overflow-hidden">
+// import { BrowserRouter, Routes, Route, Navigate, Outlet, Link } from 'react-router-dom';
+// import AuthPage from './components/AuthPage';
+// import AskEngineer from './components/AskEngineer';
+// import PaddockChat from './components/PaddockChat';
+// import Sidebar from './components/Sidebar';
+
+
+// // 1. Your Protector Component (Perfect as it is)
+// const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
+//   // Added 'replace' to Navigate so the back button doesn't trap users in a loop
+//   return localStorage.getItem('token') ? children : <Navigate to="/auth" replace />;
+// };
+
+// // 2. A Shared Layout for your protected pages
+// // This keeps your navigation bar at the top, while the content changes below
+// const DashboardLayout = () => {
+//   const handleLogout = () => {
+//     localStorage.removeItem('token');
+//     window.location.href = '/auth'; // Force hard reload to clear socket state
+//   };
+
+//   return (
+//     // 🚨 FIX: Added flex-col right here so the layout stacks top-to-bottom
+//     <div className="flex flex-col h-screen bg-black text-white">
       
-      {/* LEFT SIDEBAR: The GridLock Server Navigation */}
-      <div className="w-64 bg-neutral-900 border-r border-neutral-800 flex flex-col">
-        {/* Branding */}
-        <div className="p-6 border-b border-neutral-800">
-          <h1 className="text-2xl font-bold tracking-tighter flex items-center gap-2">
-            <span className="text-red-600">█</span> GridLock
-          </h1>
-          <p className="text-xs text-neutral-500 font-mono mt-1">
-            v1.0.0 // PaddockOS
-          </p>
-        </div>
+//       {/* Top Navigation Bar */}
+//       <nav className="flex justify-between items-center p-4 border-b border-neutral-800 bg-neutral-950">
+//         <div className="flex gap-6">
+//           <Link to="/engineer" className="text-sm font-bold hover:text-blue-500 transition-colors">
+//             🏎️ Ask Engineer
+//           </Link>
+//           <Link to="/paddock" className="text-sm font-bold hover:text-blue-500 transition-colors">
+//             🏁 Paddock Chat
+//           </Link>
+//         </div>
+//         <button onClick={handleLogout} className="text-xs text-red-500 hover:text-red-400 font-bold">
+//           LOGOUT
+//         </button>
+//       </nav>
 
-        {/* Navigation Container */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-8">
+//       {/* Outlet is where React Router injects the active component */}
+//       <div className="flex-1 overflow-hidden relative">
+//         <Outlet /> 
+//       </div>
+//     </div>
+//   );
+// };
+
+// // 3. The Main App Router
+// export default function App() {
+//   return (
+//     <BrowserRouter>
+//       <Routes>
+//         {/* Public Route */}
+//         <Route path="/auth" element={<AuthPage />} />
+
+//         {/* Protected Parent Route */}
+//         <Route 
+//           path="/" 
+//           element={
+//             <ProtectedRoute>
+//               <DashboardLayout />
+//             </ProtectedRoute>
+//           }
+//         >
+//           {/* Default redirect: If they just type localhost:5173, send to Engineer */}
+//           <Route index element={<Navigate to="/engineer" replace />} />
           
-          {/* CHANNELS */}
-          <div>
-            <p className="text-xs font-bold text-neutral-500 mb-4 tracking-widest uppercase">
-              Telemetry Hub
-            </p>
-            <div className="space-y-1">
-              <button
-                onClick={() => setActiveChannel("paddock-chat")}
-                className={`w-full text-left px-3 py-2 rounded-md transition-colors ${
-                  activeChannel === "paddock-chat"
-                    ? "bg-neutral-800 text-white"
-                    : "text-neutral-400 hover:bg-neutral-800/50 hover:text-neutral-200"
-                }`}
-              >
-                # paddock-chat
-              </button>
+//           {/* Nested Protected Routes */}
+//           <Route path="engineer" element={<AskEngineer />} />
+//           <Route path="paddock" element={<PaddockChat />} />
+//         </Route>
 
-              <button
-                onClick={() => setActiveChannel("ask-engineer")}
-                className={`w-full text-left px-3 py-2 rounded-md transition-colors ${
-                  activeChannel === "ask-engineer"
-                    ? "bg-neutral-800 text-white"
-                    : "text-neutral-400 hover:bg-neutral-800/50 hover:text-neutral-200"
-                }`}
-              >
-                # ask-the-engineer
-              </button>
+//         {/* Catch-all: Redirect unknown URLs back to the app */}
+//         <Route path="*" element={<Navigate to="/" replace />} />
+//       </Routes>
+//     </BrowserRouter>
+//   );
+// }
 
-              <button
-                onClick={() => setActiveChannel("race-simulator")}
-                className={`w-full text-left px-3 py-2 rounded-md transition-colors ${
-                  activeChannel === "race-simulator"
-                    ? "bg-neutral-800 text-white"
-                    : "text-neutral-400 hover:bg-neutral-800/50 hover:text-neutral-200"
-                }`}
-              >
-                # race-simulator
-              </button>
-            </div>
-          </div>
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import AuthPage from './components/AuthPage';
+import AskEngineer from './components/AskEngineer';
+import PaddockChat from './components/PaddockChat';
+import Sidebar from './components/Sidebar';
 
-          {/* RACE DATA CONTEXT (Zustand Integration) */}
-          <div>
-            <p className="text-xs font-bold text-neutral-500 mb-4 tracking-widest uppercase flex items-center justify-between">
-              <span>Active Dataset</span>
-              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-            </p>
-            <div className="space-y-1">
-              {AVAILABLE_RACES.map((race) => (
-                <button
-                  key={race.id}
-                  onClick={() => setActiveRaceId(race.id)}
-                  className={`w-full text-left px-3 py-3 rounded-md transition-all border-l-2 ${
-                    activeRaceId === race.id
-                      ? "bg-neutral-800 text-white border-red-600"
-                      : "text-neutral-400 hover:bg-neutral-800/50 hover:text-neutral-200 border-transparent"
-                  }`}
-                >
-                  <div className="text-sm font-semibold">{race.title}</div>
-                  <div className="text-[10px] opacity-60 uppercase tracking-wider">{race.year} Telemetry</div>
-                </button>
-              ))}
-            </div>
-          </div>
+// 1. Your Protector Component
+const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
+  return localStorage.getItem('token') ? children : <Navigate to="/auth" replace />;
+};
 
-        </div>
+// 2. Shared Layout (Sidebar on the left, Content on the right)
+const DashboardLayout = () => {
+  return (
+    // 'flex' makes it a horizontal row. Sidebar sits left, Outlet fills the right.
+    <div className="flex h-screen w-screen bg-black overflow-hidden">
+      
+      {/* 👈 Your Sidebar Component is injected here */}
+      <Sidebar />
+
+      {/* 👉 Outlet is where React Router injects the active component (Engineer or Paddock) */}
+      <div className="flex-1 relative overflow-hidden bg-black text-white">
+        <Outlet /> 
       </div>
-
-      {/* MAIN CONTENT AREA */}
-      <div className="flex-1 relative bg-black flex flex-col">
-        {/* Top Header to show active channel & context */}
-        <div className="h-14 border-b border-neutral-800 flex items-center px-6 bg-neutral-950/80 backdrop-blur-sm shrink-0 justify-between">
-          <div className="text-neutral-300 font-mono text-sm">
-            <span className="text-neutral-500">~/</span>{activeChannel}
-          </div>
-          {activeChannel === "ask-engineer" && (
-            <div className="text-[10px] text-green-500 font-mono uppercase tracking-widest border border-green-500/30 bg-green-500/10 px-2 py-1 rounded">
-              AI Connected: {activeRaceId}
-            </div>
-          )}
-        </div>
-
-        {/* Dynamic Component Rendering */}
-        <div className="flex-1 overflow-hidden">
-          {activeChannel === "ask-engineer" ? (
-            <AskEngineer />
-          ) : activeChannel === "paddock-chat" ? ( // 2. Add this condition
-            <PaddockChat />
-          ) : (
-            <div className="flex items-center justify-center h-full w-full">
-              <h2 className="text-2xl font-mono text-neutral-600 animate-pulse">
-                Initializing {activeChannel}...
-              </h2>
-            </div>
-          )}
-        </div>
-      </div>
-
+      
     </div>
+  );
+};
+
+// 3. The Main App Router
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        {/* Public Route */}
+        <Route path="/auth" element={<AuthPage />} />
+
+        {/* Protected Parent Route */}
+        <Route 
+          path="/" 
+          element={
+            <ProtectedRoute>
+              <DashboardLayout />
+            </ProtectedRoute>
+          }
+        >
+          {/* Default redirect: If they just type localhost:5173, send to Engineer */}
+          <Route index element={<Navigate to="/engineer" replace />} />
+          
+          {/* Nested Protected Routes */}
+          <Route path="engineer" element={<AskEngineer />} />
+          <Route path="paddock" element={<PaddockChat />} />
+          {/* <Route path="abudhabi" element={<AbuDhabiDataComponent />} /> 
+          <Route path="spanish" element={<SpanishGPComponent />} /> */}
+        </Route>
+
+        {/* Catch-all: Redirect unknown URLs back to the app */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
