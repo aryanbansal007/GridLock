@@ -1,0 +1,20 @@
+{
+  "2021-esp": {
+    "session": "2021 Spanish Grand Prix",
+    "driver": "Lewis Hamilton",
+    "strategy": "3-stop",
+    "tireDegradation": "High on Mediums",
+    "trackTemp": "32°C",
+    "keyEvent": "Pitted on lap 42 for fresh softs to undercut Verstappen.",
+    "telemetrySummary": "Consistent lap times in the 1:21s before the final stop."
+  },
+  "2021-abu": {
+    "session": "2021 Abu Dhabi Grand Prix",
+    "driver": "Max Verstappen",
+    "strategy": "Opportunistic 2-stop under Safety Car",
+    "tireDegradation": "Low on Hards",
+    "trackTemp": "28°C",
+    "keyEvent": "Pitted on lap 53 for fresh softs under the Nicholas Latifi safety car.",
+    "telemetrySummary": "Massive pace delta on the final lap due to tire compound advantage."
+  }
+}
