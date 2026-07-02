@@ -107,63 +107,129 @@
 //   );
 // }
 
+// import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+// import AuthPage from './components/AuthPage';
+// import AskEngineer from './components/AskEngineer';
+// import PaddockChat from './components/PaddockChat';
+// import Sidebar from './components/Sidebar';
+// import RaceTrack from './components/RaceTrack';
+// import Leaderboard from "./components/Leaderboard";
+// import LiveSimulator from './components/LiveSimulator';
+
+
+
+// // 1. Your Protector Component
+// const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
+//   return localStorage.getItem('token') ? children : <Navigate to="/auth" replace />;
+// };
+
+// // 2. Shared Layout (Sidebar on the left, Content on the right)
+// const DashboardLayout = () => {
+//   return (
+//     // 'flex' makes it a horizontal row. Sidebar sits left, Outlet fills the right.
+//     <div className="flex h-screen w-screen bg-black overflow-hidden">
+
+      
+//       {/* 👈 Your Sidebar Component is injected here */}
+//       <Sidebar />
+
+//       <Leaderboard />
+//       {/* 👉 Outlet is where React Router injects the active component (Engineer or Paddock) */}
+//       <div className="flex-1 relative overflow-hidden bg-black text-white">
+//         <Outlet /> 
+//       </div>
+      
+//     </div>
+//   );
+// };
+
+// // 3. The Main App Router
+// export default function App() {
+//   return (
+//     <BrowserRouter>
+//       <Routes>
+//         {/* Public Route */}
+//         <Route path="/auth" element={<AuthPage />} />
+
+//         {/* Protected Parent Route */}
+//         <Route 
+//           path="/" 
+//           element={
+//             <ProtectedRoute>
+//               <DashboardLayout />
+//             </ProtectedRoute>
+//           }
+//         >
+//           {/* Default redirect: If they just type localhost:5173, send to Engineer */}
+//           <Route index element={<Navigate to="/engineer" replace />} />
+          
+//           {/* Nested Protected Routes */}
+//           <Route path="engineer" element={<AskEngineer />} />
+//           <Route path="paddock" element={<PaddockChat />} />
+//           <Route path="simulator" element={<LiveSimulator />} />
+//           {/* <Route path="abudhabi" element={<AbuDhabiDataComponent />} /> 
+//           <Route path="spanish" element={<SpanishGPComponent />} /> */}
+//         </Route>
+
+//         {/* Catch-all: Redirect unknown URLs back to the app */}
+//         <Route path="*" element={<Navigate to="/" replace />} />
+//       </Routes>
+//     </BrowserRouter>
+//   );
+// }
+
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import AuthPage from './components/AuthPage';
 import AskEngineer from './components/AskEngineer';
 import PaddockChat from './components/PaddockChat';
 import Sidebar from './components/Sidebar';
+import LiveSimulator from './components/LiveSimulator';
+import SimulatorSetup from "./components/SimulatorSetup";
 
-// 1. Your Protector Component
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
   return localStorage.getItem('token') ? children : <Navigate to="/auth" replace />;
 };
 
-// 2. Shared Layout (Sidebar on the left, Content on the right)
+// 1. DashboardLayout now ONLY handles the standard sidebar pages
 const DashboardLayout = () => {
   return (
-    // 'flex' makes it a horizontal row. Sidebar sits left, Outlet fills the right.
     <div className="flex h-screen w-screen bg-black overflow-hidden">
-      
-      {/* 👈 Your Sidebar Component is injected here */}
       <Sidebar />
-
-      {/* 👉 Outlet is where React Router injects the active component (Engineer or Paddock) */}
       <div className="flex-1 relative overflow-hidden bg-black text-white">
         <Outlet /> 
       </div>
-      
     </div>
   );
 };
 
-// 3. The Main App Router
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Public Route */}
         <Route path="/auth" element={<AuthPage />} />
 
-        {/* Protected Parent Route */}
-        <Route 
-          path="/" 
-          element={
-            <ProtectedRoute>
-              <DashboardLayout />
-            </ProtectedRoute>
-          }
-        >
-          {/* Default redirect: If they just type localhost:5173, send to Engineer */}
+        {/* Protected Routes */}
+        <Route path="/" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
           <Route index element={<Navigate to="/engineer" replace />} />
-          
-          {/* Nested Protected Routes */}
           <Route path="engineer" element={<AskEngineer />} />
           <Route path="paddock" element={<PaddockChat />} />
-          {/* <Route path="abudhabi" element={<AbuDhabiDataComponent />} /> 
-          <Route path="spanish" element={<SpanishGPComponent />} /> */}
+          <Route path="/simulator-setup" element={<SimulatorSetup />} />
+          <Route path="/simulator/:raceId" element={<LiveSimulator />} />
         </Route>
 
-        {/* Catch-all: Redirect unknown URLs back to the app */}
+        {/* 2. Simulator is OUTSIDE the DashboardLayout. 
+           Because it's not inside that route, the Sidebar 
+           and other dashboard styles will not render.
+        */}
+        <Route 
+          path="/simulator" 
+          element={
+            <ProtectedRoute>
+              <LiveSimulator />
+            </ProtectedRoute>
+          } 
+        />
+
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
