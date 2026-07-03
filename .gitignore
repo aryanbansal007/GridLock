@@ -2,3 +2,15 @@ node_modules/
 dist/
 .env
 .DS_Store
+
+# Ignore everything inside the cache folder
+backend/src/cache/*
+
+# ...except for the .gitkeep file
+!backend/src/cache/.gitkeep
+
+# Ignore FastF1 raw data cache
+data_scripts/fastf1_cache/
+
+# ...except for the .gitkeep file
+backend/fastf1_cache/
