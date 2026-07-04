@@ -1,743 +1,3 @@
-// import { useEffect, useState } from "react";
-
-// const RaceTrack = () => {
-//   const [data, setData] = useState<any[]>([]);
-//   const [index, setIndex] = useState(0);
-
-//   // 1. Load the data
-//   useEffect(() => {
-//     fetch('/race_data.json')
-//       .then((res) => res.json())
-//       .then((data) => setData(data));
-//   }, []);
-
-//   // 2. The "Game Loop": Advance the index every 50ms
-//   useEffect(() => {
-//     if (data.length === 0) return;
-
-//     const timer = setInterval(() => {
-//       setIndex((prev) => (prev + 1) % data.length);
-//     }, 50); // Speed of the replay
-
-//     return () => clearInterval(timer);
-//   }, [data]);
-
-//   const car = data[index] || { X: 0, Y: 0 };
-
-// const RaceTrack = () => {
-//   const [data, setData] = useState<any[]>([]);
-//   const [index, setIndex] = useState(0);
-
-//   useEffect(() => {
-//     fetch("/race_data.json")
-//       .then((res) => res.json())
-//       .then((data) => setData(data));
-//   }, []);
-
-//   useEffect(() => {
-//     if (data.length === 0) return;
-//     const timer = setInterval(() => {
-//       setIndex((prev) => (prev + 1) % data.length);
-//     }, 50);
-//     return () => clearInterval(timer);
-//   }, [data]);
-
-//   const rawCar = data[index] || { X: 0, Y: 0 };
-
-//   // NORMALIZATION MATH:
-//   // We need to shift the negative values to start at 0,
-//   // then divide by the range to map to the 0-439/0-499 scale.
-//   // These factors (offset/scale) are specific to your dataset.
-//   // Calculate the exact shift needed to place the first point (index 0)
-//   // at the start of the path (431.61, 6.61)
-//     const minX = Math.min(...data.map(p => p.X));
-//   const maxX = Math.max(...data.map(p => p.X));
-//   const minY = Math.min(...data.map(p => p.Y));
-//   const maxY = Math.max(...data.map(p => p.Y));
-
-//   // 2. Map telemetry data (minX/maxX) to SVG viewBox (0-439/0-499)
-//   // We add a little padding (e.g., 20) to keep it inside the view
-//   const normalizedX = 439 - (((rawCar.X - minX) / (maxX - minX)) * 400 + 20);
-//   const normalizedY = ((rawCar.Y - minY) / (maxY - minY)) * 460 + 20;
-
-//   return (
-//     <div className="h-full flex flex-col items-center justify-center p-10">
-//       <div className="w-full max-w-4xl aspect-[16/9]  overflow-hidden relative">
-//         <h2 className="absolute top-4 left-4 text-xs font-bold text-red-500 uppercase tracking-widest">
-//           Live Telemetry: Abu Dhabi
-//         </h2>
-
-//         {/* Set viewBox to match the SVG path data */}
-//         <svg viewBox="0 0 439.42 499.5" className="w-full h-full p-4">
-//           {/* The Track Map */}
-//           <path
-//             d="m431.61 6.6182c-3.3477-4.0298-8.3958-2.341-41.441 9.8359-18.537 6.8309-39.522 14.534-46.634 17.116-7.1116 2.5826-13.552 5.0006-14.311 5.3739-0.75942 0.37338-21.89 8.2536-46.957 17.512-25.067 9.2579-62.517 23.092-83.223 30.742-20.706 7.6502-48.358 18.562-61.451 24.248-13.092 5.686-41.603 16.913-63.357 24.949-38.402 14.186-45.609 17.506-45.246 20.839 0.08851 0.81344 2.6604 4.3766 5.7142 7.9192 6.9717 8.0874 7.9848 11.134 5.0395 15.148-1.2214 1.6647-5.0006 6.7421-8.3986 11.284-19.024 25.427-25.312 40.312-26.306 62.281-0.93897 20.75-0.02187 110.59 1.2621 123.6 2.1666 21.963 3.0438 26.465 13.644 70.052 5.738 23.595 10.863 42.438 11.915 43.806 2.1716 2.8235 6.5319 4.3237 8.3297 2.8654 3.1293-2.5383 13.696-6.7883 15.911-6.3999 1.3467 0.2362 3.926 1.7796 5.7325 3.4305 2.0346 1.8595 4.5342 3.0918 6.5688 3.24 3.274 0.23845 3.3364 0.19418 19.903-14.184 15.838-13.746 16.628-14.566 16.839-17.468 0.4085-5.6089-1.4735-8.2319-14.155-19.727-20.688-18.752-52.986-48.829-54.687-50.927-2.4108-2.9722-3.8486-11.029-5.5777-31.265-1.2039-14.09-1.162-18.968 0.19135-22.233 1.9318-4.6602 17.809-25.225 22.204-28.759 1.5517-1.2483 3.5471-2.3552 4.4332-2.4592 1.0647-0.12495 5.2707 3.3344 12.403 10.2 12.627 12.155 16.401 14.979 19.278 14.426 2.4039-0.46254 26.683-21.342 28.631-24.621 1.7699-2.9798-0.14855-10.06-4.881-18.013-3.9813-6.691-5.4372-8.184-31.765-32.549-28.74-26.597-28.893-26.77-28.038-32.282 0.68926-4.4478 19.548-51.7 21.972-55.052 1.4532-2.0099 3.951-4.147 6.4612-5.5275 3.4946-1.9219 4.6021-2.0059 7.5817-0.57428 2.1302 1.0235 16.013 13.334 35.645 31.605 77.013 71.677 95.226 88.463 97.895 90.222 4.1039 2.7043 11.606 2.5116 15.183-0.38976 3.1204-2.531 37.322-46.725 43.104-55.697 5.5106-8.5514 5.4379-11.111-0.78195-27.56-2.9716-7.8583-5.9137-16.604-6.5392-19.434-2.3841-10.786 0.12005-23.821 6.5801-34.243 5.1419-8.295 10.915-12.391 27.932-19.822 24.28-10.603 36.497-19.201 54.123-38.088 5.2939-5.6728 10.884-11.62 12.422-13.216 25.575-26.551 24.555-24.949 21.171-33.26-1.4859-3.6501-2.5296-7.4967-2.3204-8.547 0.48007-2.4105 1.8869-3.0654 20.674-9.6272 20.249-7.0722 23.08-9.5947 18.738-16.705-0.48551-0.79518-0.92968-1.4887-1.4079-2.0644z"
-//             stroke="gray"
-//             strokeWidth="8"
-//             fill="none"
-//           />
-
-//           {/* The Car */}
-//           {data.map((point, i) => (
-//             <circle
-//               key={i}
-//               cx={(point.X - 573) * 0.055 + 431}
-//               cy={(point.Y - 2080) * 0.055 + 6}
-//               r="1"
-//               fill="white"
-//             />
-//           ))}
-//         </svg>
-//       </div>
-//       <div className="mt-6 text-neutral-400 text-sm">
-//         Replaying fastest lap data...
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default RaceTrack;
-
-// import { useState, useEffect } from "react";
-
-// const RaceTrack = () => {
-//   const [data, setData] = useState<any[]>([]);
-
-//   useEffect(() => {
-//     fetch("/race_data.json")
-//       .then((res) => res.json())
-//       .then((data) => setData(data));
-//   }, []);
-
-//   // Wait until data loads to render so we can calculate boundaries
-//   if (data.length === 0) return null;
-
-//   // 1. Find boundaries of the telemetry data automatically
-//   const minX = Math.min(...data.map((p) => p.X));
-//   const maxX = Math.max(...data.map((p) => p.X));
-//   const minY = Math.min(...data.map((p) => p.Y));
-//   const maxY = Math.max(...data.map((p) => p.Y));
-
-//   // ==========================================
-//   // 🎛️ ALIGNMENT DASHBOARD
-//   // Tweak these values until the white dots match the gray track perfectly!
-//   // ==========================================
-//   const ALIGN = {
-//     rotate90: true,  // Change to false if it rotates too far
-//     flipX: false,    // Change to true if it looks mirrored left-to-right
-//     flipY: true,     // Change to false if it looks upside down
-//     stretchX: 400,   // Increase/decrease to make the shape wider/narrower
-//     stretchY: 460,   // Increase/decrease to make the shape taller/shorter
-//     shiftX: 20,      // Move the whole shape left/right
-//     shiftY: 20,      // Move the whole shape up/down
-//   };
-//   // ==========================================
-
-//   return (
-//     <div className="h-full flex flex-col items-center justify-center p-10">
-//       <div className="w-full max-w-4xl aspect-[16/9] overflow-hidden relative">
-//         <h2 className="absolute top-4 left-4 text-xs font-bold text-red-500 uppercase tracking-widest">
-//           Live Telemetry: Abu Dhabi
-//         </h2>
-
-//         <svg viewBox="0 0 439.42 499.5" className="w-full h-full p-4">
-
-//           {/* The Track Map */}
-//           <path
-//             d="m431.61 6.6182c-3.3477-4.0298-8.3958-2.341-41.441 9.8359-18.537 6.8309-39.522 14.534-46.634 17.116-7.1116 2.5826-13.552 5.0006-14.311 5.3739-0.75942 0.37338-21.89 8.2536-46.957 17.512-25.067 9.2579-62.517 23.092-83.223 30.742-20.706 7.6502-48.358 18.562-61.451 24.248-13.092 5.686-41.603 16.913-63.357 24.949-38.402 14.186-45.609 17.506-45.246 20.839 0.08851 0.81344 2.6604 4.3766 5.7142 7.9192 6.9717 8.0874 7.9848 11.134 5.0395 15.148-1.2214 1.6647-5.0006 6.7421-8.3986 11.284-19.024 25.427-25.312 40.312-26.306 62.281-0.93897 20.75-0.02187 110.59 1.2621 123.6 2.1666 21.963 3.0438 26.465 13.644 70.052 5.738 23.595 10.863 42.438 11.915 43.806 2.1716 2.8235 6.5319 4.3237 8.3297 2.8654 3.1293-2.5383 13.696-6.7883 15.911-6.3999 1.3467 0.2362 3.926 1.7796 5.7325 3.4305 2.0346 1.8595 4.5342 3.0918 6.5688 3.24 3.274 0.23845 3.3364 0.19418 19.903-14.184 15.838-13.746 16.628-14.566 16.839-17.468 0.4085-5.6089-1.4735-8.2319-14.155-19.727-20.688-18.752-52.986-48.829-54.687-50.927-2.4108-2.9722-3.8486-11.029-5.5777-31.265-1.2039-14.09-1.162-18.968 0.19135-22.233 1.9318-4.6602 17.809-25.225 22.204-28.759 1.5517-1.2483 3.5471-2.3552 4.4332-2.4592 1.0647-0.12495 5.2707 3.3344 12.403 10.2 12.627 12.155 16.401 14.979 19.278 14.426 2.4039-0.46254 26.683-21.342 28.631-24.621 1.7699-2.9798-0.14855-10.06-4.881-18.013-3.9813-6.691-5.4372-8.184-31.765-32.549-28.74-26.597-28.893-26.77-28.038-32.282 0.68926-4.4478 19.548-51.7 21.972-55.052 1.4532-2.0099 3.951-4.147 6.4612-5.5275 3.4946-1.9219 4.6021-2.0059 7.5817-0.57428 2.1302 1.0235 16.013 13.334 35.645 31.605 77.013 71.677 95.226 88.463 97.895 90.222 4.1039 2.7043 11.606 2.5116 15.183-0.38976 3.1204-2.531 37.322-46.725 43.104-55.697 5.5106-8.5514 5.4379-11.111-0.78195-27.56-2.9716-7.8583-5.9137-16.604-6.5392-19.434-2.3841-10.786 0.12005-23.821 6.5801-34.243 5.1419-8.295 10.915-12.391 27.932-19.822 24.28-10.603 36.497-19.201 54.123-38.088 5.2939-5.6728 10.884-11.62 12.422-13.216 25.575-26.551 24.555-24.949 21.171-33.26-1.4859-3.6501-2.5296-7.4967-2.3204-8.547 0.48007-2.4105 1.8869-3.0654 20.674-9.6272 20.249-7.0722 23.08-9.5947 18.738-16.705-0.48551-0.79518-0.92968-1.4887-1.4079-2.0644z"
-//             stroke="gray"
-//             strokeWidth="8"
-//             fill="none"
-//           />
-
-//           {/* The Data Points */}
-//           {data.map((point, i) => {
-//             // 1. Convert to a percentage (0 to 1) based on max boundaries
-//             let percentX = (point.X - minX) / (maxX - minX);
-//             let percentY = (point.Y - minY) / (maxY - minY);
-
-//             // 2. Rotate 90 degrees if toggled
-//             if (ALIGN.rotate90) {
-//               const temp = percentX;
-//               percentX = percentY;
-//               percentY = temp;
-//             }
-
-//             // 3. Mirror the axes if toggled
-//             if (ALIGN.flipX) percentX = 1 - percentX;
-//             if (ALIGN.flipY) percentY = 1 - percentY;
-
-//             // 4. Apply the stretch and shift to fit the SVG
-//             const finalX = percentX * ALIGN.stretchX + ALIGN.shiftX;
-//             const finalY = percentY * ALIGN.stretchY + ALIGN.shiftY;
-
-//             return (
-//               <circle
-//                 key={i}
-//                 cx={finalX}
-//                 cy={finalY}
-//                 r="1.5"
-//                 fill="white"
-//               />
-//             );
-//           })}
-//         </svg>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default RaceTrack;
-
-// import { useState, useEffect } from "react";
-
-// const RaceTrack = () => {
-//   const [data, setData] = useState<any[]>([]);
-
-//   useEffect(() => {
-//     fetch("/race_data.json")
-//       .then((res) => res.json())
-//       .then((data) => setData(data));
-//   }, []);
-
-//   if (data.length === 0) return null;
-
-//   // 1. Find the boundaries to calculate the center of the telemetry data
-//   const minX = Math.min(...data.map((p) => p.X));
-//   const maxX = Math.max(...data.map((p) => p.X));
-//   const minY = Math.min(...data.map((p) => p.Y));
-//   const maxY = Math.max(...data.map((p) => p.Y));
-
-//   const dataCenterX = (minX + maxX) / 2;
-//   const dataCenterY = (minY + maxY) / 2;
-
-//   // Center of your SVG ViewBox (439.42 / 2 and 499.5 / 2)
-//   const svgCenterX = 219.71;
-//   const svgCenterY = 249.75;
-
-//   // ==========================================
-//   // 🎛️ ALIGNMENT DASHBOARD 2.0 (Proportional)
-//   // ==========================================
-//   const ALIGN = {
-//     swapXY: true,    // true rotates it 90 degrees
-//     flipX: true,     // Mirrors left/right (Try true/false to match the hairpin)
-//     flipY: false,    // Mirrors up/down
-//     scale: 0.025,    // 👈 Increase to make bigger, decrease to make smaller
-//     offsetX: 0,      // Nudge the whole shape left/right
-//     offsetY: 0,      // Nudge the whole shape up/down
-//   };
-//   // ==========================================
-
-//   return (
-//     <div className="h-full flex flex-col items-center justify-center p-10">
-//       <div className="w-full max-w-4xl aspect-[16/9] overflow-hidden relative">
-//         <h2 className="absolute top-4 left-4 text-xs font-bold text-red-500 uppercase tracking-widest">
-//           Live Telemetry: Abu Dhabi
-//         </h2>
-
-//         <svg viewBox="0 0 439.42 499.5" className="w-full h-full p-4">
-//           {/* The Track Map */}
-//           <path
-//             d="m431.61 6.6182c-3.3477-4.0298-8.3958-2.341-41.441 9.8359-18.537 6.8309-39.522 14.534-46.634 17.116-7.1116 2.5826-13.552 5.0006-14.311 5.3739-0.75942 0.37338-21.89 8.2536-46.957 17.512-25.067 9.2579-62.517 23.092-83.223 30.742-20.706 7.6502-48.358 18.562-61.451 24.248-13.092 5.686-41.603 16.913-63.357 24.949-38.402 14.186-45.609 17.506-45.246 20.839 0.08851 0.81344 2.6604 4.3766 5.7142 7.9192 6.9717 8.0874 7.9848 11.134 5.0395 15.148-1.2214 1.6647-5.0006 6.7421-8.3986 11.284-19.024 25.427-25.312 40.312-26.306 62.281-0.93897 20.75-0.02187 110.59 1.2621 123.6 2.1666 21.963 3.0438 26.465 13.644 70.052 5.738 23.595 10.863 42.438 11.915 43.806 2.1716 2.8235 6.5319 4.3237 8.3297 2.8654 3.1293-2.5383 13.696-6.7883 15.911-6.3999 1.3467 0.2362 3.926 1.7796 5.7325 3.4305 2.0346 1.8595 4.5342 3.0918 6.5688 3.24 3.274 0.23845 3.3364 0.19418 19.903-14.184 15.838-13.746 16.628-14.566 16.839-17.468 0.4085-5.6089-1.4735-8.2319-14.155-19.727-20.688-18.752-52.986-48.829-54.687-50.927-2.4108-2.9722-3.8486-11.029-5.5777-31.265-1.2039-14.09-1.162-18.968 0.19135-22.233 1.9318-4.6602 17.809-25.225 22.204-28.759 1.5517-1.2483 3.5471-2.3552 4.4332-2.4592 1.0647-0.12495 5.2707 3.3344 12.403 10.2 12.627 12.155 16.401 14.979 19.278 14.426 2.4039-0.46254 26.683-21.342 28.631-24.621 1.7699-2.9798-0.14855-10.06-4.881-18.013-3.9813-6.691-5.4372-8.184-31.765-32.549-28.74-26.597-28.893-26.77-28.038-32.282 0.68926-4.4478 19.548-51.7 21.972-55.052 1.4532-2.0099 3.951-4.147 6.4612-5.5275 3.4946-1.9219 4.6021-2.0059 7.5817-0.57428 2.1302 1.0235 16.013 13.334 35.645 31.605 77.013 71.677 95.226 88.463 97.895 90.222 4.1039 2.7043 11.606 2.5116 15.183-0.38976 3.1204-2.531 37.322-46.725 43.104-55.697 5.5106-8.5514 5.4379-11.111-0.78195-27.56-2.9716-7.8583-5.9137-16.604-6.5392-19.434-2.3841-10.786 0.12005-23.821 6.5801-34.243 5.1419-8.295 10.915-12.391 27.932-19.822 24.28-10.603 36.497-19.201 54.123-38.088 5.2939-5.6728 10.884-11.62 12.422-13.216 25.575-26.551 24.555-24.949 21.171-33.26-1.4859-3.6501-2.5296-7.4967-2.3204-8.547 0.48007-2.4105 1.8869-3.0654 20.674-9.6272 20.249-7.0722 23.08-9.5947 18.738-16.705-0.48551-0.79518-0.92968-1.4887-1.4079-2.0644z"
-//             stroke="gray"
-//             strokeWidth="8"
-//             fill="none"
-//           />
-
-//           {/* The Data Points */}
-//           {data.map((point, i) => {
-//             // 1. Center the point around 0,0
-//             let x = point.X - dataCenterX;
-//             let y = point.Y - dataCenterY;
-
-//             // 2. Swap axes (Rotate 90)
-//             if (ALIGN.swapXY) {
-//               const temp = x;
-//               x = y;
-//               y = temp;
-//             }
-
-//             // 3. Mirror axes if needed
-//             if (ALIGN.flipX) x = -x;
-//             if (ALIGN.flipY) y = -y;
-
-//             // 4. Scale uniformly to preserve the real track shape
-//             x = x * ALIGN.scale;
-//             y = y * ALIGN.scale;
-
-//             // 5. Move to the center of the SVG, apply manual offsets
-//             const finalX = x + svgCenterX + ALIGN.offsetX;
-//             const finalY = y + svgCenterY + ALIGN.offsetY;
-
-//             return (
-//               <circle
-//                 key={i}
-//                 cx={finalX}
-//                 cy={finalY}
-//                 r="1.5"
-//                 fill="white"
-//               />
-//             );
-//           })}
-//         </svg>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default RaceTrack;
-
-// import { useState, useEffect, useMemo } from "react";
-
-// const RaceTrack = () => {
-//   const [data, setData] = useState<any[]>([]);
-//   const [index, setIndex] = useState(0);
-
-//   useEffect(() => {
-//     fetch("/race_data.json")
-//       .then((res) => res.json())
-//       .then((data) => setData(data));
-//   }, []);
-
-//   useEffect(() => {
-//     if (data.length === 0) return;
-//     const timer = setInterval(() => {
-//       setIndex((prev) => (prev + 1) % data.length);
-//     }, 50);
-//     return () => clearInterval(timer);
-//   }, [data]);
-
-//   // Calculate the exact boundaries of your data to set the camera (viewBox)
-//   const bounds = useMemo(() => {
-//     if (data.length === 0) return null;
-//     const minX = Math.min(...data.map(p => p.X));
-//     const maxX = Math.max(...data.map(p => p.X));
-//     const minY = Math.min(...data.map(p => p.Y));
-//     const maxY = Math.max(...data.map(p => p.Y));
-
-//     // Create the polyline string (the track drawing)
-//     const points = data.map(p => `${p.X},${p.Y}`).join(" ");
-
-//     return {
-//       minX, minY,
-//       width: maxX - minX,
-//       height: maxY - minY,
-//       points
-//     };
-//   }, [data]);
-
-//   if (!bounds || data.length === 0) return null;
-
-//   const rawCar = data[index] || { X: 0, Y: 0 };
-
-//   return (
-//     <div className="h-full flex flex-col items-center justify-center p-10">
-//       <div className="w-full max-w-4xl aspect-[16/9] relative">
-//         <h2 className="absolute top-4 left-4 text-xs font-bold text-red-500 uppercase tracking-widest z-10">
-//           Live Telemetry
-//         </h2>
-
-//         {/* We dynamically set the viewBox to match the data's exact footprint.
-//             We add a 5% margin so the track doesn't touch the edges. */}
-//         <svg
-//           viewBox={`${bounds.minX - (bounds.width * 0.05)} ${bounds.minY - (bounds.height * 0.05)} ${bounds.width * 1.1} ${bounds.height * 1.1}`}
-//           className="w-full h-full"
-//         >
-//           {/* Automatically draw the track using the lap data */}
-//           <polyline
-//             points={bounds.points}
-//             stroke="#404040"
-//             strokeWidth={bounds.width * 0.015} // Scale line thickness automatically
-//             fill="none"
-//             strokeLinejoin="round"
-//           />
-
-//           {/* The car uses the exact same raw X/Y, guaranteeing perfect alignment */}
-//           <circle
-//             cx={rawCar.X}
-//             cy={rawCar.Y}
-//             r={bounds.width * 0.02} // Scale dot size automatically
-//             fill="#ef4444"
-//             className="transition-all duration-75 ease-linear"
-//           />
-//         </svg>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default RaceTrack;
-
-// import { useState, useEffect } from "react";
-
-// const RaceTrack = () => {
-//   const [data, setData] = useState<any[]>([]);
-//   const [index, setIndex] = useState(0);
-
-//   useEffect(() => {
-//     fetch("/race_data.json")
-//       .then((res) => res.json())
-//       .then((data) => setData(data));
-//   }, []);
-
-//   useEffect(() => {
-//     if (data.length === 0) return;
-//     const timer = setInterval(() => {
-//       setIndex((prev) => (prev + 1) % data.length);
-//     }, 50); // Speed of the replay
-//     return () => clearInterval(timer);
-//   }, [data]);
-
-//   if (data.length === 0) return null;
-
-//   const car = data[index];
-
-//   // 1. Calculate the bounding box of the actual data
-//   const minX = Math.min(...data.map((p) => p.X));
-//   const maxX = Math.max(...data.map((p) => p.X));
-//   const minY = Math.min(...data.map((p) => p.Y));
-//   const maxY = Math.max(...data.map((p) => p.Y));
-
-//   // 2. Add some padding so the track doesn't touch the edge of the screen
-//   const padding = (maxX - minX) * 0.1;
-
-//   // 3. Create a dynamic SVG viewBox based on the data's real coordinates
-//   const viewBox = `${minX - padding} ${minY - padding} ${maxX - minX + padding * 2} ${maxY - minY + padding * 2}`;
-
-//   // 4. Generate the track line directly from the raw data
-//   const trackPoints = data.map((p) => `${p.X},${p.Y}`).join(" ");
-
-//   return (
-//     <div className="h-full flex flex-col items-center justify-center p-10">
-//       <div className="w-full max-w-4xl aspect-[16/9] overflow-hidden relative">
-//         <h2 className="absolute top-4 left-4 text-xs font-bold text-red-500 uppercase tracking-widest z-10">
-//           Live Telemetry: Silverstone
-//         </h2>
-
-//         {/* The SVG automatically scales to fit whatever data you feed it */}
-//         <svg viewBox={viewBox} className="w-full h-full p-4 transform -scale-y-100">
-//           {/* Track Line */}
-//           <polyline
-//             points={trackPoints}
-//             stroke="#404040" // Gray track
-//             strokeWidth={(maxX - minX) * 0.015} // Dynamic line thickness
-//             strokeLinejoin="round"
-//             fill="none"
-//           />
-
-//           {/* Car */}
-//           <circle
-//             cx={car.X}
-//             cy={car.Y}
-//             r={(maxX - minX) * 0.02} // Dynamic dot size
-//             fill="#ef4444" // Red dot
-//             className="transition-all duration-75 ease-linear"
-//           />
-//         </svg>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default RaceTrack;
-
-// import { useState, useEffect, useRef } from "react";
-
-// const RaceTrack = () => {
-//   const [data, setData] = useState<any[]>([]);
-//   const [index, setIndex] = useState(0);
-
-//   // State to hold the perfect X/Y coordinates for the dot
-//   const [carPos, setCarPos] = useState({ x: 0, y: 0 });
-
-//   // A reference to your gray SVG track path
-//   const trackRef = useRef<SVGPathElement>(null);
-
-//   // 1. Load the data (We will only use it for timing/speed now)
-//   useEffect(() => {
-//     fetch("/race_data.json")
-//       .then((res) => res.json())
-//       .then((data) => setData(data));
-//   }, []);
-
-//   // 2. The Game Loop
-//   useEffect(() => {
-//     if (data.length === 0) return;
-
-//     const timer = setInterval(() => {
-//       setIndex((prev) => (prev + 1) % data.length);
-//     }, 50);
-
-//     return () => clearInterval(timer);
-//   }, [data]);
-
-//   // 3. The Magic Alignment Math
-//   useEffect(() => {
-//     if (data.length === 0 || !trackRef.current) return;
-
-//     // Calculate how far along the lap we are (0.0 to 1.0)
-//     const progress = index / data.length;
-
-//     // Get the total length of your SVG drawing in pixels
-//     const totalLength = trackRef.current.getTotalLength();
-
-//     // Ask the browser: "What are the exact X/Y coordinates at this percentage?"
-//     const point = trackRef.current.getPointAtLength(progress * totalLength);
-
-//     // Update the car's position
-//     setCarPos({ x: point.x, y: point.y });
-
-//   }, [index, data]); // Runs every time the index changes
-
-//   return (
-//     <div className="h-full flex flex-col items-center justify-center p-10">
-//       <div className="w-full max-w-4xl aspect-[16/9] overflow-hidden relative">
-//         <h2 className="absolute top-4 left-4 text-xs font-bold text-red-500 uppercase tracking-widest z-10">
-//           Live Telemetry: Abu Dhabi
-//         </h2>
-
-//         {/* Use your original viewBox */}
-//         <svg viewBox="0 0 439.42 499.5" className="w-full h-full p-4">
-
-//           {/* Your exact Abu Dhabi SVG Path. Notice we added ref={trackRef} */}
-//           <path
-//             ref={trackRef}
-//             d="m431.61 6.6182c-3.3477-4.0298-8.3958-2.341-41.441 9.8359-18.537 6.8309-39.522 14.534-46.634 17.116-7.1116 2.5826-13.552 5.0006-14.311 5.3739-0.75942 0.37338-21.89 8.2536-46.957 17.512-25.067 9.2579-62.517 23.092-83.223 30.742-20.706 7.6502-48.358 18.562-61.451 24.248-13.092 5.686-41.603 16.913-63.357 24.949-38.402 14.186-45.609 17.506-45.246 20.839 0.08851 0.81344 2.6604 4.3766 5.7142 7.9192 6.9717 8.0874 7.9848 11.134 5.0395 15.148-1.2214 1.6647-5.0006 6.7421-8.3986 11.284-19.024 25.427-25.312 40.312-26.306 62.281-0.93897 20.75-0.02187 110.59 1.2621 123.6 2.1666 21.963 3.0438 26.465 13.644 70.052 5.738 23.595 10.863 42.438 11.915 43.806 2.1716 2.8235 6.5319 4.3237 8.3297 2.8654 3.1293-2.5383 13.696-6.7883 15.911-6.3999 1.3467 0.2362 3.926 1.7796 5.7325 3.4305 2.0346 1.8595 4.5342 3.0918 6.5688 3.24 3.274 0.23845 3.3364 0.19418 19.903-14.184 15.838-13.746 16.628-14.566 16.839-17.468 0.4085-5.6089-1.4735-8.2319-14.155-19.727-20.688-18.752-52.986-48.829-54.687-50.927-2.4108-2.9722-3.8486-11.029-5.5777-31.265-1.2039-14.09-1.162-18.968 0.19135-22.233 1.9318-4.6602 17.809-25.225 22.204-28.759 1.5517-1.2483 3.5471-2.3552 4.4332-2.4592 1.0647-0.12495 5.2707 3.3344 12.403 10.2 12.627 12.155 16.401 14.979 19.278 14.426 2.4039-0.46254 26.683-21.342 28.631-24.621 1.7699-2.9798-0.14855-10.06-4.881-18.013-3.9813-6.691-5.4372-8.184-31.765-32.549-28.74-26.597-28.893-26.77-28.038-32.282 0.68926-4.4478 19.548-51.7 21.972-55.052 1.4532-2.0099 3.951-4.147 6.4612-5.5275 3.4946-1.9219 4.6021-2.0059 7.5817-0.57428 2.1302 1.0235 16.013 13.334 35.645 31.605 77.013 71.677 95.226 88.463 97.895 90.222 4.1039 2.7043 11.606 2.5116 15.183-0.38976 3.1204-2.531 37.322-46.725 43.104-55.697 5.5106-8.5514 5.4379-11.111-0.78195-27.56-2.9716-7.8583-5.9137-16.604-6.5392-19.434-2.3841-10.786 0.12005-23.821 6.5801-34.243 5.1419-8.295 10.915-12.391 27.932-19.822 24.28-10.603 36.497-19.201 54.123-38.088 5.2939-5.6728 10.884-11.62 12.422-13.216 25.575-26.551 24.555-24.949 21.171-33.26-1.4859-3.6501-2.5296-7.4967-2.3204-8.547 0.48007-2.4105 1.8869-3.0654 20.674-9.6272 20.249-7.0722 23.08-9.5947 18.738-16.705-0.48551-0.79518-0.92968-1.4887-1.4079-2.0644z"
-//             stroke="#404040"
-//             strokeWidth="8"
-//             fill="none"
-//           />
-
-//           {/* The Car - Positioned perfectly using the path coordinates */}
-//           {carPos.x !== 0 && (
-//             <circle
-//               cx={carPos.x}
-//               cy={carPos.y}
-//               r="10"
-//               fill="#ef4444"
-//               className="transition-all duration-75 ease-linear"
-//             />
-//           )}
-//         </svg>
-//       </div>
-//       <div className="mt-6 text-neutral-400 text-sm">
-//         Replaying fastest lap data...
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default RaceTrack;
-
-// import { useState, useEffect, useRef } from "react";
-
-// const RaceTrack = () => {
-//   const [data, setData] = useState<any[]>([]);
-//   const [index, setIndex] = useState(0);
-//   const [carPos, setCarPos] = useState({ x: 0, y: 0 });
-//   const trackRef = useRef<SVGPathElement>(null);
-
-//   useEffect(() => {
-//     fetch("/race_data.json")
-//       .then((res) => res.json())
-//       .then((data) => setData(data));
-//   }, []);
-
-//   useEffect(() => {
-//     if (data.length === 0) return;
-//     const timer = setInterval(() => {
-//       setIndex((prev) => (prev + 1) % data.length);
-//     }, 50);
-//     return () => clearInterval(timer);
-//   }, [data]);
-
-//   useEffect(() => {
-//     if (data.length === 0 || !trackRef.current) return;
-//     const progress = index / data.length;
-//     const pathLength = trackRef.current.getTotalLength();
-//     const point = trackRef.current.getPointAtLength(progress * pathLength);
-//     setCarPos({ x: point.x, y: point.y });
-//   }, [index, data]);
-
-//   return (
-//     // Removed 'p-10' and 'flex-col' to allow the parent container
-//     // to control the layout (as planned in LiveSimulator.tsx)
-//     <div className="w-full h-full flex items-center justify-center">
-//       <div className="w-full h-full relative p-8">
-//         <h2 className="absolute top-4 left-4 text-xs font-bold text-red-500 uppercase tracking-widest z-10">
-//           Live Telemetry: Abu Dhabi
-//         </h2>
-
-//         {/* Removed p-4 to let the SVG fill the div space */}
-//         <svg viewBox="0 0 439.42 499.5" className="w-full h-full">
-//           <path
-//             ref={trackRef}
-//             d="m431.61 6.6182c-3.3477-4.0298-8.3958-2.341-41.441 9.8359-18.537 6.8309-39.522 14.534-46.634 17.116-7.1116 2.5826-13.552 5.0006-14.311 5.3739-0.75942 0.37338-21.89 8.2536-46.957 17.512-25.067 9.2579-62.517 23.092-83.223 30.742-20.706 7.6502-48.358 18.562-61.451 24.248-13.092 5.686-41.603 16.913-63.357 24.949-38.402 14.186-45.609 17.506-45.246 20.839 0.08851 0.81344 2.6604 4.3766 5.7142 7.9192 6.9717 8.0874 7.9848 11.134 5.0395 15.148-1.2214 1.6647-5.0006 6.7421-8.3986 11.284-19.024 25.427-25.312 40.312-26.306 62.281-0.93897 20.75-0.02187 110.59 1.2621 123.6 2.1666 21.963 3.0438 26.465 13.644 70.052 5.738 23.595 10.863 42.438 11.915 43.806 2.1716 2.8235 6.5319 4.3237 8.3297 2.8654 3.1293-2.5383 13.696-6.7883 15.911-6.3999 1.3467 0.2362 3.926 1.7796 5.7325 3.4305 2.0346 1.8595 4.5342 3.0918 6.5688 3.24 3.274 0.23845 3.3364 0.19418 19.903-14.184 15.838-13.746 16.628-14.566 16.839-17.468 0.4085-5.6089-1.4735-8.2319-14.155-19.727-20.688-18.752-52.986-48.829-54.687-50.927-2.4108-2.9722-3.8486-11.029-5.5777-31.265-1.2039-14.09-1.162-18.968 0.19135-22.233 1.9318-4.6602 17.809-25.225 22.204-28.759 1.5517-1.2483 3.5471-2.3552 4.4332-2.4592 1.0647-0.12495 5.2707 3.3344 12.403 10.2 12.627 12.155 16.401 14.979 19.278 14.426 2.4039-0.46254 26.683-21.342 28.631-24.621 1.7699-2.9798-0.14855-10.06-4.881-18.013-3.9813-6.691-5.4372-8.184-31.765-32.549-28.74-26.597-28.893-26.77-28.038-32.282 0.68926-4.4478 19.548-51.7 21.972-55.052 1.4532-2.0099 3.951-4.147 6.4612-5.5275 3.4946-1.9219 4.6021-2.0059 7.5817-0.57428 2.1302 1.0235 16.013 13.334 35.645 31.605 77.013 71.677 95.226 88.463 97.895 90.222 4.1039 2.7043 11.606 2.5116 15.183-0.38976 3.1204-2.531 37.322-46.725 43.104-55.697 5.5106-8.5514 5.4379-11.111-0.78195-27.56-2.9716-7.8583-5.9137-16.604-6.5392-19.434-2.3841-10.786 0.12005-23.821 6.5801-34.243 5.1419-8.295 10.915-12.391 27.932-19.822 24.28-10.603 36.497-19.201 54.123-38.088 5.2939-5.6728 10.884-11.62 12.422-13.216 25.575-26.551 24.555-24.949 21.171-33.26-1.4859-3.6501-2.5296-7.4967-2.3204-8.547 0.48007-2.4105 1.8869-3.0654 20.674-9.6272 20.249-7.0722 23.08-9.5947 18.738-16.705-0.48551-0.79518-0.92968-1.4887-1.4079-2.0644z"
-//             stroke="#404040"
-//             strokeWidth="8"
-//             fill="none"
-//           />
-
-//           {carPos.x !== 0 && (
-//             <circle
-//               cx={carPos.x}
-//               cy={carPos.y}
-//               r="6"
-//               fill="#ef4444"
-//               className="transition-all duration-75 ease-linear"
-//             />
-//           )}
-//         </svg>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default RaceTrack;
-
-// import { useState, useEffect, useRef } from "react";
-
-// // 1. Mock data for 20 drivers
-// const INITIAL_DRIVERS = [
-//   { id: "VER", color: "#3b82f6", progress: 0.00 },
-//   { id: "LEC", color: "#ef4444", progress: 0.02 },
-//   { id: "RUS", color: "#2dd4bf", progress: 0.04 },
-//   { id: "NOR", color: "#f97316", progress: 0.06 },
-//   { id: "PIA", color: "#f97316", progress: 0.08 },
-//   { id: "ALO", color: "#10b981", progress: 0.10 },
-//   { id: "HAM", color: "#2dd4bf", progress: 0.12 },
-//   { id: "TSU", color: "#1e3a8a", progress: 0.14 },
-//   { id: "STR", color: "#10b981", progress: 0.16 },
-//   { id: "SAI", color: "#ef4444", progress: 0.18 },
-//   { id: "GAS", color: "#ec4899", progress: 0.20 },
-//   { id: "OCO", color: "#ec4899", progress: 0.22 },
-//   { id: "ALB", color: "#3b82f6", progress: 0.24 },
-//   { id: "SAR", color: "#3b82f6", progress: 0.26 },
-//   { id: "RIC", color: "#1e3a8a", progress: 0.28 },
-//   { id: "BOT", color: "#991b1b", progress: 0.30 },
-//   { id: "ZHO", color: "#991b1b", progress: 0.32 },
-//   { id: "MAG", color: "#f3f4f6", progress: 0.34 },
-//   { id: "HUL", color: "#f3f4f6", progress: 0.36 },
-//   { id: "LAW", color: "#1e3a8a", progress: 0.38 },
-// ];
-
-// const RaceTrack = () => {
-//   const [drivers, setDrivers] = useState(INITIAL_DRIVERS);
-//   const trackRef = useRef<SVGPathElement>(null);
-
-//   // 2. Race Loop: Advance every driver's progress
-//   useEffect(() => {
-//     const timer = setInterval(() => {
-//       setDrivers((prev) =>
-//         prev.map((d) => ({
-//           ...d,
-//           // Small random variation to make it look like a real race
-//           progress: (d.progress + (Math.random() * 0.002)) % 1
-//         }))
-//       );
-//     }, 50);
-//     return () => clearInterval(timer);
-//   }, []);
-
-//   return (
-//     <div className="w-full h-full flex items-center justify-center">
-//       <div className="w-full h-full relative p-8">
-//         <h2 className="absolute top-4 left-4 text-xs font-bold text-red-500 uppercase tracking-widest z-10">
-//           Live Simulator: Abu Dhabi
-//         </h2>
-
-//         <svg viewBox="0 0 439.42 499.5" className="w-full h-full">
-//           <path
-//             ref={trackRef}
-//             d="m431.61 6.6182c-3.3477-4.0298-8.3958-2.341-41.441 9.8359-18.537 6.8309-39.522 14.534-46.634 17.116-7.1116 2.5826-13.552 5.0006-14.311 5.3739-0.75942 0.37338-21.89 8.2536-46.957 17.512-25.067 9.2579-62.517 23.092-83.223 30.742-20.706 7.6502-48.358 18.562-61.451 24.248-13.092 5.686-41.603 16.913-63.357 24.949-38.402 14.186-45.609 17.506-45.246 20.839 0.08851 0.81344 2.6604 4.3766 5.7142 7.9192 6.9717 8.0874 7.9848 11.134 5.0395 15.148-1.2214 1.6647-5.0006 6.7421-8.3986 11.284-19.024 25.427-25.312 40.312-26.306 62.281-0.93897 20.75-0.02187 110.59 1.2621 123.6 2.1666 21.963 3.0438 26.465 13.644 70.052 5.738 23.595 10.863 42.438 11.915 43.806 2.1716 2.8235 6.5319 4.3237 8.3297 2.8654 3.1293-2.5383 13.696-6.7883 15.911-6.3999 1.3467 0.2362 3.926 1.7796 5.7325 3.4305 2.0346 1.8595 4.5342 3.0918 6.5688 3.24 3.274 0.23845 3.3364 0.19418 19.903-14.184 15.838-13.746 16.628-14.566 16.839-17.468 0.4085-5.6089-1.4735-8.2319-14.155-19.727-20.688-18.752-52.986-48.829-54.687-50.927-2.4108-2.9722-3.8486-11.029-5.5777-31.265-1.2039-14.09-1.162-18.968 0.19135-22.233 1.9318-4.6602 17.809-25.225 22.204-28.759 1.5517-1.2483 3.5471-2.3552 4.4332-2.4592 1.0647-0.12495 5.2707 3.3344 12.403 10.2 12.627 12.155 16.401 14.979 19.278 14.426 2.4039-0.46254 26.683-21.342 28.631-24.621 1.7699-2.9798-0.14855-10.06-4.881-18.013-3.9813-6.691-5.4372-8.184-31.765-32.549-28.74-26.597-28.893-26.77-28.038-32.282 0.68926-4.4478 19.548-51.7 21.972-55.052 1.4532-2.0099 3.951-4.147 6.4612-5.5275 3.4946-1.9219 4.6021-2.0059 7.5817-0.57428 2.1302 1.0235 16.013 13.334 35.645 31.605 77.013 71.677 95.226 88.463 97.895 90.222 4.1039 2.7043 11.606 2.5116 15.183-0.38976 3.1204-2.531 37.322-46.725 43.104-55.697 5.5106-8.5514 5.4379-11.111-0.78195-27.56-2.9716-7.8583-5.9137-16.604-6.5392-19.434-2.3841-10.786 0.12005-23.821 6.5801-34.243 5.1419-8.295 10.915-12.391 27.932-19.822 24.28-10.603 36.497-19.201 54.123-38.088 5.2939-5.6728 10.884-11.62 12.422-13.216 25.575-26.551 24.555-24.949 21.171-33.26-1.4859-3.6501-2.5296-7.4967-2.3204-8.547 0.48007-2.4105 1.8869-3.0654 20.674-9.6272 20.249-7.0722 23.08-9.5947 18.738-16.705-0.48551-0.79518-0.92968-1.4887-1.4079-2.0644z"
-//             stroke="#404040"
-//             strokeWidth="8"
-//             fill="none"
-//           />
-
-//           {/* Render all 20 cars */}
-//           {trackRef.current && drivers.map((d) => {
-//             const point = trackRef.current!.getPointAtLength(d.progress * trackRef.current!.getTotalLength());
-//             return (
-//               <circle
-//                 key={d.id}
-//                 cx={point.x}
-//                 cy={point.y}
-//                 r="6"
-//                 fill={d.color}
-//                 stroke="#000"
-//                 strokeWidth="1"
-//                 className="transition-all duration-75 ease-linear"
-//               />
-//             );
-//           })}
-//         </svg>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default RaceTrack;
-
-// import { useRef } from "react";
-
-// // The component now accepts data as props, making it a "dumb" presenter
-// export interface RaceTrackProps {
-//   drivers: { id: string; color: string }[];
-//   positions: number[]; // Array of progress values (0.0 to 1.0) for each driver
-// }
-
-// const RaceTrack = ({ drivers, positions }: RaceTrackProps) => {
-//   const trackRef = useRef<SVGPathElement>(null);
-
-//   return (
-//     <div className="w-full h-full flex items-center justify-center">
-//       <div className="w-full h-full relative p-8">
-//         <h2 className="absolute top-4 left-4 text-xs font-bold text-red-500 uppercase tracking-widest z-10">
-//           Live Simulator: Abu Dhabi
-//         </h2>
-
-//         <svg viewBox="0 0 439.42 499.5" className="w-full h-full">
-//           <path
-//             ref={trackRef}
-//             d="m431.61 6.6182c-3.3477-4.0298-8.3958-2.341-41.441 9.8359-18.537 6.8309-39.522 14.534-46.634 17.116-7.1116 2.5826-13.552 5.0006-14.311 5.3739-0.75942 0.37338-21.89 8.2536-46.957 17.512-25.067 9.2579-62.517 23.092-83.223 30.742-20.706 7.6502-48.358 18.562-61.451 24.248-13.092 5.686-41.603 16.913-63.357 24.949-38.402 14.186-45.609 17.506-45.246 20.839 0.08851 0.81344 2.6604 4.3766 5.7142 7.9192 6.9717 8.0874 7.9848 11.134 5.0395 15.148-1.2214 1.6647-5.0006 6.7421-8.3986 11.284-19.024 25.427-25.312 40.312-26.306 62.281-0.93897 20.75-0.02187 110.59 1.2621 123.6 2.1666 21.963 3.0438 26.465 13.644 70.052 5.738 23.595 10.863 42.438 11.915 43.806 2.1716 2.8235 6.5319 4.3237 8.3297 2.8654 3.1293-2.5383 13.696-6.7883 15.911-6.3999 1.3467 0.2362 3.926 1.7796 5.7325 3.4305 2.0346 1.8595 4.5342 3.0918 6.5688 3.24 3.274 0.23845 3.3364 0.19418 19.903-14.184 15.838-13.746 16.628-14.566 16.839-17.468 0.4085-5.6089-1.4735-8.2319-14.155-19.727-20.688-18.752-52.986-48.829-54.687-50.927-2.4108-2.9722-3.8486-11.029-5.5777-31.265-1.2039-14.09-1.162-18.968 0.19135-22.233 1.9318-4.6602 17.809-25.225 22.204-28.759 1.5517-1.2483 3.5471-2.3552 4.4332-2.4592 1.0647-0.12495 5.2707 3.3344 12.403 10.2 12.627 12.155 16.401 14.979 19.278 14.426 2.4039-0.46254 26.683-21.342 28.631-24.621 1.7699-2.9798-0.14855-10.06-4.881-18.013-3.9813-6.691-5.4372-8.184-31.765-32.549-28.74-26.597-28.893-26.77-28.038-32.282 0.68926-4.4478 19.548-51.7 21.972-55.052 1.4532-2.0099 3.951-4.147 6.4612-5.5275 3.4946-1.9219 4.6021-2.0059 7.5817-0.57428 2.1302 1.0235 16.013 13.334 35.645 31.605 77.013 71.677 95.226 88.463 97.895 90.222 4.1039 2.7043 11.606 2.5116 15.183-0.38976 3.1204-2.531 37.322-46.725 43.104-55.697 5.5106-8.5514 5.4379-11.111-0.78195-27.56-2.9716-7.8583-5.9137-16.604-6.5392-19.434-2.3841-10.786 0.12005-23.821 6.5801-34.243 5.1419-8.295 10.915-12.391 27.932-19.822 24.28-10.603 36.497-19.201 54.123-38.088 5.2939-5.6728 10.884-11.62 12.422-13.216 25.575-26.551 24.555-24.949 21.171-33.26-1.4859-3.6501-2.5296-7.4967-2.3204-8.547 0.48007-2.4105 1.8869-3.0654 20.674-9.6272 20.249-7.0722 23.08-9.5947 18.738-16.705-0.48551-0.79518-0.92968-1.4887-1.4079-2.0644z"
-//             stroke="#404040"
-//             strokeWidth="8"
-//             fill="none"
-//           />
-
-//           {/* Render cars using passed-in positions */}
-//           {trackRef.current &&
-//             drivers.map((d, index) => {
-//               const progress = positions[index] || 0;
-//               const point = trackRef.current!.getPointAtLength(
-//                 progress * trackRef.current!.getTotalLength()
-//               );
-//               return (
-//                 <circle
-//                   key={d.id}
-//                   cx={point.x}
-//                   cy={point.y}
-//                   r="6"
-//                   fill={d.color}
-//                   stroke="#000"
-//                   strokeWidth="1"
-//                   className="transition-all duration-100 ease-linear"
-//                   style={{
-//                     // Smooths out position updates perfectly to keep them locked to the track line
-//                     transition: "cx 0.1s linear, cy 0.1s linear",
-//                   }}
-//                 />
-//               );
-//             })}
-//         </svg>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default RaceTrack;\
-
 // import { useMemo } from "react";
 
 // export interface Driver {
@@ -749,6 +9,7 @@
 //   x: number;
 //   y: number;
 //   lap: number | null;
+//   in_pit: boolean;
 // }
 
 // export interface TrackPoint {
@@ -765,48 +26,63 @@
 
 // export interface RaceTrackProps {
 //   drivers: Driver[];
-//   positions: Record<string, CarPosition>; // keyed by driver code, real x/y
+//   positions: Record<string, CarPosition>;
 //   trackOutline: TrackPoint[];
 //   bounds: Bounds;
+//   flag?: string; 
 // }
 
-// // Fixed SVG canvas size — we scale real-world coordinates INTO this box,
-// // rather than trying to align real data onto a fixed hand-drawn path.
-// const VIEWBOX_WIDTH = 800;
-// const VIEWBOX_HEIGHT = 600;
-// const PADDING = 40;
+// const VIEWBOX_WIDTH = 1000;
+// const VIEWBOX_HEIGHT = 1000;
+// const PADDING = 45; 
 
-// // Converts a real telemetry x/y (meters, arbitrary origin) into SVG
-// // viewBox space, preserving aspect ratio and centering the track.
-// // This single function is what replaces ALL the manual SVG alignment work —
-// // it works identically for every circuit because it's driven by that
-// // circuit's own bounds, not a fixed hand-tuned transform.
+// const FLAG_COLORS: Record<string, string> = {
+//   clear: "#525252", 
+//   "1": "#525252",
+//   yellow: "#e6c900",
+//   "2": "#e6c900",
+//   red: "#dc2626",
+//   "5": "#dc2626",
+//   safety_car: "#f59e0b",
+//   "4": "#f59e0b",
+//   vsc: "#f59e0b",
+//   "6": "#f59e0b",
+//   vsc_ending: "#f59e0b",
+//   "7": "#f59e0b",
+// };
+
+// const FLAG_LABELS: Record<string, string> = {
+//   yellow: "YELLOW FLAG",
+//   "2": "YELLOW FLAG",
+//   red: "RED FLAG",
+//   "5": "RED FLAG",
+//   safety_car: "SAFETY CAR DEPLOYED",
+//   "4": "SAFETY CAR DEPLOYED",
+//   vsc: "VIRTUAL SAFETY CAR",
+//   "6": "VIRTUAL SAFETY CAR",
+//   vsc_ending: "VSC ENDING",
+//   "7": "VSC ENDING",
+// };
+
 // const makeProjector = (bounds: Bounds) => {
 //   const dataWidth = bounds.x_max - bounds.x_min || 1;
 //   const dataHeight = bounds.y_max - bounds.y_min || 1;
-
 //   const availableWidth = VIEWBOX_WIDTH - PADDING * 2;
 //   const availableHeight = VIEWBOX_HEIGHT - PADDING * 2;
-
-//   // Uniform scale (not stretched) so the track shape isn't distorted
 //   const scale = Math.min(availableWidth / dataWidth, availableHeight / dataHeight);
-
 //   const offsetX = PADDING + (availableWidth - dataWidth * scale) / 2;
 //   const offsetY = PADDING + (availableHeight - dataHeight * scale) / 2;
 
 //   return (x: number, y: number) => {
 //     const svgX = offsetX + (x - bounds.x_min) * scale;
-//     // Flip Y: telemetry Y typically increases "up", SVG Y increases "down"
 //     const svgY = offsetY + (dataHeight - (y - bounds.y_min)) * scale;
 //     return { x: svgX, y: svgY };
 //   };
 // };
 
-// const RaceTrack = ({ drivers, positions, trackOutline, bounds }: RaceTrackProps) => {
+// const RaceTrack = ({ drivers, positions, trackOutline, bounds, flag }: RaceTrackProps) => {
 //   const project = useMemo(() => makeProjector(bounds), [bounds]);
 
-//   // Build the track path ONCE from real telemetry points, not from a
-//   // downloaded/hand-aligned SVG. Closed loop back to the start point.
 //   const trackPathD = useMemo(() => {
 //     if (!trackOutline || trackOutline.length === 0) return "";
 //     const points = trackOutline.map((p) => project(p.x, p.y));
@@ -818,177 +94,345 @@
 //     return `${path} Z`;
 //   }, [trackOutline, project]);
 
+//   const safeFlag = (flag || "clear").toString().toLowerCase().trim();
+//   const trackColor = FLAG_COLORS[safeFlag] || FLAG_COLORS.clear;
+//   const isFlagActive = safeFlag !== "clear" && safeFlag !== "1" && !!FLAG_LABELS[safeFlag];
+
 //   return (
-//     <div className="w-full h-full flex items-center justify-center">
-//       <div className="w-full h-full relative p-8">
-//         <h2 className="absolute top-4 left-4 text-xs font-bold text-red-500 uppercase tracking-widest z-10">
-//           Live Simulator
-//         </h2>
-//         <svg viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`} className="w-full h-full">
-//           <path d={trackPathD} stroke="#404040" strokeWidth="8" fill="none" strokeLinejoin="round" />
+//     <div className="w-full h-full flex items-center justify-center relative">
+      
+//       {/* 🛠️ FIX: Sleek, F1 Broadcast Style Flag Banner */}
+//       {isFlagActive && (
+//         <div className="absolute top-8 left-1/2 -translate-x-1/2 z-[100] flex items-stretch bg-neutral-900/95 backdrop-blur-md border border-neutral-700/50 rounded-lg shadow-[0_10px_40px_rgba(0,0,0,0.8)] overflow-hidden">
+//           <div className="w-2" style={{ backgroundColor: trackColor }} />
+//           <div className="px-6 py-2.5 flex items-center gap-3">
+//             <span 
+//               className="w-3 h-3 rounded-full animate-pulse" 
+//               style={{ backgroundColor: trackColor, boxShadow: `0 0 10px ${trackColor}` }} 
+//             />
+//             <span className="font-black text-sm tracking-widest text-white uppercase">
+//               {FLAG_LABELS[safeFlag]}
+//             </span>
+//           </div>
+//         </div>
+//       )}
 
-//           {/* Cars plotted directly at their real (projected) coordinates —
-//               no getPointAtLength lookup, no progress-to-path guessing. */}
-//           {drivers.map((d) => {
-//             const pos = positions[d.code];
-//             if (!pos) return null; // driver not on track this frame
+//       <svg viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`} className="w-full h-full drop-shadow-2xl">
+//         <path d={trackPathD} stroke={trackColor} strokeWidth="24" fill="none" strokeLinejoin="round" opacity="0.3" />
+//         <path d={trackPathD} stroke={trackColor} strokeWidth="12" fill="none" strokeLinejoin="round" />
+//         <path d={trackPathD} stroke="#ffffff" strokeWidth="1.5" strokeDasharray="4,6" fill="none" strokeLinejoin="round" opacity="0.4" />
 
-//             const { x, y } = project(pos.x, pos.y);
-//             return (
+//         {drivers.map((d) => {
+//           const pos = positions[d.code];
+//           if (!pos || isNaN(pos.x)) return null;
+          
+//           const { x, y } = project(pos.x, pos.y);
+//           return (
+//             <g key={d.code} style={{ transition: "transform 0.1s linear" }}>
 //               <circle
-//                 key={d.code}
-//                 cx={x}
-//                 cy={y}
-//                 r="6"
+//                 cx={x} cy={y}
+//                 r="8"
 //                 fill={d.color}
-//                 stroke="#000"
-//                 strokeWidth="1"
-//                 style={{
-//                   transition: "cx 0.1s linear, cy 0.1s linear",
-//                 }}
+//                 stroke="#fff"
+//                 strokeWidth="1.5"
+//                 style={{ transition: "cx 0.1s linear, cy 0.1s linear" }}
 //               />
-//             );
-//           })}
-//         </svg>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default RaceTrack;
-
-// import { useMemo } from "react";
-
-// export interface Driver {
-//   code: string;
-//   color: string;
-// }
-
-// // Updated to match the new Python JSON schema
-// export interface CarPosition {
-//   x: number;
-//   y: number;
-//   lap: number | null;
-//   dist: number;      
-//   compound: string;  
-// }
-
-// export interface TrackPoint {
-//   x: number;
-//   y: number;
-// }
-
-// export interface Bounds {
-//   x_min: number;
-//   x_max: number;
-//   y_min: number;
-//   y_max: number;
-// }
-
-// export interface RaceTrackProps {
-//   drivers: Driver[];
-//   positions: Record<string, CarPosition>; 
-//   trackOutline: TrackPoint[];
-//   bounds: Bounds;
-// }
-
-// const VIEWBOX_WIDTH = 800;
-// const VIEWBOX_HEIGHT = 600;
-// const PADDING = 60; // Increased padding slightly to account for text labels spilling over the edge
-
-// const makeProjector = (bounds: Bounds) => {
-//   const dataWidth = bounds.x_max - bounds.x_min || 1;
-//   const dataHeight = bounds.y_max - bounds.y_min || 1;
-
-//   const availableWidth = VIEWBOX_WIDTH - PADDING * 2;
-//   const availableHeight = VIEWBOX_HEIGHT - PADDING * 2;
-
-//   const scale = Math.min(availableWidth / dataWidth, availableHeight / dataHeight);
-
-//   const offsetX = PADDING + (availableWidth - dataWidth * scale) / 2;
-//   const offsetY = PADDING + (availableHeight - dataHeight * scale) / 2;
-
-//   return (x: number, y: number) => {
-//     const svgX = offsetX + (x - bounds.x_min) * scale;
-//     const svgY = offsetY + (dataHeight - (y - bounds.y_min)) * scale;
-//     return { x: svgX, y: svgY };
-//   };
-// };
-
-// const RaceTrack = ({ drivers, positions, trackOutline, bounds }: RaceTrackProps) => {
-//   const project = useMemo(() => makeProjector(bounds), [bounds]);
-
-//   const trackPathD = useMemo(() => {
-//     if (!trackOutline || trackOutline.length === 0) return "";
-//     const points = trackOutline.map((p) => project(p.x, p.y));
-//     const [first, ...rest] = points;
-//     const path = rest.reduce(
-//       (acc, p) => `${acc} L ${p.x.toFixed(2)} ${p.y.toFixed(2)}`,
-//       `M ${first.x.toFixed(2)} ${first.y.toFixed(2)}`
-//     );
-//     return `${path} Z`;
-//   }, [trackOutline, project]);
-
-//   return (
-//     <div className="w-full h-full flex items-center justify-center font-sans">
-//       <div className="w-full h-full relative p-8">
-//         <svg viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`} className="w-full h-full drop-shadow-2xl">
-          
-//           {/* 1. Track Outer Border / Rumble Strip Boundary */}
-//           <path d={trackPathD} stroke="#171717" strokeWidth="18" fill="none" strokeLinejoin="round" />
-          
-//           {/* 2. Track Surface (Asphalt) */}
-//           <path d={trackPathD} stroke="#404040" strokeWidth="14" fill="none" strokeLinejoin="round" />
-          
-//           {/* 3. Subtle Center Racing Line */}
-//           <path d={trackPathD} stroke="#737373" strokeWidth="1" strokeDasharray="6 6" fill="none" strokeLinejoin="round" opacity="0.4" />
-
-//           {/* Cars and Labels */}
-//           {drivers.map((d) => {
-//             const pos = positions[d.code];
-//             // If data is entirely missing for this frame, don't render the car
-//             if (!pos || isNaN(pos.x)) return null; 
-
-//             const { x, y } = project(pos.x, pos.y);
-//             const isActive = pos.lap !== null;
-
-//             return (
-//               <g
-//                 key={d.code}
-//                 style={{
-//                   transform: `translate(${x}px, ${y}px)`,
-//                   transition: "transform 0.1s linear, opacity 0.3s ease",
-//                   opacity: isActive ? 1 : 0.2, // Fade out cars that have retired/pitted
-//                 }}
+//               <text
+//                 x={x + 12} y={y + 3}
+//                 fontSize="11"
+//                 fontWeight="900"
+//                 fill="#fff"
+//                 className="drop-shadow-md"
+//                 style={{ transition: "x 0.1s linear, y 0.1s linear" }}
 //               >
-//                 {/* Car Dot (slightly larger, with a white stroke for contrast) */}
-//                 <circle
-//                   cx={x}
-//                   cy={y}
-//                   r="7"
-//                   fill={d.color}
-//                   stroke="#ffffff"
-//                   strokeWidth="1.5"
-//                   style={{ transition: "cx 0.1s linear, cy 0.1s linear" }}
-//                 />
-                
-//                 {/* Driver Abbreviation Label */}
+//                 {d.code}
+//               </text>
+//             </g>
+//           );
+//         })}
+//       </svg>
+//     </div>
+//   );
+// };
+
+// export default RaceTrack;
+
+// import { useMemo } from "react";
+
+// export interface Driver {
+//   code: string;
+//   color: string;
+// }
+
+// export interface CarPosition {
+//   x: number;
+//   y: number;
+//   lap: number | null;
+//   in_pit: boolean;
+// }
+
+// export interface TrackPoint {
+//   x: number;
+//   y: number;
+// }
+
+// export interface Bounds {
+//   x_min: number;
+//   x_max: number;
+//   y_min: number;
+//   y_max: number;
+// }
+
+// export interface FinishLine {
+//   x: number;
+//   y: number;
+// }
+
+// export interface RaceTrackProps {
+//   drivers: Driver[];
+//   positions: Record<string, CarPosition>;
+//   trackOutline: TrackPoint[];
+//   bounds: Bounds;
+//   flag?: string;
+//   showNames?: boolean;
+//   finishLine?: FinishLine | null;
+// }
+
+// // ─── constants ──────────────────────────────────────────────────────────────
+
+// const VIEWBOX_W = 1000;
+// const VIEWBOX_H = 1000;
+// const PADDING   = 40;
+
+// const FLAG_TRACK_COLOR: Record<string, string> = {
+//   clear:      "#4a4a4a",
+//   yellow:     "#ca8a04",
+//   red:        "#dc2626",
+//   safety_car: "#d97706",
+//   vsc:        "#d97706",
+//   vsc_ending: "#d97706",
+// };
+
+// // ─── projection ─────────────────────────────────────────────────────────────
+
+// const makeProjector = (bounds: Bounds) => {
+//   const dataW = bounds.x_max - bounds.x_min || 1;
+//   const dataH = bounds.y_max - bounds.y_min || 1;
+//   const availW = VIEWBOX_W - PADDING * 2;
+//   const availH = VIEWBOX_H - PADDING * 2;
+
+//   // Uniform scale — keeps circuit shape undistorted
+//   const scale   = Math.min(availW / dataW, availH / dataH);
+//   const offsetX = PADDING + (availW - dataW * scale) / 2;
+//   const offsetY = PADDING + (availH - dataH * scale) / 2;
+
+//   return (x: number, y: number) => ({
+//     x: offsetX + (x - bounds.x_min) * scale,
+//     // SVG y-axis is inverted vs telemetry y-axis
+//     y: offsetY + (dataH - (y - bounds.y_min)) * scale,
+//   });
+// };
+
+// // ─── finish line helper ──────────────────────────────────────────────────────
+
+// /**
+//  * Draws a short perpendicular stroke across the track at the finish line.
+//  * We find the two track-outline points nearest the finish-line coordinate,
+//  * compute the tangent direction between them, then draw a line 90° to it.
+//  */
+// const FinishLineMark = ({
+//   finishLine,
+//   trackOutline,
+//   project,
+// }: {
+//   finishLine: FinishLine;
+//   trackOutline: TrackPoint[];
+//   project: (x: number, y: number) => { x: number; y: number };
+// }) => {
+//   const { x: fx, y: fy } = project(finishLine.x, finishLine.y);
+
+//   // Find the two outline points nearest the projected finish point
+//   let best1 = 0, best2 = 1, bestDist = Infinity;
+//   const projected = trackOutline.map((p) => project(p.x, p.y));
+
+//   for (let i = 0; i < projected.length - 1; i++) {
+//     const mx = (projected[i].x + projected[i + 1].x) / 2;
+//     const my = (projected[i].y + projected[i + 1].y) / 2;
+//     const d  = Math.hypot(mx - fx, my - fy);
+//     if (d < bestDist) {
+//       bestDist = d;
+//       best1    = i;
+//       best2    = i + 1;
+//     }
+//   }
+
+//   // Tangent vector along the track at that point
+//   const tx = projected[best2].x - projected[best1].x;
+//   const ty = projected[best2].y - projected[best1].y;
+//   const len = Math.hypot(tx, ty) || 1;
+
+//   // Perpendicular = rotate tangent 90°
+//   const nx = -ty / len;
+//   const ny =  tx / len;
+
+//   const half = 18; // half-length of the finish line mark in SVG units
+//   const x1   = fx + nx * half;
+//   const y1   = fy + ny * half;
+//   const x2   = fx - nx * half;
+//   const y2   = fy - ny * half;
+
+//   return (
+//     <g>
+//       {/* Chequered flag effect: alternating black/white segments */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="5" strokeLinecap="round" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#000000" strokeWidth="5" strokeLinecap="round"
+//         strokeDasharray="4,4" />
+//       {/* Outer glow */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="9" strokeLinecap="round" opacity="0.15" />
+//     </g>
+//   );
+// };
+
+// // ─── component ──────────────────────────────────────────────────────────────
+
+// const RaceTrack = ({
+//   drivers,
+//   positions,
+//   trackOutline,
+//   bounds,
+//   flag       = "clear",
+//   showNames  = false,
+//   finishLine = null,
+// }: RaceTrackProps) => {
+//   const project = useMemo(() => makeProjector(bounds), [bounds]);
+
+//   // Build SVG path string once — only changes when track outline or bounds change
+//   const trackPathD = useMemo(() => {
+//     if (!trackOutline || trackOutline.length === 0) return "";
+//     const pts     = trackOutline.map((p) => project(p.x, p.y));
+//     const [first, ...rest] = pts;
+//     return rest.reduce(
+//       (acc, p) => `${acc} L ${p.x.toFixed(1)} ${p.y.toFixed(1)}`,
+//       `M ${first.x.toFixed(1)} ${first.y.toFixed(1)}`
+//     ) + " Z";
+//   }, [trackOutline, project]);
+
+//   const safeFlag   = (flag || "clear").toLowerCase().trim();
+//   const trackColor = FLAG_TRACK_COLOR[safeFlag] ?? FLAG_TRACK_COLOR.clear;
+
+//   return (
+//     <div className="w-full h-full">
+//       <svg
+//         viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H}`}
+//         className="w-full h-full"
+//         style={{ overflow: "visible" }}
+//       >
+//         {/* ── Track rendering — 3 layered strokes ── */}
+
+//         {/* Layer 1: wide outer glow — gives the "circuit lit up" feel */}
+//         <path
+//           d={trackPathD}
+//           stroke={trackColor}
+//           strokeWidth="28"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.18"
+//         />
+
+//         {/* Layer 2: main tarmac surface */}
+//         <path
+//           d={trackPathD}
+//           stroke={trackColor}
+//           strokeWidth="14"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.9"
+//         />
+
+//         {/* Layer 3: inner edge highlight — the bright centre line
+//             subtle white line that gives the track a 3D "lit from above" feel */}
+//         <path
+//           d={trackPathD}
+//           stroke="#ffffff"
+//           strokeWidth="2"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.12"
+//         />
+
+//         {/* ── Finish line ── */}
+//         {finishLine && (
+//           <FinishLineMark
+//             finishLine={finishLine}
+//             trackOutline={trackOutline}
+//             project={project}
+//           />
+//         )}
+
+//         {/* ── Cars ── */}
+//         {drivers.map((d) => {
+//           const pos = positions[d.code];
+//           if (!pos || isNaN(pos.x) || isNaN(pos.y)) return null;
+
+//           const { x, y } = project(pos.x, pos.y);
+//           const r        = pos.in_pit ? 5 : 8;
+//           const opacity  = pos.in_pit ? 0.55 : 1;
+
+//           return (
+//             <g
+//               key={d.code}
+//               opacity={opacity}
+//               style={{ transition: "opacity 0.3s" }}
+//             >
+//               {/* Drop shadow ring — makes cars pop off dark track */}
+//               <circle
+//                 cx={x} cy={y} r={r + 3}
+//                 fill="none"
+//                 stroke="#000000"
+//                 strokeWidth="3"
+//                 opacity="0.5"
+//                 style={{ transition: "cx 0.1s linear, cy 0.1s linear" }}
+//               />
+
+//               {/* Team color fill */}
+//               <circle
+//                 cx={x} cy={y} r={r}
+//                 fill={d.color}
+//                 stroke="#ffffff"
+//                 strokeWidth="1.5"
+//                 style={{ transition: "cx 0.1s linear, cy 0.1s linear" }}
+//               />
+
+//               {/* Driver name — only when toggled on via L key */}
+//               {showNames && (
 //                 <text
-//                   x="12"
-//                   y="4" // Slightly offset vertically to center with the dot
-//                   fontSize="12"
-//                   fill="#ffffff"
+//                   x={x + r + 5}
+//                   y={y + 4}
+//                   fontSize="11"
 //                   fontWeight="900"
-//                   className="tracking-wider drop-shadow-md"
-//                   style={{ textShadow: "0px 1px 3px rgba(0,0,0,0.8)" }}
+//                   fill="#ffffff"
+//                   stroke="#000000"
+//                   strokeWidth="3"
+//                   paintOrder="stroke"
+//                   style={{
+//                     transition:     "x 0.1s linear, y 0.1s linear",
+//                     userSelect:     "none",
+//                     pointerEvents:  "none",
+//                   }}
 //                 >
 //                   {d.code}
 //                 </text>
-//               </g>
-//             );
-//           })}
-//         </svg>
-//       </div>
+//               )}
+//             </g>
+//           );
+//         })}
+//       </svg>
 //     </div>
 //   );
 // };
@@ -1006,8 +450,1083 @@
 //   x: number;
 //   y: number;
 //   lap: number | null;
-//   dist: number;      
-//   compound: string;  
+//   in_pit: boolean;
+// }
+
+// export interface TrackPoint {
+//   x: number;
+//   y: number;
+// }
+
+// export interface Bounds {
+//   x_min: number;
+//   x_max: number;
+//   y_min: number;
+//   y_max: number;
+// }
+
+// export interface FinishLine {
+//   x: number;
+//   y: number;
+// }
+
+// export interface RaceTrackProps {
+//   drivers: Driver[];
+//   positions: Record<string, CarPosition>;
+//   trackOutline: TrackPoint[];
+//   bounds: Bounds;
+//   flag?: string;
+//   showNames?: boolean;
+//   finishLine?: FinishLine | null;
+// }
+
+// // ─── constants ──────────────────────────────────────────────────────────────
+
+// const VIEWBOX_W = 1000;
+// const VIEWBOX_H = 1000;
+// // Decreased padding from 40 to 25 to increase the overall size of the track slightly
+// const PADDING   = 25;
+
+// const FLAG_TRACK_COLOR: Record<string, string> = {
+//   clear:      "#4a4a4a",
+//   yellow:     "#ca8a04",
+//   red:        "#dc2626",
+//   safety_car: "#d97706",
+//   vsc:        "#d97706",
+//   vsc_ending: "#d97706",
+// };
+
+// // ─── projection ─────────────────────────────────────────────────────────────
+
+// const makeProjector = (bounds: Bounds) => {
+//   const dataW = bounds.x_max - bounds.x_min || 1;
+//   const dataH = bounds.y_max - bounds.y_min || 1;
+//   const availW = VIEWBOX_W - PADDING * 2;
+//   const availH = VIEWBOX_H - PADDING * 2;
+
+//   // Uniform scale — keeps circuit shape undistorted
+//   const scale   = Math.min(availW / dataW, availH / dataH);
+//   const offsetX = PADDING + (availW - dataW * scale) / 2;
+//   const offsetY = PADDING + (availH - dataH * scale) / 2;
+
+//   return (x: number, y: number) => ({
+//     x: offsetX + (x - bounds.x_min) * scale,
+//     // SVG y-axis is inverted vs telemetry y-axis
+//     y: offsetY + (dataH - (y - bounds.y_min)) * scale,
+//   });
+// };
+
+// // ─── finish line helper ──────────────────────────────────────────────────────
+
+// /**
+//  * Draws a short perpendicular stroke across the track at the finish line.
+//  * We find the two track-outline points nearest the finish-line coordinate,
+//  * compute the tangent direction between them, then draw a line 90° to it.
+//  */
+// const FinishLineMark = ({
+//   finishLine,
+//   trackOutline,
+//   project,
+// }: {
+//   finishLine: FinishLine;
+//   trackOutline: TrackPoint[];
+//   project: (x: number, y: number) => { x: number; y: number };
+// }) => {
+//   const { x: fx, y: fy } = project(finishLine.x, finishLine.y);
+
+//   // Find the two outline points nearest the projected finish point
+//   let best1 = 0, best2 = 1, bestDist = Infinity;
+//   const projected = trackOutline.map((p) => project(p.x, p.y));
+
+//   for (let i = 0; i < projected.length - 1; i++) {
+//     const mx = (projected[i].x + projected[i + 1].x) / 2;
+//     const my = (projected[i].y + projected[i + 1].y) / 2;
+//     const d  = Math.hypot(mx - fx, my - fy);
+//     if (d < bestDist) {
+//       bestDist = d;
+//       best1    = i;
+//       best2    = i + 1;
+//     }
+//   }
+
+//   // Tangent vector along the track at that point
+//   const tx = projected[best2].x - projected[best1].x;
+//   const ty = projected[best2].y - projected[best1].y;
+//   const len = Math.hypot(tx, ty) || 1;
+
+//   // Perpendicular = rotate tangent 90°
+//   const nx = -ty / len;
+//   const ny =  tx / len;
+
+//   const half = 18; // half-length of the finish line mark in SVG units
+//   const x1   = fx + nx * half;
+//   const y1   = fy + ny * half;
+//   const x2   = fx - nx * half;
+//   const y2   = fy - ny * half;
+
+//   return (
+//     <g>
+//       {/* Chequered flag effect: alternating black/white segments */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="5" strokeLinecap="round" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#000000" strokeWidth="5" strokeLinecap="round"
+//         strokeDasharray="4,4" />
+//       {/* Outer glow */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="9" strokeLinecap="round" opacity="0.15" />
+//     </g>
+//   );
+// };
+
+// // ─── component ──────────────────────────────────────────────────────────────
+
+// const RaceTrack = ({
+//   drivers,
+//   positions,
+//   trackOutline,
+//   bounds,
+//   flag       = "clear",
+//   showNames  = false,
+//   finishLine = null,
+// }: RaceTrackProps) => {
+//   const project = useMemo(() => makeProjector(bounds), [bounds]);
+
+//   // Build SVG path string once — only changes when track outline or bounds change
+//   const trackPathD = useMemo(() => {
+//     if (!trackOutline || trackOutline.length === 0) return "";
+//     const pts     = trackOutline.map((p) => project(p.x, p.y));
+//     const [first, ...rest] = pts;
+//     return rest.reduce(
+//       (acc, p) => `${acc} L ${p.x.toFixed(1)} ${p.y.toFixed(1)}`,
+//       `M ${first.x.toFixed(1)} ${first.y.toFixed(1)}`
+//     ) + " Z";
+//   }, [trackOutline, project]);
+
+//   const safeFlag   = (flag || "clear").toLowerCase().trim();
+//   const trackColor = FLAG_TRACK_COLOR[safeFlag] ?? FLAG_TRACK_COLOR.clear;
+
+//   // Fallback to the first coordinate of the track outline if no explicit finish line is provided
+//   const startLine = finishLine || (trackOutline?.length > 0 ? trackOutline[0] : null);
+
+//   return (
+//     <div className="w-full h-full">
+//       <svg
+//         viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H}`}
+//         className="w-full h-full"
+//         style={{ overflow: "visible" }}
+//       >
+//         {/* ── Track rendering — 3 layered strokes ── */}
+
+//         {/* Layer 1: wide outer glow — gives the "circuit lit up" feel */}
+//         <path
+//           d={trackPathD}
+//           stroke={trackColor}
+//           strokeWidth="28"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.18"
+//         />
+
+//         {/* Layer 2: main tarmac surface */}
+//         <path
+//           d={trackPathD}
+//           stroke={trackColor}
+//           strokeWidth="14"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.9"
+//         />
+
+//         {/* Layer 3: inner edge highlight — the bright centre line
+//             subtle white line that gives the track a 3D "lit from above" feel */}
+//         <path
+//           d={trackPathD}
+//           stroke="#ffffff"
+//           strokeWidth="2"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.12"
+//         />
+
+//         {/* ── Finish line ── */}
+//         {startLine && (
+//           <FinishLineMark
+//             finishLine={startLine}
+//             trackOutline={trackOutline}
+//             project={project}
+//           />
+//         )}
+
+//         {/* ── Cars ── */}
+//         {drivers.map((d) => {
+//           const pos = positions[d.code];
+//           if (!pos || isNaN(pos.x) || isNaN(pos.y)) return null;
+
+//           const { x, y } = project(pos.x, pos.y);
+//           const r        = pos.in_pit ? 5 : 8;
+//           const opacity  = pos.in_pit ? 0.55 : 1;
+
+//           return (
+//             <g
+//               key={d.code}
+//               opacity={opacity}
+//               style={{ transition: "opacity 0.3s" }}
+//             >
+//               {/* Drop shadow ring — makes cars pop off dark track */}
+//               <circle
+//                 cx={x} cy={y} r={r + 3}
+//                 fill="none"
+//                 stroke="#000000"
+//                 strokeWidth="3"
+//                 opacity="0.5"
+//                 style={{ transition: "cx 0.1s linear, cy 0.1s linear" }}
+//               />
+
+//               {/* Team color fill */}
+//               <circle
+//                 cx={x} cy={y} r={r}
+//                 fill={d.color}
+//                 stroke="#ffffff"
+//                 strokeWidth="1.5"
+//                 style={{ transition: "cx 0.1s linear, cy 0.1s linear" }}
+//               />
+
+//               {/* Driver name — only when toggled on via L key */}
+//               {showNames && (
+//                 <text
+//                   x={x + r + 5}
+//                   y={y + 4}
+//                   fontSize="11"
+//                   fontWeight="900"
+//                   fill="#ffffff"
+//                   stroke="#000000"
+//                   strokeWidth="3"
+//                   paintOrder="stroke"
+//                   style={{
+//                     transition:     "x 0.1s linear, y 0.1s linear",
+//                     userSelect:     "none",
+//                     pointerEvents:  "none",
+//                   }}
+//                 >
+//                   {d.code}
+//                 </text>
+//               )}
+//             </g>
+//           );
+//         })}
+//       </svg>
+//     </div>
+//   );
+// };
+
+// export default RaceTrack;
+
+// import { useMemo } from "react";
+
+// export interface Driver {
+//   code: string;
+//   color: string;
+// }
+
+// export interface CarPosition {
+//   x: number;
+//   y: number;
+//   lap: number | null;
+//   in_pit: boolean;
+// }
+
+// export interface TrackPoint {
+//   x: number;
+//   y: number;
+// }
+
+// export interface Bounds {
+//   x_min: number;
+//   x_max: number;
+//   y_min: number;
+//   y_max: number;
+// }
+
+// export interface FinishLine {
+//   x: number;
+//   y: number;
+// }
+
+// export interface RaceTrackProps {
+//   drivers: Driver[];
+//   positions: Record<string, CarPosition>;
+//   trackOutline: TrackPoint[];
+//   bounds: Bounds;
+//   flag?: string;
+//   showNames?: boolean;
+//   finishLine?: FinishLine | null;
+// }
+
+// // ─── constants ──────────────────────────────────────────────────────────────
+
+// const VIEWBOX_W = 1000;
+// const VIEWBOX_H = 1000;
+// // Decreased padding from 40 to 25 to increase the overall size of the track slightly
+// const PADDING   = 1;
+
+// const FLAG_TRACK_COLOR: Record<string, string> = {
+//   clear:      "#4a4a4a",
+//   yellow:     "#ca8a04",
+//   red:        "#dc2626",
+//   safety_car: "#d97706",
+//   vsc:        "#d97706",
+//   vsc_ending: "#d97706",
+// };
+
+// // ─── projection ─────────────────────────────────────────────────────────────
+
+// const makeProjector = (bounds: Bounds) => {
+//   const dataW = bounds.x_max - bounds.x_min || 1;
+//   const dataH = bounds.y_max - bounds.y_min || 1;
+//   const availW = VIEWBOX_W - PADDING * 2;
+//   const availH = VIEWBOX_H - PADDING * 2;
+
+//   // Uniform scale — keeps circuit shape undistorted
+//   const scale   = Math.min(availW / dataW, availH / dataH);
+//   const offsetX = PADDING + (availW - dataW * scale) / 2;
+//   const offsetY = PADDING + (availH - dataH * scale) / 2;
+
+//   return (x: number, y: number) => ({
+//     x: offsetX + (x - bounds.x_min) * scale,
+//     // SVG y-axis is inverted vs telemetry y-axis
+//     y: offsetY + (dataH - (y - bounds.y_min)) * scale,
+//   });
+// };
+
+// // ─── finish line helper ──────────────────────────────────────────────────────
+
+// /**
+//  * Draws a short perpendicular stroke across the track at the finish line.
+//  * We find the two track-outline points nearest the finish-line coordinate,
+//  * compute the tangent direction between them, then draw a line 90° to it.
+//  */
+// const FinishLineMark = ({
+//   finishLine,
+//   trackOutline,
+//   project,
+// }: {
+//   finishLine: FinishLine;
+//   trackOutline: TrackPoint[];
+//   project: (x: number, y: number) => { x: number; y: number };
+// }) => {
+//   const { x: fx, y: fy } = project(finishLine.x, finishLine.y);
+
+//   // Find the two outline points nearest the projected finish point
+//   let best1 = 0, best2 = 1, bestDist = Infinity;
+//   const projected = trackOutline.map((p) => project(p.x, p.y));
+
+//   for (let i = 0; i < projected.length - 1; i++) {
+//     const mx = (projected[i].x + projected[i + 1].x) / 2;
+//     const my = (projected[i].y + projected[i + 1].y) / 2;
+//     const d  = Math.hypot(mx - fx, my - fy);
+//     if (d < bestDist) {
+//       bestDist = d;
+//       best1    = i;
+//       best2    = i + 1;
+//     }
+//   }
+
+//   // Tangent vector along the track at that point
+//   const tx = projected[best2].x - projected[best1].x;
+//   const ty = projected[best2].y - projected[best1].y;
+//   const len = Math.hypot(tx, ty) || 1;
+
+//   // Perpendicular = rotate tangent 90°
+//   const nx = -ty / len;
+//   const ny =  tx / len;
+
+//   const half = 18; // half-length of the finish line mark in SVG units
+//   const x1   = fx + nx * half;
+//   const y1   = fy + ny * half;
+//   const x2   = fx - nx * half;
+//   const y2   = fy - ny * half;
+
+//   return (
+//     <g>
+//       {/* 1. Asphalt burn / shadow (gives the paint depth) */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#000000" strokeWidth="8" strokeLinecap="butt" opacity="0.5" />
+
+//       {/* 2. Base white paint layer */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="6" strokeLinecap="butt" />
+
+//       {/* 3. Crisp black squares (butt cap creates sharp checkerboard boxes) */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#111111" strokeWidth="6" strokeLinecap="butt"
+//         strokeDasharray="4,4" />
+
+//       {/* 4. Reflective paint highlight (only on the white squares) */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="2" strokeLinecap="butt"
+//         strokeDasharray="4,4" strokeDashoffset="4" opacity="0.9" />
+
+//       {/* 5. Soft ambient bloom/glow to match the rest of the track */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="14" strokeLinecap="round" opacity="0.12" />
+//     </g>
+//   );
+// };
+
+// // ─── component ──────────────────────────────────────────────────────────────
+
+// const RaceTrack = ({
+//   drivers,
+//   positions,
+//   trackOutline,
+//   bounds,
+//   flag       = "clear",
+//   showNames  = false,
+//   finishLine = null,
+// }: RaceTrackProps) => {
+//   const project = useMemo(() => makeProjector(bounds), [bounds]);
+
+//   // Build SVG path string once — only changes when track outline or bounds change
+//   const trackPathD = useMemo(() => {
+//     if (!trackOutline || trackOutline.length === 0) return "";
+//     const pts     = trackOutline.map((p) => project(p.x, p.y));
+//     const [first, ...rest] = pts;
+//     return rest.reduce(
+//       (acc, p) => `${acc} L ${p.x.toFixed(1)} ${p.y.toFixed(1)}`,
+//       `M ${first.x.toFixed(1)} ${first.y.toFixed(1)}`
+//     ) + " Z";
+//   }, [trackOutline, project]);
+
+//   const safeFlag   = (flag || "clear").toLowerCase().trim();
+//   const trackColor = FLAG_TRACK_COLOR[safeFlag] ?? FLAG_TRACK_COLOR.clear;
+
+//   // Fallback to the first coordinate of the track outline if no explicit finish line is provided
+//   const startLine = finishLine || (trackOutline?.length > 0 ? trackOutline[0] : null);
+
+//   return (
+//     <div className="w-full h-full">
+//       <svg
+//         viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H}`}
+//         className="w-full h-full"
+//         style={{ overflow: "visible" }}
+//       >
+//         {/* ── Track rendering — 3 layered strokes ── */}
+
+//         {/* Layer 1: wide outer glow — gives the "circuit lit up" feel */}
+//         <path
+//           d={trackPathD}
+//           stroke={trackColor}
+//           strokeWidth="28"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.18"
+//         />
+
+//         {/* Layer 2: main tarmac surface */}
+//         <path
+//           d={trackPathD}
+//           stroke={trackColor}
+//           strokeWidth="14"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.9"
+//         />
+
+//         {/* Layer 3: inner edge highlight — the bright centre line
+//             subtle white line that gives the track a 3D "lit from above" feel */}
+//         <path
+//           d={trackPathD}
+//           stroke="#ffffff"
+//           strokeWidth="2"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.12"
+//         />
+
+//         {/* ── Finish line ── */}
+//         {startLine && (
+//           <FinishLineMark
+//             finishLine={startLine}
+//             trackOutline={trackOutline}
+//             project={project}
+//           />
+//         )}
+
+//         {/* ── Cars ── */}
+//         {drivers.map((d) => {
+//           const pos = positions[d.code];
+//           if (!pos || isNaN(pos.x) || isNaN(pos.y)) return null;
+
+//           const { x, y } = project(pos.x, pos.y);
+//           const r        = pos.in_pit ? 5 : 8;
+//           const opacity  = pos.in_pit ? 0.55 : 1;
+
+//           return (
+//             <g
+//               key={d.code}
+//               opacity={opacity}
+//               style={{ transition: "opacity 0.3s" }}
+//             >
+//               {/* Drop shadow ring — makes cars pop off dark track */}
+//               <circle
+//                 cx={x} cy={y} r={r + 3}
+//                 fill="none"
+//                 stroke="#000000"
+//                 strokeWidth="3"
+//                 opacity="0.5"
+//                 style={{ transition: "cx 0.1s linear, cy 0.1s linear" }}
+//               />
+
+//               {/* Team color fill */}
+//               <circle
+//                 cx={x} cy={y} r={r}
+//                 fill={d.color}
+//                 stroke="#ffffff"
+//                 strokeWidth="1.5"
+//                 style={{ transition: "cx 0.1s linear, cy 0.1s linear" }}
+//               />
+
+//               {/* Driver name — only when toggled on via L key */}
+//               {showNames && (
+//                 <text
+//                   x={x + r + 5}
+//                   y={y + 4}
+//                   fontSize="11"
+//                   fontWeight="900"
+//                   fill="#ffffff"
+//                   stroke="#000000"
+//                   strokeWidth="3"
+//                   paintOrder="stroke"
+//                   style={{
+//                     transition:     "x 0.1s linear, y 0.1s linear",
+//                     userSelect:     "none",
+//                     pointerEvents:  "none",
+//                   }}
+//                 >
+//                   {d.code}
+//                 </text>
+//               )}
+//             </g>
+//           );
+//         })}
+//       </svg>
+//     </div>
+//   );
+// };
+
+// export default RaceTrack;\\
+// import { useMemo } from "react";
+
+// export interface Driver {
+//   code: string;
+//   color: string;
+// }
+
+// export interface CarPosition {
+//   x: number;
+//   y: number;
+//   lap: number | null;
+//   in_pit: boolean;
+// }
+
+// export interface TrackPoint {
+//   x: number;
+//   y: number;
+// }
+
+// export interface Bounds {
+//   x_min: number;
+//   x_max: number;
+//   y_min: number;
+//   y_max: number;
+// }
+
+// export interface FinishLine {
+//   x: number;
+//   y: number;
+// }
+
+// export interface RaceTrackProps {
+//   drivers: Driver[];
+//   positions: Record<string, CarPosition>;
+//   trackOutline: TrackPoint[];
+//   bounds: Bounds;
+//   flag?: string;
+//   showNames?: boolean;
+//   finishLine?: FinishLine | null;
+//   transitionMs?: number; // 🛠️ NEW: Dynamic sync for smooth gliding
+// }
+
+// // ─── constants ──────────────────────────────────────────────────────────────
+
+// const VIEWBOX_W = 1000;
+// const VIEWBOX_H = 1000;
+// const PADDING   = 1;
+
+// const FLAG_TRACK_COLOR: Record<string, string> = {
+//   clear:      "#4a4a4a",
+//   yellow:     "#ca8a04",
+//   red:        "#dc2626",
+//   safety_car: "#d97706",
+//   vsc:        "#d97706",
+//   vsc_ending: "#d97706",
+// };
+
+// // ─── projection ─────────────────────────────────────────────────────────────
+
+// const makeProjector = (bounds: Bounds) => {
+//   const dataW = bounds.x_max - bounds.x_min || 1;
+//   const dataH = bounds.y_max - bounds.y_min || 1;
+//   const availW = VIEWBOX_W - PADDING * 2;
+//   const availH = VIEWBOX_H - PADDING * 2;
+
+//   const scale   = Math.min(availW / dataW, availH / dataH);
+//   const offsetX = PADDING + (availW - dataW * scale) / 2;
+//   const offsetY = PADDING + (availH - dataH * scale) / 2;
+
+//   return (x: number, y: number) => ({
+//     x: offsetX + (x - bounds.x_min) * scale,
+//     y: offsetY + (dataH - (y - bounds.y_min)) * scale,
+//   });
+// };
+
+// // ─── finish line helper ──────────────────────────────────────────────────────
+
+// const FinishLineMark = ({
+//   finishLine,
+//   trackOutline,
+//   project,
+// }: {
+//   finishLine: FinishLine;
+//   trackOutline: TrackPoint[];
+//   project: (x: number, y: number) => { x: number; y: number };
+// }) => {
+//   const { x: fx, y: fy } = project(finishLine.x, finishLine.y);
+
+//   let best1 = 0, best2 = 1, bestDist = Infinity;
+//   const projected = trackOutline.map((p) => project(p.x, p.y));
+
+//   for (let i = 0; i < projected.length - 1; i++) {
+//     const mx = (projected[i].x + projected[i + 1].x) / 2;
+//     const my = (projected[i].y + projected[i + 1].y) / 2;
+//     const d  = Math.hypot(mx - fx, my - fy);
+//     if (d < bestDist) {
+//       bestDist = d;
+//       best1    = i;
+//       best2    = i + 1;
+//     }
+//   }
+
+//   const tx = projected[best2].x - projected[best1].x;
+//   const ty = projected[best2].y - projected[best1].y;
+//   const len = Math.hypot(tx, ty) || 1;
+
+//   const nx = -ty / len;
+//   const ny =  tx / len;
+
+//   const half = 18; 
+//   const x1   = fx + nx * half;
+//   const y1   = fy + ny * half;
+//   const x2   = fx - nx * half;
+//   const y2   = fy - ny * half;
+
+//   return (
+//     <g>
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#000000" strokeWidth="8" strokeLinecap="butt" opacity="0.5" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="6" strokeLinecap="butt" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#111111" strokeWidth="6" strokeLinecap="butt"
+//         strokeDasharray="4,4" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="2" strokeLinecap="butt"
+//         strokeDasharray="4,4" strokeDashoffset="4" opacity="0.9" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="14" strokeLinecap="round" opacity="0.12" />
+//     </g>
+//   );
+// };
+
+// // ─── component ──────────────────────────────────────────────────────────────
+
+// const RaceTrack = ({
+//   drivers,
+//   positions,
+//   trackOutline,
+//   bounds,
+//   flag       = "clear",
+//   showNames  = false,
+//   finishLine = null,
+//   transitionMs = 300, 
+// }: RaceTrackProps) => {
+//   const project = useMemo(() => makeProjector(bounds), [bounds]);
+
+//   const trackPathD = useMemo(() => {
+//     if (!trackOutline || trackOutline.length === 0) return "";
+//     const pts     = trackOutline.map((p) => project(p.x, p.y));
+//     const [first, ...rest] = pts;
+//     return rest.reduce(
+//       // 🛠️ FIX: Removed .toFixed(1) to stop the track line from rounding/shifting under the cars
+//       (acc, p) => `${acc} L ${p.x.toFixed(3)} ${p.y.toFixed(3)}`,
+//       `M ${first.x.toFixed(3)} ${first.y.toFixed(3)}`
+//     ) + " Z";
+//   }, [trackOutline, project]);
+
+//   const safeFlag   = (flag || "clear").toLowerCase().trim();
+//   const trackColor = FLAG_TRACK_COLOR[safeFlag] ?? FLAG_TRACK_COLOR.clear;
+//   const startLine = finishLine || (trackOutline?.length > 0 ? trackOutline[0] : null);
+
+//   // 🛠️ FIX: Perfect timing sync for CSS transitions
+//   const smoothTransform = `cx ${transitionMs}ms linear, cy ${transitionMs}ms linear`;
+//   const textTransform = `x ${transitionMs}ms linear, y ${transitionMs}ms linear`;
+
+//   return (
+//     <div className="w-full h-full">
+//       <svg
+//         viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H}`}
+//         className="w-full h-full"
+//         style={{ overflow: "visible" }}
+//       >
+//         <path d={trackPathD} stroke={trackColor} strokeWidth="28" fill="none" strokeLinejoin="round" strokeLinecap="round" opacity="0.18" />
+//         <path d={trackPathD} stroke={trackColor} strokeWidth="14" fill="none" strokeLinejoin="round" strokeLinecap="round" opacity="0.9" />
+//         <path d={trackPathD} stroke="#ffffff" strokeWidth="2" fill="none" strokeLinejoin="round" strokeLinecap="round" opacity="0.12" />
+
+//         {startLine && (
+//           <FinishLineMark finishLine={startLine} trackOutline={trackOutline} project={project} />
+//         )}
+
+//         {drivers.map((d) => {
+//           const pos = positions[d.code];
+//           if (!pos || isNaN(pos.x) || isNaN(pos.y)) return null;
+
+//           const { x, y } = project(pos.x, pos.y);
+//           // 🛠️ FIX: Locked all cars to size 8, regardless of pitting
+//           const r = 8;
+//           const opacity = pos.in_pit ? 0.55 : 1;
+
+//           return (
+//             <g key={d.code} opacity={opacity} style={{ transition: "opacity 0.2s" }}>
+//               <circle
+//                 cx={x} cy={y} r={r + 3}
+//                 fill="none" stroke="#000000" strokeWidth="3" opacity="0.5"
+//                 style={{ transition: smoothTransform }}
+//               />
+//               <circle
+//                 cx={x} cy={y} r={r}
+//                 fill={d.color} stroke="#ffffff" strokeWidth="1.5"
+//                 style={{ transition: smoothTransform }}
+//               />
+//               {showNames && (
+//                 <text
+//                   x={x + r + 5} y={y + 4}
+//                   fontSize="11" fontWeight="900" fill="#ffffff" stroke="#000000" strokeWidth="3" paintOrder="stroke"
+//                   style={{ transition: textTransform, userSelect: "none", pointerEvents: "none" }}
+//                 >
+//                   {d.code}
+//                 </text>
+//               )}
+//             </g>
+//           );
+//         })}
+//       </svg>
+//     </div>
+//   );
+// };
+
+// export default RaceTrack;
+
+// import { useMemo, useRef } from "react";
+
+// export interface Driver {
+//   code: string;
+//   color: string;
+// }
+
+// export interface CarPosition {
+//   x: number;
+//   y: number;
+//   lap: number | null;
+//   in_pit: boolean;
+// }
+
+// export interface TrackPoint {
+//   x: number;
+//   y: number;
+// }
+
+// export interface Bounds {
+//   x_min: number;
+//   x_max: number;
+//   y_min: number;
+//   y_max: number;
+// }
+
+// export interface FinishLine {
+//   x: number;
+//   y: number;
+// }
+
+// export interface RaceTrackProps {
+//   drivers: Driver[];
+//   positions: Record<string, CarPosition>;
+//   trackOutline: TrackPoint[];
+//   bounds: Bounds;
+//   flag?: string;
+//   showNames?: boolean;
+//   finishLine?: FinishLine | null;
+//   transitionMs?: number;
+// }
+
+// // ─── constants ───────────────────────────────────────────────────────────────
+
+// const VIEWBOX_W = 1000;
+// const VIEWBOX_H = 1000;
+// // Generous padding so cars at the edge are never clipped
+// const PADDING   = 40;
+
+// // Car sizes
+// const CAR_R_RACING = 8;
+// const CAR_R_PIT    = 5;
+
+// // Pit debounce: how many consecutive in_pit=true frames before we confirm pit state.
+// // Must match Leaderboard.tsx so both update at the same frame.
+// const PIT_CONFIRM_THRESHOLD = 3;
+
+// const FLAG_TRACK_COLOR: Record<string, string> = {
+//   clear:      "#5a5a5a",
+//   yellow:     "#ca8a04",
+//   red:        "#dc2626",
+//   safety_car: "#d97706",
+//   vsc:        "#d97706",
+//   vsc_ending: "#d97706",
+// };
+
+// // ─── projection ──────────────────────────────────────────────────────────────
+
+// const makeProjector = (bounds: Bounds) => {
+//   const dataW  = bounds.x_max - bounds.x_min || 1;
+//   const dataH  = bounds.y_max - bounds.y_min || 1;
+//   const availW = VIEWBOX_W - PADDING * 2;
+//   const availH = VIEWBOX_H - PADDING * 2;
+
+//   const scale   = Math.min(availW / dataW, availH / dataH);
+//   const offsetX = PADDING + (availW - dataW * scale) / 2;
+//   const offsetY = PADDING + (availH - dataH * scale) / 2;
+
+//   return (x: number, y: number) => ({
+//     x: offsetX + (x - bounds.x_min) * scale,
+//     // FastF1 Y increases upward, SVG Y increases downward — flip it
+//     y: offsetY + (dataH - (y - bounds.y_min)) * scale,
+//   });
+// };
+
+// // ─── finish line ─────────────────────────────────────────────────────────────
+
+// const FinishLineMark = ({
+//   finishLine,
+//   trackOutline,
+//   project,
+// }: {
+//   finishLine: FinishLine;
+//   trackOutline: TrackPoint[];
+//   project: (x: number, y: number) => { x: number; y: number };
+// }) => {
+//   const { x: fx, y: fy } = project(finishLine.x, finishLine.y);
+//   const projected = trackOutline.map((p) => project(p.x, p.y));
+
+//   let best1 = 0, best2 = 1, bestDist = Infinity;
+//   for (let i = 0; i < projected.length - 1; i++) {
+//     const mx = (projected[i].x + projected[i + 1].x) / 2;
+//     const my = (projected[i].y + projected[i + 1].y) / 2;
+//     const d  = Math.hypot(mx - fx, my - fy);
+//     if (d < bestDist) { bestDist = d; best1 = i; best2 = i + 1; }
+//   }
+
+//   const tx  = projected[best2].x - projected[best1].x;
+//   const ty  = projected[best2].y - projected[best1].y;
+//   const len = Math.hypot(tx, ty) || 1;
+//   const nx  = -ty / len;
+//   const ny  =  tx / len;
+//   const half = 20;
+
+//   const x1 = fx + nx * half, y1 = fy + ny * half;
+//   const x2 = fx - nx * half, y2 = fy - ny * half;
+
+//   return (
+//     <g>
+//       <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#000" strokeWidth="10" strokeLinecap="butt" opacity="0.4" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#fff" strokeWidth="7"  strokeLinecap="butt" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#111" strokeWidth="7"  strokeLinecap="butt" strokeDasharray="5,5" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#fff" strokeWidth="2"  strokeLinecap="butt" strokeDasharray="5,5" strokeDashoffset="5" opacity="0.9" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#fff" strokeWidth="16" strokeLinecap="round" opacity="0.08" />
+//     </g>
+//   );
+// };
+
+// // ─── main component ──────────────────────────────────────────────────────────
+
+// const RaceTrack = ({
+//   drivers,
+//   positions,
+//   trackOutline,
+//   bounds,
+//   flag         = "clear",
+//   showNames    = false,
+//   finishLine   = null,
+//   transitionMs = 300,
+// }: RaceTrackProps) => {
+//   const project = useMemo(() => makeProjector(bounds), [bounds]);
+
+//   // ── debounced pit state (mirrors Leaderboard.tsx logic exactly) ──
+//   const pitCounterRef = useRef<Map<string, number>>(new Map());
+
+//   const trackPathD = useMemo(() => {
+//     if (!trackOutline || trackOutline.length === 0) return "";
+//     const pts          = trackOutline.map((p) => project(p.x, p.y));
+//     const [first, ...rest] = pts;
+//     return (
+//       rest.reduce(
+//         (acc, p) => `${acc} L ${p.x.toFixed(3)} ${p.y.toFixed(3)}`,
+//         `M ${first.x.toFixed(3)} ${first.y.toFixed(3)}`
+//       ) + " Z"
+//     );
+//   }, [trackOutline, project]);
+
+//   const safeFlag   = (flag || "clear").toLowerCase().trim();
+//   const trackColor = FLAG_TRACK_COLOR[safeFlag] ?? FLAG_TRACK_COLOR.clear;
+//   const startLine  = finishLine || (trackOutline?.length > 0 ? trackOutline[0] : null);
+
+//   const smoothTransform = `cx ${transitionMs}ms linear, cy ${transitionMs}ms linear`;
+//   const textTransform   = `x ${transitionMs}ms linear, y ${transitionMs}ms linear`;
+//   const sizeTransition  = `r 200ms ease-in-out`;
+
+//   // Build confirmed pit states for all drivers this render
+//   const confirmedPitMap = useMemo(() => {
+//     const map = new Map<string, boolean>();
+//     drivers.forEach((d) => {
+//       const pos      = positions[d.code];
+//       const rawInPit = pos?.in_pit || false;
+//       const prev     = pitCounterRef.current.get(d.code) ?? 0;
+//       const next     = rawInPit ? prev + 1 : 0;
+//       pitCounterRef.current.set(d.code, next);
+//       map.set(d.code, next >= PIT_CONFIRM_THRESHOLD);
+//     });
+//     return map;
+//   }, [drivers, positions]);
+
+//   return (
+//     <div className="w-full h-full">
+//       <svg
+//         viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H}`}
+//         className="w-full h-full"
+//         style={{ overflow: "visible" }}
+//       >
+//         {/* ── track layers ── */}
+//         {/* Outer glow */}
+//         <path d={trackPathD} stroke={trackColor} strokeWidth="38" fill="none"
+//           strokeLinejoin="round" strokeLinecap="round" opacity="0.10" />
+//         {/* Road body — wider than before so car dots sit inside it */}
+//         <path d={trackPathD} stroke={trackColor} strokeWidth="22" fill="none"
+//           strokeLinejoin="round" strokeLinecap="round" opacity="0.85" />
+//         {/* Kerb highlight */}
+//         <path d={trackPathD} stroke="#ffffff" strokeWidth="2" fill="none"
+//           strokeLinejoin="round" strokeLinecap="round" opacity="0.08" />
+
+//         {startLine && (
+//           <FinishLineMark
+//             finishLine={startLine}
+//             trackOutline={trackOutline}
+//             project={project}
+//           />
+//         )}
+
+//         {/* ── cars ── */}
+//         {drivers.map((d) => {
+//           const pos = positions[d.code];
+//           if (!pos || isNaN(pos.x) || isNaN(pos.y)) return null;
+
+//           const { x, y }   = project(pos.x, pos.y);
+//           const isPitting   = confirmedPitMap.get(d.code) ?? false;
+//           const r           = isPitting ? CAR_R_PIT : CAR_R_RACING;
+
+//           return (
+//             <g key={d.code}>
+//               {/* ── shadow ring (always present, gives depth) ── */}
+//               <circle
+//                 cx={x} cy={y} r={r + 4}
+//                 fill="none" stroke="#000000" strokeWidth="4" opacity="0.35"
+//                 style={{ transition: `${smoothTransform}, ${sizeTransition}` }}
+//               />
+
+//               {/* ── pit indicator ring (only visible when pitting) ── */}
+//               {isPitting && (
+//                 <circle
+//                   cx={x} cy={y} r={r + 7}
+//                   fill="none"
+//                   stroke="#facc15"
+//                   strokeWidth="1.5"
+//                   strokeDasharray="3 3"
+//                   opacity="0.7"
+//                   style={{ transition: smoothTransform }}
+//                 />
+//               )}
+
+//               {/* ── car body ── */}
+//               <circle
+//                 cx={x} cy={y} r={r}
+//                 fill={isPitting ? "#4a4a4a" : d.color}
+//                 stroke={isPitting ? "#888888" : "#ffffff"}
+//                 strokeWidth={isPitting ? 1 : 1.5}
+//                 opacity={isPitting ? 0.6 : 1}
+//                 style={{ transition: `${smoothTransform}, ${sizeTransition}, opacity 200ms ease-in-out` }}
+//               />
+
+//               {/* ── driver label ── */}
+//               {showNames && (
+//                 <text
+//                   x={x + r + 5} y={y + 4}
+//                   fontSize="11" fontWeight="900"
+//                   fill={isPitting ? "#888" : "#ffffff"}
+//                   stroke="#000000" strokeWidth="3" paintOrder="stroke"
+//                   style={{
+//                     transition: textTransform,
+//                     userSelect: "none",
+//                     pointerEvents: "none",
+//                   }}
+//                 >
+//                   {d.code}
+//                 </text>
+//               )}
+//             </g>
+//           );
+//         })}
+//       </svg>
+//     </div>
+//   );
+// };
+
+// export default RaceTrack;
+
+// import { useMemo } from "react";
+
+// export interface Driver {
+//   code: string;
+//   color: string;
+// }
+
+// export interface CarPosition {
+//   x: number;
+//   y: number;
+//   lap: number | null;
+//   in_pit: boolean;
 // }
 
 // export interface TrackPoint {
@@ -1024,24 +1543,50 @@
 
 // export interface RaceTrackProps {
 //   drivers: Driver[];
-//   positions: Record<string, CarPosition>; 
+//   positions: Record<string, CarPosition>;
 //   trackOutline: TrackPoint[];
 //   bounds: Bounds;
+//   flag?: string; 
 // }
 
-// const VIEWBOX_WIDTH = 800;
-// const VIEWBOX_HEIGHT = 600;
-// const PADDING = 60; 
+// const VIEWBOX_WIDTH = 1000;
+// const VIEWBOX_HEIGHT = 1000;
+// const PADDING = 45; 
+
+// const FLAG_COLORS: Record<string, string> = {
+//   clear: "#525252", 
+//   "1": "#525252",
+//   yellow: "#e6c900",
+//   "2": "#e6c900",
+//   red: "#dc2626",
+//   "5": "#dc2626",
+//   safety_car: "#f59e0b",
+//   "4": "#f59e0b",
+//   vsc: "#f59e0b",
+//   "6": "#f59e0b",
+//   vsc_ending: "#f59e0b",
+//   "7": "#f59e0b",
+// };
+
+// const FLAG_LABELS: Record<string, string> = {
+//   yellow: "YELLOW FLAG",
+//   "2": "YELLOW FLAG",
+//   red: "RED FLAG",
+//   "5": "RED FLAG",
+//   safety_car: "SAFETY CAR DEPLOYED",
+//   "4": "SAFETY CAR DEPLOYED",
+//   vsc: "VIRTUAL SAFETY CAR",
+//   "6": "VIRTUAL SAFETY CAR",
+//   vsc_ending: "VSC ENDING",
+//   "7": "VSC ENDING",
+// };
 
 // const makeProjector = (bounds: Bounds) => {
 //   const dataWidth = bounds.x_max - bounds.x_min || 1;
 //   const dataHeight = bounds.y_max - bounds.y_min || 1;
-
 //   const availableWidth = VIEWBOX_WIDTH - PADDING * 2;
 //   const availableHeight = VIEWBOX_HEIGHT - PADDING * 2;
-
 //   const scale = Math.min(availableWidth / dataWidth, availableHeight / dataHeight);
-
 //   const offsetX = PADDING + (availableWidth - dataWidth * scale) / 2;
 //   const offsetY = PADDING + (availableHeight - dataHeight * scale) / 2;
 
@@ -1052,7 +1597,7 @@
 //   };
 // };
 
-// const RaceTrack = ({ drivers, positions, trackOutline, bounds }: RaceTrackProps) => {
+// const RaceTrack = ({ drivers, positions, trackOutline, bounds, flag }: RaceTrackProps) => {
 //   const project = useMemo(() => makeProjector(bounds), [bounds]);
 
 //   const trackPathD = useMemo(() => {
@@ -1066,334 +1611,7262 @@
 //     return `${path} Z`;
 //   }, [trackOutline, project]);
 
-//   return (
-//     <div className="w-full h-full flex items-center justify-center font-sans">
-//       <div className="w-full h-full relative p-8">
-//         <svg viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`} className="w-full h-full drop-shadow-2xl">
-          
-//           {/* 1. Track Outer Border / Rumble Strip Boundary */}
-//           <path d={trackPathD} stroke="#171717" strokeWidth="18" fill="none" strokeLinejoin="round" />
-          
-//           {/* 2. Track Surface (Asphalt) */}
-//           <path d={trackPathD} stroke="#404040" strokeWidth="14" fill="none" strokeLinejoin="round" />
-          
-//           {/* 3. Subtle Center Racing Line */}
-//           <path d={trackPathD} stroke="#737373" strokeWidth="1" strokeDasharray="6 6" fill="none" strokeLinejoin="round" opacity="0.4" />
-
-//           {/* Cars Only - No Text Labels */}
-//           {drivers.map((d) => {
-//             const pos = positions[d.code];
-//             // If data is entirely missing for this frame, don't render the car
-//             if (!pos || isNaN(pos.x)) return null; 
-
-//             const { x, y } = project(pos.x, pos.y);
-//             const isActive = pos.lap !== null;
-
-//             return (
-//               <circle
-//                 key={d.code}
-//                 cx={x}
-//                 cy={y}
-//                 r="6"
-//                 fill={d.color}
-//                 stroke="#ffffff"
-//                 strokeWidth="1.5"
-//                 opacity={isActive ? 1 : 0.2}
-//                 style={{
-//                   transition: "cx 0.1s linear, cy 0.1s linear, opacity 0.3s ease",
-//                 }}
-//               />
-//             );
-//           })}
-//         </svg>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default RaceTrack;
-
-// import { useMemo } from "react";
-
-// export interface Driver {
-//   code: string;
-//   color: string;
-// }
-
-// export interface CarPosition {
-//   x: number;
-//   y: number;
-//   lap: number | null;
-//   dist: number;      
-//   compound: string;  
-// }
-
-// export interface TrackPoint {
-//   x: number;
-//   y: number;
-// }
-
-// export interface Bounds {
-//   x_min: number;
-//   x_max: number;
-//   y_min: number;
-//   y_max: number;
-// }
-
-// export interface RaceTrackProps {
-//   drivers: Driver[];
-//   positions: Record<string, CarPosition>; 
-//   trackOutline: TrackPoint[];
-//   bounds: Bounds;
-// }
-
-// // CHANGED: Perfect square canvas ensures safe rotation without clipping bounds
-// const VIEWBOX_SIZE = 800; 
-// // CHANGED: Reduced padding from 60 to 20 to make the track massive on screen
-// const PADDING = 20; 
-
-// const makeProjector = (bounds: Bounds) => {
-//   const dataWidth = bounds.x_max - bounds.x_min || 1;
-//   const dataHeight = bounds.y_max - bounds.y_min || 1;
-
-//   const availableSize = VIEWBOX_SIZE - PADDING * 2;
-
-//   const scale = Math.min(availableSize / dataWidth, availableSize / dataHeight);
-
-//   const offsetX = PADDING + (availableSize - dataWidth * scale) / 2;
-//   const offsetY = PADDING + (availableSize - dataHeight * scale) / 2;
-
-//   return (x: number, y: number) => {
-//     const svgX = offsetX + (x - bounds.x_min) * scale;
-//     const svgY = offsetY + (dataHeight - (y - bounds.y_min)) * scale;
-//     return { x: svgX, y: svgY };
-//   };
-// };
-
-// const RaceTrack = ({ drivers, positions, trackOutline, bounds }: RaceTrackProps) => {
-//   const project = useMemo(() => makeProjector(bounds), [bounds]);
-
-//   const trackPathD = useMemo(() => {
-//     if (!trackOutline || trackOutline.length === 0) return "";
-//     const points = trackOutline.map((p) => project(p.x, p.y));
-//     const [first, ...rest] = points;
-//     const path = rest.reduce(
-//       (acc, p) => `${acc} L ${p.x.toFixed(2)} ${p.y.toFixed(2)}`,
-//       `M ${first.x.toFixed(2)} ${first.y.toFixed(2)}`
-//     );
-//     return `${path} Z`;
-//   }, [trackOutline, project]);
+//   const safeFlag = (flag || "clear").toString().toLowerCase().trim();
+//   const trackColor = FLAG_COLORS[safeFlag] || FLAG_COLORS.clear;
+//   const isFlagActive = safeFlag !== "clear" && safeFlag !== "1" && !!FLAG_LABELS[safeFlag];
 
 //   return (
-//     <div className="w-full h-full flex items-center justify-center font-sans">
-//       <div className="w-full h-full relative flex items-center justify-center p-4">
-//         {/* CHANGED: Added -rotate-90 to flip the GPS coordinates to TV Broadcast orientation */}
-//         <svg 
-//           viewBox={`0 0 ${VIEWBOX_SIZE} ${VIEWBOX_SIZE}`} 
-//           className="w-full h-full max-h-[85vh] drop-shadow-2xl transform -rotate-92"
-//         >
-//           {/* Track Outer Border */}
-//           <path d={trackPathD} stroke="#171717" strokeWidth="16" fill="none" strokeLinejoin="round" />
-          
-//           {/* Track Surface (Asphalt) */}
-//           <path d={trackPathD} stroke="#404040" strokeWidth="12" fill="none" strokeLinejoin="round" />
-          
-//           {/* Center Racing Line */}
-//           <path d={trackPathD} stroke="#737373" strokeWidth="1" strokeDasharray="6 6" fill="none" strokeLinejoin="round" opacity="0.4" />
-
-//           {/* Cars */}
-//           {drivers.map((d) => {
-//             const pos = positions[d.code];
-//             if (!pos || isNaN(pos.x)) return null; 
-
-//             const { x, y } = project(pos.x, pos.y);
-//             const isActive = pos.lap !== null;
-
-//             return (
-//               <circle
-//                 key={d.code}
-//                 cx={x}
-//                 cy={y}
-//                 r="6"
-//                 fill={d.color}
-//                 stroke="#ffffff"
-//                 strokeWidth="1.5"
-//                 opacity={isActive ? 1 : 0.2}
-//                 style={{
-//                   transition: "cx 0.1s linear, cy 0.1s linear, opacity 0.3s ease",
-//                 }}
-//               />
-//             );
-//           })}
-//         </svg>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default RaceTrack;
-
-// import { useMemo } from "react";
-
-// export interface Driver {
-//   code: string;
-//   color: string;
-// }
-
-// export interface CarPosition {
-//   x: number;
-//   y: number;
-//   lap: number | null;
-//   dist: number;      
-//   compound: string;  
-// }
-
-// export interface TrackPoint {
-//   x: number;
-//   y: number;
-// }
-
-// export interface Bounds {
-//   x_min: number;
-//   x_max: number;
-//   y_min: number;
-//   y_max: number;
-// }
-
-// export interface RaceTrackProps {
-//   drivers: Driver[];
-//   positions: Record<string, CarPosition>; 
-//   trackOutline: TrackPoint[];
-//   bounds: Bounds;
-// }
-
-// const VIEWBOX_SIZE = 800; 
-// // CHANGED: Reduced padding to 10 to make the track massively fill the window
-// const PADDING = 13; 
-
-// const makeProjector = (bounds: Bounds) => {
-//   const dataWidth = bounds.x_max - bounds.x_min || 1;
-//   const dataHeight = bounds.y_max - bounds.y_min || 1;
-
-//   const availableSize = VIEWBOX_SIZE - PADDING * 2;
-//   const scale = Math.min(availableSize / dataWidth, availableSize / dataHeight);
-
-//   const offsetX = PADDING + (availableSize - dataWidth * scale) / 2;
-//   const offsetY = PADDING + (availableSize - dataHeight * scale) / 2;
-
-//   return (x: number, y: number) => {
-//     const svgX = offsetX + (x - bounds.x_min) * scale;
-//     const svgY = offsetY + (dataHeight - (y - bounds.y_min)) * scale;
-//     return { x: svgX, y: svgY };
-//   };
-// };
-
-// const RaceTrack = ({ drivers, positions, trackOutline, bounds }: RaceTrackProps) => {
-//   const project = useMemo(() => makeProjector(bounds), [bounds]);
-
-//   // Calculate the track path AND the Finish Line coordinates
-//   const { trackPathD, finishLine } = useMemo(() => {
-//     if (!trackOutline || trackOutline.length === 0) return { trackPathD: "", finishLine: null };
-    
-//     const points = trackOutline.map((p) => project(p.x, p.y));
-//     const [first, ...rest] = points;
-    
-//     const path = rest.reduce(
-//       (acc, p) => `${acc} L ${p.x.toFixed(2)} ${p.y.toFixed(2)}`,
-//       `M ${first.x.toFixed(2)} ${first.y.toFixed(2)}`
-//     );
-
-//     // FINISH LINE MATH: Get the angle of the first few meters of the track
-//     let finishLine = null;
-//     if (points.length > 1) {
-//       const p1 = points[0];
-//       const p2 = points[1];
+//     <div className="w-full h-full flex items-center justify-center relative">
       
-//       const dx = p2.x - p1.x;
-//       const dy = p2.y - p1.y;
-//       const len = Math.sqrt(dx * dx + dy * dy);
-      
-//       // Calculate the perpendicular normal vector
-//       const nx = -dy / len;
-//       const ny = dx / len;
-      
-//       // Width of the finish line extending outward
-//       const width = 11; 
-      
-//       finishLine = {
-//         x1: p1.x + nx * width,
-//         y1: p1.y + ny * width,
-//         x2: p1.x - nx * width,
-//         y2: p1.y - ny * width,
-//       };
-//     }
-
-//     return { trackPathD: `${path} Z`, finishLine };
-//   }, [trackOutline, project]);
-
-//   return (
-//     <div className="w-full h-full flex items-center justify-center font-sans">
-//       {/* Reduced outer padding to let it stretch closer to the edges */}
-//       <div className="w-full h-full relative flex items-center justify-center p-2">
-//         <svg 
-//           viewBox={`0 0 ${VIEWBOX_SIZE} ${VIEWBOX_SIZE}`} 
-//           // Removed max-h constraint so it scales as big as possible
-//           className="w-full h-full drop-shadow-2xl transform -rotate-92"
-//         >
-          
-//           {/* 1. Bright Outer Boundary */}
-//           <path d={trackPathD} stroke="#737373" strokeWidth="22" fill="none" strokeLinejoin="round" />
-          
-//           {/* 2. Dark/Blank Inner Road (Matches the background exactly) */}
-//           <path d={trackPathD} stroke="#0a0a0a" strokeWidth="18" fill="none" strokeLinejoin="round" />
-          
-//           {/* 3. Subtle Center Racing Line inside the blank road */}
-//           <path d={trackPathD} stroke="#333333" strokeWidth="1" strokeDasharray="4 4" fill="none" strokeLinejoin="round" />
-
-//           {/* 4. The Start / Finish Line */}
-//           {finishLine && (
-//             <line 
-//               x1={finishLine.x1} y1={finishLine.y1} 
-//               x2={finishLine.x2} y2={finishLine.y2} 
-//               stroke="#ffffff" 
-//               strokeWidth="3" 
-//               strokeDasharray="3 3" // Gives it a subtle checkered flag vibe
+//       {/* 🛠️ FIX: Sleek, F1 Broadcast Style Flag Banner */}
+//       {isFlagActive && (
+//         <div className="absolute top-8 left-1/2 -translate-x-1/2 z-[100] flex items-stretch bg-neutral-900/95 backdrop-blur-md border border-neutral-700/50 rounded-lg shadow-[0_10px_40px_rgba(0,0,0,0.8)] overflow-hidden">
+//           <div className="w-2" style={{ backgroundColor: trackColor }} />
+//           <div className="px-6 py-2.5 flex items-center gap-3">
+//             <span 
+//               className="w-3 h-3 rounded-full animate-pulse" 
+//               style={{ backgroundColor: trackColor, boxShadow: `0 0 10px ${trackColor}` }} 
 //             />
-//           )}
+//             <span className="font-black text-sm tracking-widest text-white uppercase">
+//               {FLAG_LABELS[safeFlag]}
+//             </span>
+//           </div>
+//         </div>
+//       )}
 
-//           {/* Cars - Floating perfectly inside the blank boundaries */}
-//           {drivers.map((d) => {
-//             const pos = positions[d.code];
-//             if (!pos || isNaN(pos.x)) return null; 
+//       <svg viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`} className="w-full h-full drop-shadow-2xl">
+//         <path d={trackPathD} stroke={trackColor} strokeWidth="24" fill="none" strokeLinejoin="round" opacity="0.3" />
+//         <path d={trackPathD} stroke={trackColor} strokeWidth="12" fill="none" strokeLinejoin="round" />
+//         <path d={trackPathD} stroke="#ffffff" strokeWidth="1.5" strokeDasharray="4,6" fill="none" strokeLinejoin="round" opacity="0.4" />
 
-//             const { x, y } = project(pos.x, pos.y);
-//             const isActive = pos.lap !== null;
-
-//             return (
+//         {drivers.map((d) => {
+//           const pos = positions[d.code];
+//           if (!pos || isNaN(pos.x)) return null;
+          
+//           const { x, y } = project(pos.x, pos.y);
+//           return (
+//             <g key={d.code} style={{ transition: "transform 0.1s linear" }}>
 //               <circle
-//                 key={d.code}
-//                 cx={x}
-//                 cy={y}
-//                 r="6"
+//                 cx={x} cy={y}
+//                 r="8"
 //                 fill={d.color}
-//                 stroke="#ffffff"
+//                 stroke="#fff"
 //                 strokeWidth="1.5"
-//                 opacity={isActive ? 1 : 0.2}
-//                 style={{
-//                   transition: "cx 0.1s linear, cy 0.1s linear, opacity 0.3s ease",
-//                 }}
+//                 style={{ transition: "cx 0.1s linear, cy 0.1s linear" }}
 //               />
-//             );
-//           })}
-//         </svg>
-//       </div>
+//               <text
+//                 x={x + 12} y={y + 3}
+//                 fontSize="11"
+//                 fontWeight="900"
+//                 fill="#fff"
+//                 className="drop-shadow-md"
+//                 style={{ transition: "x 0.1s linear, y 0.1s linear" }}
+//               >
+//                 {d.code}
+//               </text>
+//             </g>
+//           );
+//         })}
+//       </svg>
 //     </div>
 //   );
 // };
 
 // export default RaceTrack;
 
-import { useMemo } from "react";
+// import { useMemo } from "react";
+
+// export interface Driver {
+//   code: string;
+//   color: string;
+// }
+
+// export interface CarPosition {
+//   x: number;
+//   y: number;
+//   lap: number | null;
+//   in_pit: boolean;
+// }
+
+// export interface TrackPoint {
+//   x: number;
+//   y: number;
+// }
+
+// export interface Bounds {
+//   x_min: number;
+//   x_max: number;
+//   y_min: number;
+//   y_max: number;
+// }
+
+// export interface FinishLine {
+//   x: number;
+//   y: number;
+// }
+
+// export interface RaceTrackProps {
+//   drivers: Driver[];
+//   positions: Record<string, CarPosition>;
+//   trackOutline: TrackPoint[];
+//   bounds: Bounds;
+//   flag?: string;
+//   showNames?: boolean;
+//   finishLine?: FinishLine | null;
+// }
+
+// // ─── constants ──────────────────────────────────────────────────────────────
+
+// const VIEWBOX_W = 1000;
+// const VIEWBOX_H = 1000;
+// const PADDING   = 40;
+
+// const FLAG_TRACK_COLOR: Record<string, string> = {
+//   clear:      "#4a4a4a",
+//   yellow:     "#ca8a04",
+//   red:        "#dc2626",
+//   safety_car: "#d97706",
+//   vsc:        "#d97706",
+//   vsc_ending: "#d97706",
+// };
+
+// // ─── projection ─────────────────────────────────────────────────────────────
+
+// const makeProjector = (bounds: Bounds) => {
+//   const dataW = bounds.x_max - bounds.x_min || 1;
+//   const dataH = bounds.y_max - bounds.y_min || 1;
+//   const availW = VIEWBOX_W - PADDING * 2;
+//   const availH = VIEWBOX_H - PADDING * 2;
+
+//   // Uniform scale — keeps circuit shape undistorted
+//   const scale   = Math.min(availW / dataW, availH / dataH);
+//   const offsetX = PADDING + (availW - dataW * scale) / 2;
+//   const offsetY = PADDING + (availH - dataH * scale) / 2;
+
+//   return (x: number, y: number) => ({
+//     x: offsetX + (x - bounds.x_min) * scale,
+//     // SVG y-axis is inverted vs telemetry y-axis
+//     y: offsetY + (dataH - (y - bounds.y_min)) * scale,
+//   });
+// };
+
+// // ─── finish line helper ──────────────────────────────────────────────────────
+
+// /**
+//  * Draws a short perpendicular stroke across the track at the finish line.
+//  * We find the two track-outline points nearest the finish-line coordinate,
+//  * compute the tangent direction between them, then draw a line 90° to it.
+//  */
+// const FinishLineMark = ({
+//   finishLine,
+//   trackOutline,
+//   project,
+// }: {
+//   finishLine: FinishLine;
+//   trackOutline: TrackPoint[];
+//   project: (x: number, y: number) => { x: number; y: number };
+// }) => {
+//   const { x: fx, y: fy } = project(finishLine.x, finishLine.y);
+
+//   // Find the two outline points nearest the projected finish point
+//   let best1 = 0, best2 = 1, bestDist = Infinity;
+//   const projected = trackOutline.map((p) => project(p.x, p.y));
+
+//   for (let i = 0; i < projected.length - 1; i++) {
+//     const mx = (projected[i].x + projected[i + 1].x) / 2;
+//     const my = (projected[i].y + projected[i + 1].y) / 2;
+//     const d  = Math.hypot(mx - fx, my - fy);
+//     if (d < bestDist) {
+//       bestDist = d;
+//       best1    = i;
+//       best2    = i + 1;
+//     }
+//   }
+
+//   // Tangent vector along the track at that point
+//   const tx = projected[best2].x - projected[best1].x;
+//   const ty = projected[best2].y - projected[best1].y;
+//   const len = Math.hypot(tx, ty) || 1;
+
+//   // Perpendicular = rotate tangent 90°
+//   const nx = -ty / len;
+//   const ny =  tx / len;
+
+//   const half = 18; // half-length of the finish line mark in SVG units
+//   const x1   = fx + nx * half;
+//   const y1   = fy + ny * half;
+//   const x2   = fx - nx * half;
+//   const y2   = fy - ny * half;
+
+//   return (
+//     <g>
+//       {/* Chequered flag effect: alternating black/white segments */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="5" strokeLinecap="round" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#000000" strokeWidth="5" strokeLinecap="round"
+//         strokeDasharray="4,4" />
+//       {/* Outer glow */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="9" strokeLinecap="round" opacity="0.15" />
+//     </g>
+//   );
+// };
+
+// // ─── component ──────────────────────────────────────────────────────────────
+
+// const RaceTrack = ({
+//   drivers,
+//   positions,
+//   trackOutline,
+//   bounds,
+//   flag       = "clear",
+//   showNames  = false,
+//   finishLine = null,
+// }: RaceTrackProps) => {
+//   const project = useMemo(() => makeProjector(bounds), [bounds]);
+
+//   // Build SVG path string once — only changes when track outline or bounds change
+//   const trackPathD = useMemo(() => {
+//     if (!trackOutline || trackOutline.length === 0) return "";
+//     const pts     = trackOutline.map((p) => project(p.x, p.y));
+//     const [first, ...rest] = pts;
+//     return rest.reduce(
+//       (acc, p) => `${acc} L ${p.x.toFixed(1)} ${p.y.toFixed(1)}`,
+//       `M ${first.x.toFixed(1)} ${first.y.toFixed(1)}`
+//     ) + " Z";
+//   }, [trackOutline, project]);
+
+//   const safeFlag   = (flag || "clear").toLowerCase().trim();
+//   const trackColor = FLAG_TRACK_COLOR[safeFlag] ?? FLAG_TRACK_COLOR.clear;
+
+//   return (
+//     <div className="w-full h-full">
+//       <svg
+//         viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H}`}
+//         className="w-full h-full"
+//         style={{ overflow: "visible" }}
+//       >
+//         {/* ── Track rendering — 3 layered strokes ── */}
+
+//         {/* Layer 1: wide outer glow — gives the "circuit lit up" feel */}
+//         <path
+//           d={trackPathD}
+//           stroke={trackColor}
+//           strokeWidth="28"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.18"
+//         />
+
+//         {/* Layer 2: main tarmac surface */}
+//         <path
+//           d={trackPathD}
+//           stroke={trackColor}
+//           strokeWidth="14"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.9"
+//         />
+
+//         {/* Layer 3: inner edge highlight — the bright centre line
+//             subtle white line that gives the track a 3D "lit from above" feel */}
+//         <path
+//           d={trackPathD}
+//           stroke="#ffffff"
+//           strokeWidth="2"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.12"
+//         />
+
+//         {/* ── Finish line ── */}
+//         {finishLine && (
+//           <FinishLineMark
+//             finishLine={finishLine}
+//             trackOutline={trackOutline}
+//             project={project}
+//           />
+//         )}
+
+//         {/* ── Cars ── */}
+//         {drivers.map((d) => {
+//           const pos = positions[d.code];
+//           if (!pos || isNaN(pos.x) || isNaN(pos.y)) return null;
+
+//           const { x, y } = project(pos.x, pos.y);
+//           const r        = pos.in_pit ? 5 : 8;
+//           const opacity  = pos.in_pit ? 0.55 : 1;
+
+//           return (
+//             <g
+//               key={d.code}
+//               opacity={opacity}
+//               style={{ transition: "opacity 0.3s" }}
+//             >
+//               {/* Drop shadow ring — makes cars pop off dark track */}
+//               <circle
+//                 cx={x} cy={y} r={r + 3}
+//                 fill="none"
+//                 stroke="#000000"
+//                 strokeWidth="3"
+//                 opacity="0.5"
+//                 style={{ transition: "cx 0.1s linear, cy 0.1s linear" }}
+//               />
+
+//               {/* Team color fill */}
+//               <circle
+//                 cx={x} cy={y} r={r}
+//                 fill={d.color}
+//                 stroke="#ffffff"
+//                 strokeWidth="1.5"
+//                 style={{ transition: "cx 0.1s linear, cy 0.1s linear" }}
+//               />
+
+//               {/* Driver name — only when toggled on via L key */}
+//               {showNames && (
+//                 <text
+//                   x={x + r + 5}
+//                   y={y + 4}
+//                   fontSize="11"
+//                   fontWeight="900"
+//                   fill="#ffffff"
+//                   stroke="#000000"
+//                   strokeWidth="3"
+//                   paintOrder="stroke"
+//                   style={{
+//                     transition:     "x 0.1s linear, y 0.1s linear",
+//                     userSelect:     "none",
+//                     pointerEvents:  "none",
+//                   }}
+//                 >
+//                   {d.code}
+//                 </text>
+//               )}
+//             </g>
+//           );
+//         })}
+//       </svg>
+//     </div>
+//   );
+// };
+
+// export default RaceTrack;
+
+// import { useMemo } from "react";
+
+// export interface Driver {
+//   code: string;
+//   color: string;
+// }
+
+// export interface CarPosition {
+//   x: number;
+//   y: number;
+//   lap: number | null;
+//   in_pit: boolean;
+// }
+
+// export interface TrackPoint {
+//   x: number;
+//   y: number;
+// }
+
+// export interface Bounds {
+//   x_min: number;
+//   x_max: number;
+//   y_min: number;
+//   y_max: number;
+// }
+
+// export interface FinishLine {
+//   x: number;
+//   y: number;
+// }
+
+// export interface RaceTrackProps {
+//   drivers: Driver[];
+//   positions: Record<string, CarPosition>;
+//   trackOutline: TrackPoint[];
+//   bounds: Bounds;
+//   flag?: string;
+//   showNames?: boolean;
+//   finishLine?: FinishLine | null;
+// }
+
+// // ─── constants ──────────────────────────────────────────────────────────────
+
+// const VIEWBOX_W = 1000;
+// const VIEWBOX_H = 1000;
+// // Decreased padding from 40 to 25 to increase the overall size of the track slightly
+// const PADDING   = 25;
+
+// const FLAG_TRACK_COLOR: Record<string, string> = {
+//   clear:      "#4a4a4a",
+//   yellow:     "#ca8a04",
+//   red:        "#dc2626",
+//   safety_car: "#d97706",
+//   vsc:        "#d97706",
+//   vsc_ending: "#d97706",
+// };
+
+// // ─── projection ─────────────────────────────────────────────────────────────
+
+// const makeProjector = (bounds: Bounds) => {
+//   const dataW = bounds.x_max - bounds.x_min || 1;
+//   const dataH = bounds.y_max - bounds.y_min || 1;
+//   const availW = VIEWBOX_W - PADDING * 2;
+//   const availH = VIEWBOX_H - PADDING * 2;
+
+//   // Uniform scale — keeps circuit shape undistorted
+//   const scale   = Math.min(availW / dataW, availH / dataH);
+//   const offsetX = PADDING + (availW - dataW * scale) / 2;
+//   const offsetY = PADDING + (availH - dataH * scale) / 2;
+
+//   return (x: number, y: number) => ({
+//     x: offsetX + (x - bounds.x_min) * scale,
+//     // SVG y-axis is inverted vs telemetry y-axis
+//     y: offsetY + (dataH - (y - bounds.y_min)) * scale,
+//   });
+// };
+
+// // ─── finish line helper ──────────────────────────────────────────────────────
+
+// /**
+//  * Draws a short perpendicular stroke across the track at the finish line.
+//  * We find the two track-outline points nearest the finish-line coordinate,
+//  * compute the tangent direction between them, then draw a line 90° to it.
+//  */
+// const FinishLineMark = ({
+//   finishLine,
+//   trackOutline,
+//   project,
+// }: {
+//   finishLine: FinishLine;
+//   trackOutline: TrackPoint[];
+//   project: (x: number, y: number) => { x: number; y: number };
+// }) => {
+//   const { x: fx, y: fy } = project(finishLine.x, finishLine.y);
+
+//   // Find the two outline points nearest the projected finish point
+//   let best1 = 0, best2 = 1, bestDist = Infinity;
+//   const projected = trackOutline.map((p) => project(p.x, p.y));
+
+//   for (let i = 0; i < projected.length - 1; i++) {
+//     const mx = (projected[i].x + projected[i + 1].x) / 2;
+//     const my = (projected[i].y + projected[i + 1].y) / 2;
+//     const d  = Math.hypot(mx - fx, my - fy);
+//     if (d < bestDist) {
+//       bestDist = d;
+//       best1    = i;
+//       best2    = i + 1;
+//     }
+//   }
+
+//   // Tangent vector along the track at that point
+//   const tx = projected[best2].x - projected[best1].x;
+//   const ty = projected[best2].y - projected[best1].y;
+//   const len = Math.hypot(tx, ty) || 1;
+
+//   // Perpendicular = rotate tangent 90°
+//   const nx = -ty / len;
+//   const ny =  tx / len;
+
+//   const half = 18; // half-length of the finish line mark in SVG units
+//   const x1   = fx + nx * half;
+//   const y1   = fy + ny * half;
+//   const x2   = fx - nx * half;
+//   const y2   = fy - ny * half;
+
+//   return (
+//     <g>
+//       {/* Chequered flag effect: alternating black/white segments */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="5" strokeLinecap="round" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#000000" strokeWidth="5" strokeLinecap="round"
+//         strokeDasharray="4,4" />
+//       {/* Outer glow */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="9" strokeLinecap="round" opacity="0.15" />
+//     </g>
+//   );
+// };
+
+// // ─── component ──────────────────────────────────────────────────────────────
+
+// const RaceTrack = ({
+//   drivers,
+//   positions,
+//   trackOutline,
+//   bounds,
+//   flag       = "clear",
+//   showNames  = false,
+//   finishLine = null,
+// }: RaceTrackProps) => {
+//   const project = useMemo(() => makeProjector(bounds), [bounds]);
+
+//   // Build SVG path string once — only changes when track outline or bounds change
+//   const trackPathD = useMemo(() => {
+//     if (!trackOutline || trackOutline.length === 0) return "";
+//     const pts     = trackOutline.map((p) => project(p.x, p.y));
+//     const [first, ...rest] = pts;
+//     return rest.reduce(
+//       (acc, p) => `${acc} L ${p.x.toFixed(1)} ${p.y.toFixed(1)}`,
+//       `M ${first.x.toFixed(1)} ${first.y.toFixed(1)}`
+//     ) + " Z";
+//   }, [trackOutline, project]);
+
+//   const safeFlag   = (flag || "clear").toLowerCase().trim();
+//   const trackColor = FLAG_TRACK_COLOR[safeFlag] ?? FLAG_TRACK_COLOR.clear;
+
+//   // Fallback to the first coordinate of the track outline if no explicit finish line is provided
+//   const startLine = finishLine || (trackOutline?.length > 0 ? trackOutline[0] : null);
+
+//   return (
+//     <div className="w-full h-full">
+//       <svg
+//         viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H}`}
+//         className="w-full h-full"
+//         style={{ overflow: "visible" }}
+//       >
+//         {/* ── Track rendering — 3 layered strokes ── */}
+
+//         {/* Layer 1: wide outer glow — gives the "circuit lit up" feel */}
+//         <path
+//           d={trackPathD}
+//           stroke={trackColor}
+//           strokeWidth="28"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.18"
+//         />
+
+//         {/* Layer 2: main tarmac surface */}
+//         <path
+//           d={trackPathD}
+//           stroke={trackColor}
+//           strokeWidth="14"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.9"
+//         />
+
+//         {/* Layer 3: inner edge highlight — the bright centre line
+//             subtle white line that gives the track a 3D "lit from above" feel */}
+//         <path
+//           d={trackPathD}
+//           stroke="#ffffff"
+//           strokeWidth="2"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.12"
+//         />
+
+//         {/* ── Finish line ── */}
+//         {startLine && (
+//           <FinishLineMark
+//             finishLine={startLine}
+//             trackOutline={trackOutline}
+//             project={project}
+//           />
+//         )}
+
+//         {/* ── Cars ── */}
+//         {drivers.map((d) => {
+//           const pos = positions[d.code];
+//           if (!pos || isNaN(pos.x) || isNaN(pos.y)) return null;
+
+//           const { x, y } = project(pos.x, pos.y);
+//           const r        = pos.in_pit ? 5 : 8;
+//           const opacity  = pos.in_pit ? 0.55 : 1;
+
+//           return (
+//             <g
+//               key={d.code}
+//               opacity={opacity}
+//               style={{ transition: "opacity 0.3s" }}
+//             >
+//               {/* Drop shadow ring — makes cars pop off dark track */}
+//               <circle
+//                 cx={x} cy={y} r={r + 3}
+//                 fill="none"
+//                 stroke="#000000"
+//                 strokeWidth="3"
+//                 opacity="0.5"
+//                 style={{ transition: "cx 0.1s linear, cy 0.1s linear" }}
+//               />
+
+//               {/* Team color fill */}
+//               <circle
+//                 cx={x} cy={y} r={r}
+//                 fill={d.color}
+//                 stroke="#ffffff"
+//                 strokeWidth="1.5"
+//                 style={{ transition: "cx 0.1s linear, cy 0.1s linear" }}
+//               />
+
+//               {/* Driver name — only when toggled on via L key */}
+//               {showNames && (
+//                 <text
+//                   x={x + r + 5}
+//                   y={y + 4}
+//                   fontSize="11"
+//                   fontWeight="900"
+//                   fill="#ffffff"
+//                   stroke="#000000"
+//                   strokeWidth="3"
+//                   paintOrder="stroke"
+//                   style={{
+//                     transition:     "x 0.1s linear, y 0.1s linear",
+//                     userSelect:     "none",
+//                     pointerEvents:  "none",
+//                   }}
+//                 >
+//                   {d.code}
+//                 </text>
+//               )}
+//             </g>
+//           );
+//         })}
+//       </svg>
+//     </div>
+//   );
+// };
+
+// export default RaceTrack;
+
+// import { useMemo } from "react";
+
+// export interface Driver {
+//   code: string;
+//   color: string;
+// }
+
+// export interface CarPosition {
+//   x: number;
+//   y: number;
+//   lap: number | null;
+//   in_pit: boolean;
+// }
+
+// export interface TrackPoint {
+//   x: number;
+//   y: number;
+// }
+
+// export interface Bounds {
+//   x_min: number;
+//   x_max: number;
+//   y_min: number;
+//   y_max: number;
+// }
+
+// export interface FinishLine {
+//   x: number;
+//   y: number;
+// }
+
+// export interface RaceTrackProps {
+//   drivers: Driver[];
+//   positions: Record<string, CarPosition>;
+//   trackOutline: TrackPoint[];
+//   bounds: Bounds;
+//   flag?: string;
+//   showNames?: boolean;
+//   finishLine?: FinishLine | null;
+// }
+
+// // ─── constants ──────────────────────────────────────────────────────────────
+
+// const VIEWBOX_W = 1000;
+// const VIEWBOX_H = 1000;
+// // Decreased padding from 40 to 25 to increase the overall size of the track slightly
+// const PADDING   = 1;
+
+// const FLAG_TRACK_COLOR: Record<string, string> = {
+//   clear:      "#4a4a4a",
+//   yellow:     "#ca8a04",
+//   red:        "#dc2626",
+//   safety_car: "#d97706",
+//   vsc:        "#d97706",
+//   vsc_ending: "#d97706",
+// };
+
+// // ─── projection ─────────────────────────────────────────────────────────────
+
+// const makeProjector = (bounds: Bounds) => {
+//   const dataW = bounds.x_max - bounds.x_min || 1;
+//   const dataH = bounds.y_max - bounds.y_min || 1;
+//   const availW = VIEWBOX_W - PADDING * 2;
+//   const availH = VIEWBOX_H - PADDING * 2;
+
+//   // Uniform scale — keeps circuit shape undistorted
+//   const scale   = Math.min(availW / dataW, availH / dataH);
+//   const offsetX = PADDING + (availW - dataW * scale) / 2;
+//   const offsetY = PADDING + (availH - dataH * scale) / 2;
+
+//   return (x: number, y: number) => ({
+//     x: offsetX + (x - bounds.x_min) * scale,
+//     // SVG y-axis is inverted vs telemetry y-axis
+//     y: offsetY + (dataH - (y - bounds.y_min)) * scale,
+//   });
+// };
+
+// // ─── finish line helper ──────────────────────────────────────────────────────
+
+// /**
+//  * Draws a short perpendicular stroke across the track at the finish line.
+//  * We find the two track-outline points nearest the finish-line coordinate,
+//  * compute the tangent direction between them, then draw a line 90° to it.
+//  */
+// const FinishLineMark = ({
+//   finishLine,
+//   trackOutline,
+//   project,
+// }: {
+//   finishLine: FinishLine;
+//   trackOutline: TrackPoint[];
+//   project: (x: number, y: number) => { x: number; y: number };
+// }) => {
+//   const { x: fx, y: fy } = project(finishLine.x, finishLine.y);
+
+//   // Find the two outline points nearest the projected finish point
+//   let best1 = 0, best2 = 1, bestDist = Infinity;
+//   const projected = trackOutline.map((p) => project(p.x, p.y));
+
+//   for (let i = 0; i < projected.length - 1; i++) {
+//     const mx = (projected[i].x + projected[i + 1].x) / 2;
+//     const my = (projected[i].y + projected[i + 1].y) / 2;
+//     const d  = Math.hypot(mx - fx, my - fy);
+//     if (d < bestDist) {
+//       bestDist = d;
+//       best1    = i;
+//       best2    = i + 1;
+//     }
+//   }
+
+//   // Tangent vector along the track at that point
+//   const tx = projected[best2].x - projected[best1].x;
+//   const ty = projected[best2].y - projected[best1].y;
+//   const len = Math.hypot(tx, ty) || 1;
+
+//   // Perpendicular = rotate tangent 90°
+//   const nx = -ty / len;
+//   const ny =  tx / len;
+
+//   const half = 18; // half-length of the finish line mark in SVG units
+//   const x1   = fx + nx * half;
+//   const y1   = fy + ny * half;
+//   const x2   = fx - nx * half;
+//   const y2   = fy - ny * half;
+
+//   return (
+//     <g>
+//       {/* 1. Asphalt burn / shadow (gives the paint depth) */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#000000" strokeWidth="8" strokeLinecap="butt" opacity="0.5" />
+
+//       {/* 2. Base white paint layer */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="6" strokeLinecap="butt" />
+
+//       {/* 3. Crisp black squares (butt cap creates sharp checkerboard boxes) */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#111111" strokeWidth="6" strokeLinecap="butt"
+//         strokeDasharray="4,4" />
+
+//       {/* 4. Reflective paint highlight (only on the white squares) */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="2" strokeLinecap="butt"
+//         strokeDasharray="4,4" strokeDashoffset="4" opacity="0.9" />
+
+//       {/* 5. Soft ambient bloom/glow to match the rest of the track */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="14" strokeLinecap="round" opacity="0.12" />
+//     </g>
+//   );
+// };
+
+// // ─── component ──────────────────────────────────────────────────────────────
+
+// const RaceTrack = ({
+//   drivers,
+//   positions,
+//   trackOutline,
+//   bounds,
+//   flag       = "clear",
+//   showNames  = false,
+//   finishLine = null,
+// }: RaceTrackProps) => {
+//   const project = useMemo(() => makeProjector(bounds), [bounds]);
+
+//   // Build SVG path string once — only changes when track outline or bounds change
+//   const trackPathD = useMemo(() => {
+//     if (!trackOutline || trackOutline.length === 0) return "";
+//     const pts     = trackOutline.map((p) => project(p.x, p.y));
+//     const [first, ...rest] = pts;
+//     return rest.reduce(
+//       (acc, p) => `${acc} L ${p.x.toFixed(1)} ${p.y.toFixed(1)}`,
+//       `M ${first.x.toFixed(1)} ${first.y.toFixed(1)}`
+//     ) + " Z";
+//   }, [trackOutline, project]);
+
+//   const safeFlag   = (flag || "clear").toLowerCase().trim();
+//   const trackColor = FLAG_TRACK_COLOR[safeFlag] ?? FLAG_TRACK_COLOR.clear;
+
+//   // Fallback to the first coordinate of the track outline if no explicit finish line is provided
+//   const startLine = finishLine || (trackOutline?.length > 0 ? trackOutline[0] : null);
+
+//   return (
+//     <div className="w-full h-full">
+//       <svg
+//         viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H}`}
+//         className="w-full h-full"
+//         style={{ overflow: "visible" }}
+//       >
+//         {/* ── Track rendering — 3 layered strokes ── */}
+
+//         {/* Layer 1: wide outer glow — gives the "circuit lit up" feel */}
+//         <path
+//           d={trackPathD}
+//           stroke={trackColor}
+//           strokeWidth="28"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.18"
+//         />
+
+//         {/* Layer 2: main tarmac surface */}
+//         <path
+//           d={trackPathD}
+//           stroke={trackColor}
+//           strokeWidth="14"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.9"
+//         />
+
+//         {/* Layer 3: inner edge highlight — the bright centre line
+//             subtle white line that gives the track a 3D "lit from above" feel */}
+//         <path
+//           d={trackPathD}
+//           stroke="#ffffff"
+//           strokeWidth="2"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.12"
+//         />
+
+//         {/* ── Finish line ── */}
+//         {startLine && (
+//           <FinishLineMark
+//             finishLine={startLine}
+//             trackOutline={trackOutline}
+//             project={project}
+//           />
+//         )}
+
+//         {/* ── Cars ── */}
+//         {drivers.map((d) => {
+//           const pos = positions[d.code];
+//           if (!pos || isNaN(pos.x) || isNaN(pos.y)) return null;
+
+//           const { x, y } = project(pos.x, pos.y);
+//           const r        = pos.in_pit ? 5 : 8;
+//           const opacity  = pos.in_pit ? 0.55 : 1;
+
+//           return (
+//             <g
+//               key={d.code}
+//               opacity={opacity}
+//               style={{ transition: "opacity 0.3s" }}
+//             >
+//               {/* Drop shadow ring — makes cars pop off dark track */}
+//               <circle
+//                 cx={x} cy={y} r={r + 3}
+//                 fill="none"
+//                 stroke="#000000"
+//                 strokeWidth="3"
+//                 opacity="0.5"
+//                 style={{ transition: "cx 0.1s linear, cy 0.1s linear" }}
+//               />
+
+//               {/* Team color fill */}
+//               <circle
+//                 cx={x} cy={y} r={r}
+//                 fill={d.color}
+//                 stroke="#ffffff"
+//                 strokeWidth="1.5"
+//                 style={{ transition: "cx 0.1s linear, cy 0.1s linear" }}
+//               />
+
+//               {/* Driver name — only when toggled on via L key */}
+//               {showNames && (
+//                 <text
+//                   x={x + r + 5}
+//                   y={y + 4}
+//                   fontSize="11"
+//                   fontWeight="900"
+//                   fill="#ffffff"
+//                   stroke="#000000"
+//                   strokeWidth="3"
+//                   paintOrder="stroke"
+//                   style={{
+//                     transition:     "x 0.1s linear, y 0.1s linear",
+//                     userSelect:     "none",
+//                     pointerEvents:  "none",
+//                   }}
+//                 >
+//                   {d.code}
+//                 </text>
+//               )}
+//             </g>
+//           );
+//         })}
+//       </svg>
+//     </div>
+//   );
+// };
+
+// export default RaceTrack;\\
+// import { useMemo } from "react";
+
+// export interface Driver {
+//   code: string;
+//   color: string;
+// }
+
+// export interface CarPosition {
+//   x: number;
+//   y: number;
+//   lap: number | null;
+//   in_pit: boolean;
+// }
+
+// export interface TrackPoint {
+//   x: number;
+//   y: number;
+// }
+
+// export interface Bounds {
+//   x_min: number;
+//   x_max: number;
+//   y_min: number;
+//   y_max: number;
+// }
+
+// export interface FinishLine {
+//   x: number;
+//   y: number;
+// }
+
+// export interface RaceTrackProps {
+//   drivers: Driver[];
+//   positions: Record<string, CarPosition>;
+//   trackOutline: TrackPoint[];
+//   bounds: Bounds;
+//   flag?: string;
+//   showNames?: boolean;
+//   finishLine?: FinishLine | null;
+//   transitionMs?: number; // 🛠️ NEW: Dynamic sync for smooth gliding
+// }
+
+// // ─── constants ──────────────────────────────────────────────────────────────
+
+// const VIEWBOX_W = 1000;
+// const VIEWBOX_H = 1000;
+// const PADDING   = 1;
+
+// const FLAG_TRACK_COLOR: Record<string, string> = {
+//   clear:      "#4a4a4a",
+//   yellow:     "#ca8a04",
+//   red:        "#dc2626",
+//   safety_car: "#d97706",
+//   vsc:        "#d97706",
+//   vsc_ending: "#d97706",
+// };
+
+// // ─── projection ─────────────────────────────────────────────────────────────
+
+// const makeProjector = (bounds: Bounds) => {
+//   const dataW = bounds.x_max - bounds.x_min || 1;
+//   const dataH = bounds.y_max - bounds.y_min || 1;
+//   const availW = VIEWBOX_W - PADDING * 2;
+//   const availH = VIEWBOX_H - PADDING * 2;
+
+//   const scale   = Math.min(availW / dataW, availH / dataH);
+//   const offsetX = PADDING + (availW - dataW * scale) / 2;
+//   const offsetY = PADDING + (availH - dataH * scale) / 2;
+
+//   return (x: number, y: number) => ({
+//     x: offsetX + (x - bounds.x_min) * scale,
+//     y: offsetY + (dataH - (y - bounds.y_min)) * scale,
+//   });
+// };
+
+// // ─── finish line helper ──────────────────────────────────────────────────────
+
+// const FinishLineMark = ({
+//   finishLine,
+//   trackOutline,
+//   project,
+// }: {
+//   finishLine: FinishLine;
+//   trackOutline: TrackPoint[];
+//   project: (x: number, y: number) => { x: number; y: number };
+// }) => {
+//   const { x: fx, y: fy } = project(finishLine.x, finishLine.y);
+
+//   let best1 = 0, best2 = 1, bestDist = Infinity;
+//   const projected = trackOutline.map((p) => project(p.x, p.y));
+
+//   for (let i = 0; i < projected.length - 1; i++) {
+//     const mx = (projected[i].x + projected[i + 1].x) / 2;
+//     const my = (projected[i].y + projected[i + 1].y) / 2;
+//     const d  = Math.hypot(mx - fx, my - fy);
+//     if (d < bestDist) {
+//       bestDist = d;
+//       best1    = i;
+//       best2    = i + 1;
+//     }
+//   }
+
+//   const tx = projected[best2].x - projected[best1].x;
+//   const ty = projected[best2].y - projected[best1].y;
+//   const len = Math.hypot(tx, ty) || 1;
+
+//   const nx = -ty / len;
+//   const ny =  tx / len;
+
+//   const half = 18; 
+//   const x1   = fx + nx * half;
+//   const y1   = fy + ny * half;
+//   const x2   = fx - nx * half;
+//   const y2   = fy - ny * half;
+
+//   return (
+//     <g>
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#000000" strokeWidth="8" strokeLinecap="butt" opacity="0.5" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="6" strokeLinecap="butt" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#111111" strokeWidth="6" strokeLinecap="butt"
+//         strokeDasharray="4,4" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="2" strokeLinecap="butt"
+//         strokeDasharray="4,4" strokeDashoffset="4" opacity="0.9" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="14" strokeLinecap="round" opacity="0.12" />
+//     </g>
+//   );
+// };
+
+// // ─── component ──────────────────────────────────────────────────────────────
+
+// const RaceTrack = ({
+//   drivers,
+//   positions,
+//   trackOutline,
+//   bounds,
+//   flag       = "clear",
+//   showNames  = false,
+//   finishLine = null,
+//   transitionMs = 300, 
+// }: RaceTrackProps) => {
+//   const project = useMemo(() => makeProjector(bounds), [bounds]);
+
+//   const trackPathD = useMemo(() => {
+//     if (!trackOutline || trackOutline.length === 0) return "";
+//     const pts     = trackOutline.map((p) => project(p.x, p.y));
+//     const [first, ...rest] = pts;
+//     return rest.reduce(
+//       // 🛠️ FIX: Removed .toFixed(1) to stop the track line from rounding/shifting under the cars
+//       (acc, p) => `${acc} L ${p.x.toFixed(3)} ${p.y.toFixed(3)}`,
+//       `M ${first.x.toFixed(3)} ${first.y.toFixed(3)}`
+//     ) + " Z";
+//   }, [trackOutline, project]);
+
+//   const safeFlag   = (flag || "clear").toLowerCase().trim();
+//   const trackColor = FLAG_TRACK_COLOR[safeFlag] ?? FLAG_TRACK_COLOR.clear;
+//   const startLine = finishLine || (trackOutline?.length > 0 ? trackOutline[0] : null);
+
+//   // 🛠️ FIX: Perfect timing sync for CSS transitions
+//   const smoothTransform = `cx ${transitionMs}ms linear, cy ${transitionMs}ms linear`;
+//   const textTransform = `x ${transitionMs}ms linear, y ${transitionMs}ms linear`;
+
+//   return (
+//     <div className="w-full h-full">
+//       <svg
+//         viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H}`}
+//         className="w-full h-full"
+//         style={{ overflow: "visible" }}
+//       >
+//         <path d={trackPathD} stroke={trackColor} strokeWidth="28" fill="none" strokeLinejoin="round" strokeLinecap="round" opacity="0.18" />
+//         <path d={trackPathD} stroke={trackColor} strokeWidth="14" fill="none" strokeLinejoin="round" strokeLinecap="round" opacity="0.9" />
+//         <path d={trackPathD} stroke="#ffffff" strokeWidth="2" fill="none" strokeLinejoin="round" strokeLinecap="round" opacity="0.12" />
+
+//         {startLine && (
+//           <FinishLineMark finishLine={startLine} trackOutline={trackOutline} project={project} />
+//         )}
+
+//         {drivers.map((d) => {
+//           const pos = positions[d.code];
+//           if (!pos || isNaN(pos.x) || isNaN(pos.y)) return null;
+
+//           const { x, y } = project(pos.x, pos.y);
+//           // 🛠️ FIX: Locked all cars to size 8, regardless of pitting
+//           const r = 8;
+//           const opacity = pos.in_pit ? 0.55 : 1;
+
+//           return (
+//             <g key={d.code} opacity={opacity} style={{ transition: "opacity 0.2s" }}>
+//               <circle
+//                 cx={x} cy={y} r={r + 3}
+//                 fill="none" stroke="#000000" strokeWidth="3" opacity="0.5"
+//                 style={{ transition: smoothTransform }}
+//               />
+//               <circle
+//                 cx={x} cy={y} r={r}
+//                 fill={d.color} stroke="#ffffff" strokeWidth="1.5"
+//                 style={{ transition: smoothTransform }}
+//               />
+//               {showNames && (
+//                 <text
+//                   x={x + r + 5} y={y + 4}
+//                   fontSize="11" fontWeight="900" fill="#ffffff" stroke="#000000" strokeWidth="3" paintOrder="stroke"
+//                   style={{ transition: textTransform, userSelect: "none", pointerEvents: "none" }}
+//                 >
+//                   {d.code}
+//                 </text>
+//               )}
+//             </g>
+//           );
+//         })}
+//       </svg>
+//     </div>
+//   );
+// };
+
+// export default RaceTrack;
+
+// import { useMemo, useRef } from "react";
+
+// export interface Driver {
+//   code: string;
+//   color: string;
+// }
+
+// export interface CarPosition {
+//   x: number;
+//   y: number;
+//   lap: number | null;
+//   in_pit: boolean;
+// }
+
+// export interface TrackPoint {
+//   x: number;
+//   y: number;
+// }
+
+// export interface Bounds {
+//   x_min: number;
+//   x_max: number;
+//   y_min: number;
+//   y_max: number;
+// }
+
+// export interface FinishLine {
+//   x: number;
+//   y: number;
+// }
+
+// export interface RaceTrackProps {
+//   drivers: Driver[];
+//   positions: Record<string, CarPosition>;
+//   trackOutline: TrackPoint[];
+//   bounds: Bounds;
+//   flag?: string;
+//   showNames?: boolean;
+//   finishLine?: FinishLine | null;
+//   transitionMs?: number;
+//   // Set of driver codes who have retired — their circles are removed from the track entirely.
+//   // The backend keeps sending their last known coordinates, so we must filter them out explicitly.
+//   retiredDrivers?: Set<string>;
+// }
+
+// // ─── constants ───────────────────────────────────────────────────────────────
+
+// const VIEWBOX_W = 1000;
+// const VIEWBOX_H = 1000;
+// // Generous padding so cars at the edge are never clipped
+// const PADDING   = 40;
+
+// // Car sizes
+// const CAR_R_RACING = 8;
+// const CAR_R_PIT    = 5;
+
+// // Pit debounce: how many consecutive in_pit=true frames before we confirm pit state.
+// // Must match Leaderboard.tsx so both update at the same frame.
+// const PIT_CONFIRM_THRESHOLD = 3;
+
+// const FLAG_TRACK_COLOR: Record<string, string> = {
+//   clear:      "#5a5a5a",
+//   yellow:     "#ca8a04",
+//   red:        "#dc2626",
+//   safety_car: "#d97706",
+//   vsc:        "#d97706",
+//   vsc_ending: "#d97706",
+// };
+
+// // ─── projection ──────────────────────────────────────────────────────────────
+
+// const makeProjector = (bounds: Bounds) => {
+//   const dataW  = bounds.x_max - bounds.x_min || 1;
+//   const dataH  = bounds.y_max - bounds.y_min || 1;
+//   const availW = VIEWBOX_W - PADDING * 2;
+//   const availH = VIEWBOX_H - PADDING * 2;
+
+//   const scale   = Math.min(availW / dataW, availH / dataH);
+//   const offsetX = PADDING + (availW - dataW * scale) / 2;
+//   const offsetY = PADDING + (availH - dataH * scale) / 2;
+
+//   return (x: number, y: number) => ({
+//     x: offsetX + (x - bounds.x_min) * scale,
+//     // FastF1 Y increases upward, SVG Y increases downward — flip it
+//     y: offsetY + (dataH - (y - bounds.y_min)) * scale,
+//   });
+// };
+
+// // ─── finish line ─────────────────────────────────────────────────────────────
+
+// const FinishLineMark = ({
+//   finishLine,
+//   trackOutline,
+//   project,
+// }: {
+//   finishLine: FinishLine;
+//   trackOutline: TrackPoint[];
+//   project: (x: number, y: number) => { x: number; y: number };
+// }) => {
+//   const { x: fx, y: fy } = project(finishLine.x, finishLine.y);
+//   const projected = trackOutline.map((p) => project(p.x, p.y));
+
+//   let best1 = 0, best2 = 1, bestDist = Infinity;
+//   for (let i = 0; i < projected.length - 1; i++) {
+//     const mx = (projected[i].x + projected[i + 1].x) / 2;
+//     const my = (projected[i].y + projected[i + 1].y) / 2;
+//     const d  = Math.hypot(mx - fx, my - fy);
+//     if (d < bestDist) { bestDist = d; best1 = i; best2 = i + 1; }
+//   }
+
+//   const tx  = projected[best2].x - projected[best1].x;
+//   const ty  = projected[best2].y - projected[best1].y;
+//   const len = Math.hypot(tx, ty) || 1;
+//   const nx  = -ty / len;
+//   const ny  =  tx / len;
+//   const half = 20;
+
+//   const x1 = fx + nx * half, y1 = fy + ny * half;
+//   const x2 = fx - nx * half, y2 = fy - ny * half;
+
+//   return (
+//     <g>
+//       <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#000" strokeWidth="10" strokeLinecap="butt" opacity="0.4" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#fff" strokeWidth="7"  strokeLinecap="butt" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#111" strokeWidth="7"  strokeLinecap="butt" strokeDasharray="5,5" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#fff" strokeWidth="2"  strokeLinecap="butt" strokeDasharray="5,5" strokeDashoffset="5" opacity="0.9" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#fff" strokeWidth="16" strokeLinecap="round" opacity="0.08" />
+//     </g>
+//   );
+// };
+
+// // ─── main component ──────────────────────────────────────────────────────────
+
+// const RaceTrack = ({
+//   drivers,
+//   positions,
+//   trackOutline,
+//   bounds,
+//   flag            = "clear",
+//   showNames       = false,
+//   finishLine      = null,
+//   transitionMs    = 300,
+//   retiredDrivers  = new Set<string>(),
+// }: RaceTrackProps) => {
+//   const project = useMemo(() => makeProjector(bounds), [bounds]);
+
+//   // ── debounced pit state (mirrors Leaderboard.tsx logic exactly) ──
+//   const pitCounterRef = useRef<Map<string, number>>(new Map());
+
+//   const trackPathD = useMemo(() => {
+//     if (!trackOutline || trackOutline.length === 0) return "";
+//     const pts          = trackOutline.map((p) => project(p.x, p.y));
+//     const [first, ...rest] = pts;
+//     return (
+//       rest.reduce(
+//         (acc, p) => `${acc} L ${p.x.toFixed(3)} ${p.y.toFixed(3)}`,
+//         `M ${first.x.toFixed(3)} ${first.y.toFixed(3)}`
+//       ) + " Z"
+//     );
+//   }, [trackOutline, project]);
+
+//   const safeFlag   = (flag || "clear").toLowerCase().trim();
+//   const trackColor = FLAG_TRACK_COLOR[safeFlag] ?? FLAG_TRACK_COLOR.clear;
+//   const startLine  = finishLine || (trackOutline?.length > 0 ? trackOutline[0] : null);
+
+//   const smoothTransform = `cx ${transitionMs}ms linear, cy ${transitionMs}ms linear`;
+//   const textTransform   = `x ${transitionMs}ms linear, y ${transitionMs}ms linear`;
+//   const sizeTransition  = `r 200ms ease-in-out`;
+
+//   // Build confirmed pit states for all drivers this render
+//   const confirmedPitMap = useMemo(() => {
+//     const map = new Map<string, boolean>();
+//     drivers.forEach((d) => {
+//       const pos      = positions[d.code];
+//       const rawInPit = pos?.in_pit || false;
+//       const prev     = pitCounterRef.current.get(d.code) ?? 0;
+//       const next     = rawInPit ? prev + 1 : 0;
+//       pitCounterRef.current.set(d.code, next);
+//       map.set(d.code, next >= PIT_CONFIRM_THRESHOLD);
+//     });
+//     return map;
+//   }, [drivers, positions]);
+
+//   return (
+//     <div className="w-full h-full">
+//       <svg
+//         viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H}`}
+//         className="w-full h-full"
+//         style={{ overflow: "visible" }}
+//       >
+//         {/* ── track layers ── */}
+//         {/* Outer glow */}
+//         <path d={trackPathD} stroke={trackColor} strokeWidth="38" fill="none"
+//           strokeLinejoin="round" strokeLinecap="round" opacity="0.10" />
+//         {/* Road body — wider than before so car dots sit inside it */}
+//         <path d={trackPathD} stroke={trackColor} strokeWidth="22" fill="none"
+//           strokeLinejoin="round" strokeLinecap="round" opacity="0.85" />
+//         {/* Kerb highlight */}
+//         <path d={trackPathD} stroke="#ffffff" strokeWidth="2" fill="none"
+//           strokeLinejoin="round" strokeLinecap="round" opacity="0.08" />
+
+//         {startLine && (
+//           <FinishLineMark
+//             finishLine={startLine}
+//             trackOutline={trackOutline}
+//             project={project}
+//           />
+//         )}
+
+//         {/* ── cars ── */}
+//         {drivers.map((d) => {
+//           // Retired drivers: backend keeps sending last known coordinates,
+//           // so we must explicitly skip them here rather than relying on !pos.
+//           if (retiredDrivers.has(d.code)) return null;
+
+//           const pos = positions[d.code];
+//           if (!pos || isNaN(pos.x) || isNaN(pos.y)) return null;
+
+//           const { x, y }   = project(pos.x, pos.y);
+//           const isPitting   = confirmedPitMap.get(d.code) ?? false;
+//           const r           = isPitting ? CAR_R_PIT : CAR_R_RACING;
+
+//           return (
+//             <g key={d.code}>
+//               {/* ── shadow ring (always present, gives depth) ── */}
+//               <circle
+//                 cx={x} cy={y} r={r + 4}
+//                 fill="none" stroke="#000000" strokeWidth="4" opacity="0.35"
+//                 style={{ transition: `${smoothTransform}, ${sizeTransition}` }}
+//               />
+
+//               {/* ── pit indicator ring (only visible when pitting) ── */}
+//               {isPitting && (
+//                 <circle
+//                   cx={x} cy={y} r={r + 7}
+//                   fill="none"
+//                   stroke="#facc15"
+//                   strokeWidth="1.5"
+//                   strokeDasharray="3 3"
+//                   opacity="0.7"
+//                   style={{ transition: smoothTransform }}
+//                 />
+//               )}
+
+//               {/* ── car body ── */}
+//               <circle
+//                 cx={x} cy={y} r={r}
+//                 fill={isPitting ? "#4a4a4a" : d.color}
+//                 stroke={isPitting ? "#888888" : "#ffffff"}
+//                 strokeWidth={isPitting ? 1 : 1.5}
+//                 opacity={isPitting ? 0.6 : 1}
+//                 style={{ transition: `${smoothTransform}, ${sizeTransition}, opacity 200ms ease-in-out` }}
+//               />
+
+//               {/* ── driver label ── */}
+//               {showNames && (
+//                 <text
+//                   x={x + r + 5} y={y + 4}
+//                   fontSize="11" fontWeight="900"
+//                   fill={isPitting ? "#888" : "#ffffff"}
+//                   stroke="#000000" strokeWidth="3" paintOrder="stroke"
+//                   style={{
+//                     transition: textTransform,
+//                     userSelect: "none",
+//                     pointerEvents: "none",
+//                   }}
+//                 >
+//                   {d.code}
+//                 </text>
+//               )}
+//             </g>
+//           );
+//         })}
+//       </svg>
+//     </div>
+//   );
+// };
+
+// export default RaceTrack;
+
+// import { useMemo } from "react";
+
+// export interface Driver {
+//   code: string;
+//   color: string;
+// }
+
+// export interface CarPosition {
+//   x: number;
+//   y: number;
+//   lap: number | null;
+//   in_pit: boolean;
+// }
+
+// export interface TrackPoint {
+//   x: number;
+//   y: number;
+// }
+
+// export interface Bounds {
+//   x_min: number;
+//   x_max: number;
+//   y_min: number;
+//   y_max: number;
+// }
+
+// export interface RaceTrackProps {
+//   drivers: Driver[];
+//   positions: Record<string, CarPosition>;
+//   trackOutline: TrackPoint[];
+//   bounds: Bounds;
+//   flag?: string; 
+// }
+
+// const VIEWBOX_WIDTH = 1000;
+// const VIEWBOX_HEIGHT = 1000;
+// const PADDING = 45; 
+
+// const FLAG_COLORS: Record<string, string> = {
+//   clear: "#525252", 
+//   "1": "#525252",
+//   yellow: "#e6c900",
+//   "2": "#e6c900",
+//   red: "#dc2626",
+//   "5": "#dc2626",
+//   safety_car: "#f59e0b",
+//   "4": "#f59e0b",
+//   vsc: "#f59e0b",
+//   "6": "#f59e0b",
+//   vsc_ending: "#f59e0b",
+//   "7": "#f59e0b",
+// };
+
+// const FLAG_LABELS: Record<string, string> = {
+//   yellow: "YELLOW FLAG",
+//   "2": "YELLOW FLAG",
+//   red: "RED FLAG",
+//   "5": "RED FLAG",
+//   safety_car: "SAFETY CAR DEPLOYED",
+//   "4": "SAFETY CAR DEPLOYED",
+//   vsc: "VIRTUAL SAFETY CAR",
+//   "6": "VIRTUAL SAFETY CAR",
+//   vsc_ending: "VSC ENDING",
+//   "7": "VSC ENDING",
+// };
+
+// const makeProjector = (bounds: Bounds) => {
+//   const dataWidth = bounds.x_max - bounds.x_min || 1;
+//   const dataHeight = bounds.y_max - bounds.y_min || 1;
+//   const availableWidth = VIEWBOX_WIDTH - PADDING * 2;
+//   const availableHeight = VIEWBOX_HEIGHT - PADDING * 2;
+//   const scale = Math.min(availableWidth / dataWidth, availableHeight / dataHeight);
+//   const offsetX = PADDING + (availableWidth - dataWidth * scale) / 2;
+//   const offsetY = PADDING + (availableHeight - dataHeight * scale) / 2;
+
+//   return (x: number, y: number) => {
+//     const svgX = offsetX + (x - bounds.x_min) * scale;
+//     const svgY = offsetY + (dataHeight - (y - bounds.y_min)) * scale;
+//     return { x: svgX, y: svgY };
+//   };
+// };
+
+// const RaceTrack = ({ drivers, positions, trackOutline, bounds, flag }: RaceTrackProps) => {
+//   const project = useMemo(() => makeProjector(bounds), [bounds]);
+
+//   const trackPathD = useMemo(() => {
+//     if (!trackOutline || trackOutline.length === 0) return "";
+//     const points = trackOutline.map((p) => project(p.x, p.y));
+//     const [first, ...rest] = points;
+//     const path = rest.reduce(
+//       (acc, p) => `${acc} L ${p.x.toFixed(2)} ${p.y.toFixed(2)}`,
+//       `M ${first.x.toFixed(2)} ${first.y.toFixed(2)}`
+//     );
+//     return `${path} Z`;
+//   }, [trackOutline, project]);
+
+//   const safeFlag = (flag || "clear").toString().toLowerCase().trim();
+//   const trackColor = FLAG_COLORS[safeFlag] || FLAG_COLORS.clear;
+//   const isFlagActive = safeFlag !== "clear" && safeFlag !== "1" && !!FLAG_LABELS[safeFlag];
+
+//   return (
+//     <div className="w-full h-full flex items-center justify-center relative">
+      
+//       {/* 🛠️ FIX: Sleek, F1 Broadcast Style Flag Banner */}
+//       {isFlagActive && (
+//         <div className="absolute top-8 left-1/2 -translate-x-1/2 z-[100] flex items-stretch bg-neutral-900/95 backdrop-blur-md border border-neutral-700/50 rounded-lg shadow-[0_10px_40px_rgba(0,0,0,0.8)] overflow-hidden">
+//           <div className="w-2" style={{ backgroundColor: trackColor }} />
+//           <div className="px-6 py-2.5 flex items-center gap-3">
+//             <span 
+//               className="w-3 h-3 rounded-full animate-pulse" 
+//               style={{ backgroundColor: trackColor, boxShadow: `0 0 10px ${trackColor}` }} 
+//             />
+//             <span className="font-black text-sm tracking-widest text-white uppercase">
+//               {FLAG_LABELS[safeFlag]}
+//             </span>
+//           </div>
+//         </div>
+//       )}
+
+//       <svg viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`} className="w-full h-full drop-shadow-2xl">
+//         <path d={trackPathD} stroke={trackColor} strokeWidth="24" fill="none" strokeLinejoin="round" opacity="0.3" />
+//         <path d={trackPathD} stroke={trackColor} strokeWidth="12" fill="none" strokeLinejoin="round" />
+//         <path d={trackPathD} stroke="#ffffff" strokeWidth="1.5" strokeDasharray="4,6" fill="none" strokeLinejoin="round" opacity="0.4" />
+
+//         {drivers.map((d) => {
+//           const pos = positions[d.code];
+//           if (!pos || isNaN(pos.x)) return null;
+          
+//           const { x, y } = project(pos.x, pos.y);
+//           return (
+//             <g key={d.code} style={{ transition: "transform 0.1s linear" }}>
+//               <circle
+//                 cx={x} cy={y}
+//                 r="8"
+//                 fill={d.color}
+//                 stroke="#fff"
+//                 strokeWidth="1.5"
+//                 style={{ transition: "cx 0.1s linear, cy 0.1s linear" }}
+//               />
+//               <text
+//                 x={x + 12} y={y + 3}
+//                 fontSize="11"
+//                 fontWeight="900"
+//                 fill="#fff"
+//                 className="drop-shadow-md"
+//                 style={{ transition: "x 0.1s linear, y 0.1s linear" }}
+//               >
+//                 {d.code}
+//               </text>
+//             </g>
+//           );
+//         })}
+//       </svg>
+//     </div>
+//   );
+// };
+
+// export default RaceTrack;
+
+// import { useMemo } from "react";
+
+// export interface Driver {
+//   code: string;
+//   color: string;
+// }
+
+// export interface CarPosition {
+//   x: number;
+//   y: number;
+//   lap: number | null;
+//   in_pit: boolean;
+// }
+
+// export interface TrackPoint {
+//   x: number;
+//   y: number;
+// }
+
+// export interface Bounds {
+//   x_min: number;
+//   x_max: number;
+//   y_min: number;
+//   y_max: number;
+// }
+
+// export interface FinishLine {
+//   x: number;
+//   y: number;
+// }
+
+// export interface RaceTrackProps {
+//   drivers: Driver[];
+//   positions: Record<string, CarPosition>;
+//   trackOutline: TrackPoint[];
+//   bounds: Bounds;
+//   flag?: string;
+//   showNames?: boolean;
+//   finishLine?: FinishLine | null;
+// }
+
+// // ─── constants ──────────────────────────────────────────────────────────────
+
+// const VIEWBOX_W = 1000;
+// const VIEWBOX_H = 1000;
+// const PADDING   = 40;
+
+// const FLAG_TRACK_COLOR: Record<string, string> = {
+//   clear:      "#4a4a4a",
+//   yellow:     "#ca8a04",
+//   red:        "#dc2626",
+//   safety_car: "#d97706",
+//   vsc:        "#d97706",
+//   vsc_ending: "#d97706",
+// };
+
+// // ─── projection ─────────────────────────────────────────────────────────────
+
+// const makeProjector = (bounds: Bounds) => {
+//   const dataW = bounds.x_max - bounds.x_min || 1;
+//   const dataH = bounds.y_max - bounds.y_min || 1;
+//   const availW = VIEWBOX_W - PADDING * 2;
+//   const availH = VIEWBOX_H - PADDING * 2;
+
+//   // Uniform scale — keeps circuit shape undistorted
+//   const scale   = Math.min(availW / dataW, availH / dataH);
+//   const offsetX = PADDING + (availW - dataW * scale) / 2;
+//   const offsetY = PADDING + (availH - dataH * scale) / 2;
+
+//   return (x: number, y: number) => ({
+//     x: offsetX + (x - bounds.x_min) * scale,
+//     // SVG y-axis is inverted vs telemetry y-axis
+//     y: offsetY + (dataH - (y - bounds.y_min)) * scale,
+//   });
+// };
+
+// // ─── finish line helper ──────────────────────────────────────────────────────
+
+// /**
+//  * Draws a short perpendicular stroke across the track at the finish line.
+//  * We find the two track-outline points nearest the finish-line coordinate,
+//  * compute the tangent direction between them, then draw a line 90° to it.
+//  */
+// const FinishLineMark = ({
+//   finishLine,
+//   trackOutline,
+//   project,
+// }: {
+//   finishLine: FinishLine;
+//   trackOutline: TrackPoint[];
+//   project: (x: number, y: number) => { x: number; y: number };
+// }) => {
+//   const { x: fx, y: fy } = project(finishLine.x, finishLine.y);
+
+//   // Find the two outline points nearest the projected finish point
+//   let best1 = 0, best2 = 1, bestDist = Infinity;
+//   const projected = trackOutline.map((p) => project(p.x, p.y));
+
+//   for (let i = 0; i < projected.length - 1; i++) {
+//     const mx = (projected[i].x + projected[i + 1].x) / 2;
+//     const my = (projected[i].y + projected[i + 1].y) / 2;
+//     const d  = Math.hypot(mx - fx, my - fy);
+//     if (d < bestDist) {
+//       bestDist = d;
+//       best1    = i;
+//       best2    = i + 1;
+//     }
+//   }
+
+//   // Tangent vector along the track at that point
+//   const tx = projected[best2].x - projected[best1].x;
+//   const ty = projected[best2].y - projected[best1].y;
+//   const len = Math.hypot(tx, ty) || 1;
+
+//   // Perpendicular = rotate tangent 90°
+//   const nx = -ty / len;
+//   const ny =  tx / len;
+
+//   const half = 18; // half-length of the finish line mark in SVG units
+//   const x1   = fx + nx * half;
+//   const y1   = fy + ny * half;
+//   const x2   = fx - nx * half;
+//   const y2   = fy - ny * half;
+
+//   return (
+//     <g>
+//       {/* Chequered flag effect: alternating black/white segments */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="5" strokeLinecap="round" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#000000" strokeWidth="5" strokeLinecap="round"
+//         strokeDasharray="4,4" />
+//       {/* Outer glow */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="9" strokeLinecap="round" opacity="0.15" />
+//     </g>
+//   );
+// };
+
+// // ─── component ──────────────────────────────────────────────────────────────
+
+// const RaceTrack = ({
+//   drivers,
+//   positions,
+//   trackOutline,
+//   bounds,
+//   flag       = "clear",
+//   showNames  = false,
+//   finishLine = null,
+// }: RaceTrackProps) => {
+//   const project = useMemo(() => makeProjector(bounds), [bounds]);
+
+//   // Build SVG path string once — only changes when track outline or bounds change
+//   const trackPathD = useMemo(() => {
+//     if (!trackOutline || trackOutline.length === 0) return "";
+//     const pts     = trackOutline.map((p) => project(p.x, p.y));
+//     const [first, ...rest] = pts;
+//     return rest.reduce(
+//       (acc, p) => `${acc} L ${p.x.toFixed(1)} ${p.y.toFixed(1)}`,
+//       `M ${first.x.toFixed(1)} ${first.y.toFixed(1)}`
+//     ) + " Z";
+//   }, [trackOutline, project]);
+
+//   const safeFlag   = (flag || "clear").toLowerCase().trim();
+//   const trackColor = FLAG_TRACK_COLOR[safeFlag] ?? FLAG_TRACK_COLOR.clear;
+
+//   return (
+//     <div className="w-full h-full">
+//       <svg
+//         viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H}`}
+//         className="w-full h-full"
+//         style={{ overflow: "visible" }}
+//       >
+//         {/* ── Track rendering — 3 layered strokes ── */}
+
+//         {/* Layer 1: wide outer glow — gives the "circuit lit up" feel */}
+//         <path
+//           d={trackPathD}
+//           stroke={trackColor}
+//           strokeWidth="28"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.18"
+//         />
+
+//         {/* Layer 2: main tarmac surface */}
+//         <path
+//           d={trackPathD}
+//           stroke={trackColor}
+//           strokeWidth="14"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.9"
+//         />
+
+//         {/* Layer 3: inner edge highlight — the bright centre line
+//             subtle white line that gives the track a 3D "lit from above" feel */}
+//         <path
+//           d={trackPathD}
+//           stroke="#ffffff"
+//           strokeWidth="2"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.12"
+//         />
+
+//         {/* ── Finish line ── */}
+//         {finishLine && (
+//           <FinishLineMark
+//             finishLine={finishLine}
+//             trackOutline={trackOutline}
+//             project={project}
+//           />
+//         )}
+
+//         {/* ── Cars ── */}
+//         {drivers.map((d) => {
+//           const pos = positions[d.code];
+//           if (!pos || isNaN(pos.x) || isNaN(pos.y)) return null;
+
+//           const { x, y } = project(pos.x, pos.y);
+//           const r        = pos.in_pit ? 5 : 8;
+//           const opacity  = pos.in_pit ? 0.55 : 1;
+
+//           return (
+//             <g
+//               key={d.code}
+//               opacity={opacity}
+//               style={{ transition: "opacity 0.3s" }}
+//             >
+//               {/* Drop shadow ring — makes cars pop off dark track */}
+//               <circle
+//                 cx={x} cy={y} r={r + 3}
+//                 fill="none"
+//                 stroke="#000000"
+//                 strokeWidth="3"
+//                 opacity="0.5"
+//                 style={{ transition: "cx 0.1s linear, cy 0.1s linear" }}
+//               />
+
+//               {/* Team color fill */}
+//               <circle
+//                 cx={x} cy={y} r={r}
+//                 fill={d.color}
+//                 stroke="#ffffff"
+//                 strokeWidth="1.5"
+//                 style={{ transition: "cx 0.1s linear, cy 0.1s linear" }}
+//               />
+
+//               {/* Driver name — only when toggled on via L key */}
+//               {showNames && (
+//                 <text
+//                   x={x + r + 5}
+//                   y={y + 4}
+//                   fontSize="11"
+//                   fontWeight="900"
+//                   fill="#ffffff"
+//                   stroke="#000000"
+//                   strokeWidth="3"
+//                   paintOrder="stroke"
+//                   style={{
+//                     transition:     "x 0.1s linear, y 0.1s linear",
+//                     userSelect:     "none",
+//                     pointerEvents:  "none",
+//                   }}
+//                 >
+//                   {d.code}
+//                 </text>
+//               )}
+//             </g>
+//           );
+//         })}
+//       </svg>
+//     </div>
+//   );
+// };
+
+// export default RaceTrack;
+
+// import { useMemo } from "react";
+
+// export interface Driver {
+//   code: string;
+//   color: string;
+// }
+
+// export interface CarPosition {
+//   x: number;
+//   y: number;
+//   lap: number | null;
+//   in_pit: boolean;
+// }
+
+// export interface TrackPoint {
+//   x: number;
+//   y: number;
+// }
+
+// export interface Bounds {
+//   x_min: number;
+//   x_max: number;
+//   y_min: number;
+//   y_max: number;
+// }
+
+// export interface FinishLine {
+//   x: number;
+//   y: number;
+// }
+
+// export interface RaceTrackProps {
+//   drivers: Driver[];
+//   positions: Record<string, CarPosition>;
+//   trackOutline: TrackPoint[];
+//   bounds: Bounds;
+//   flag?: string;
+//   showNames?: boolean;
+//   finishLine?: FinishLine | null;
+// }
+
+// // ─── constants ──────────────────────────────────────────────────────────────
+
+// const VIEWBOX_W = 1000;
+// const VIEWBOX_H = 1000;
+// // Decreased padding from 40 to 25 to increase the overall size of the track slightly
+// const PADDING   = 25;
+
+// const FLAG_TRACK_COLOR: Record<string, string> = {
+//   clear:      "#4a4a4a",
+//   yellow:     "#ca8a04",
+//   red:        "#dc2626",
+//   safety_car: "#d97706",
+//   vsc:        "#d97706",
+//   vsc_ending: "#d97706",
+// };
+
+// // ─── projection ─────────────────────────────────────────────────────────────
+
+// const makeProjector = (bounds: Bounds) => {
+//   const dataW = bounds.x_max - bounds.x_min || 1;
+//   const dataH = bounds.y_max - bounds.y_min || 1;
+//   const availW = VIEWBOX_W - PADDING * 2;
+//   const availH = VIEWBOX_H - PADDING * 2;
+
+//   // Uniform scale — keeps circuit shape undistorted
+//   const scale   = Math.min(availW / dataW, availH / dataH);
+//   const offsetX = PADDING + (availW - dataW * scale) / 2;
+//   const offsetY = PADDING + (availH - dataH * scale) / 2;
+
+//   return (x: number, y: number) => ({
+//     x: offsetX + (x - bounds.x_min) * scale,
+//     // SVG y-axis is inverted vs telemetry y-axis
+//     y: offsetY + (dataH - (y - bounds.y_min)) * scale,
+//   });
+// };
+
+// // ─── finish line helper ──────────────────────────────────────────────────────
+
+// /**
+//  * Draws a short perpendicular stroke across the track at the finish line.
+//  * We find the two track-outline points nearest the finish-line coordinate,
+//  * compute the tangent direction between them, then draw a line 90° to it.
+//  */
+// const FinishLineMark = ({
+//   finishLine,
+//   trackOutline,
+//   project,
+// }: {
+//   finishLine: FinishLine;
+//   trackOutline: TrackPoint[];
+//   project: (x: number, y: number) => { x: number; y: number };
+// }) => {
+//   const { x: fx, y: fy } = project(finishLine.x, finishLine.y);
+
+//   // Find the two outline points nearest the projected finish point
+//   let best1 = 0, best2 = 1, bestDist = Infinity;
+//   const projected = trackOutline.map((p) => project(p.x, p.y));
+
+//   for (let i = 0; i < projected.length - 1; i++) {
+//     const mx = (projected[i].x + projected[i + 1].x) / 2;
+//     const my = (projected[i].y + projected[i + 1].y) / 2;
+//     const d  = Math.hypot(mx - fx, my - fy);
+//     if (d < bestDist) {
+//       bestDist = d;
+//       best1    = i;
+//       best2    = i + 1;
+//     }
+//   }
+
+//   // Tangent vector along the track at that point
+//   const tx = projected[best2].x - projected[best1].x;
+//   const ty = projected[best2].y - projected[best1].y;
+//   const len = Math.hypot(tx, ty) || 1;
+
+//   // Perpendicular = rotate tangent 90°
+//   const nx = -ty / len;
+//   const ny =  tx / len;
+
+//   const half = 18; // half-length of the finish line mark in SVG units
+//   const x1   = fx + nx * half;
+//   const y1   = fy + ny * half;
+//   const x2   = fx - nx * half;
+//   const y2   = fy - ny * half;
+
+//   return (
+//     <g>
+//       {/* Chequered flag effect: alternating black/white segments */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="5" strokeLinecap="round" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#000000" strokeWidth="5" strokeLinecap="round"
+//         strokeDasharray="4,4" />
+//       {/* Outer glow */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="9" strokeLinecap="round" opacity="0.15" />
+//     </g>
+//   );
+// };
+
+// // ─── component ──────────────────────────────────────────────────────────────
+
+// const RaceTrack = ({
+//   drivers,
+//   positions,
+//   trackOutline,
+//   bounds,
+//   flag       = "clear",
+//   showNames  = false,
+//   finishLine = null,
+// }: RaceTrackProps) => {
+//   const project = useMemo(() => makeProjector(bounds), [bounds]);
+
+//   // Build SVG path string once — only changes when track outline or bounds change
+//   const trackPathD = useMemo(() => {
+//     if (!trackOutline || trackOutline.length === 0) return "";
+//     const pts     = trackOutline.map((p) => project(p.x, p.y));
+//     const [first, ...rest] = pts;
+//     return rest.reduce(
+//       (acc, p) => `${acc} L ${p.x.toFixed(1)} ${p.y.toFixed(1)}`,
+//       `M ${first.x.toFixed(1)} ${first.y.toFixed(1)}`
+//     ) + " Z";
+//   }, [trackOutline, project]);
+
+//   const safeFlag   = (flag || "clear").toLowerCase().trim();
+//   const trackColor = FLAG_TRACK_COLOR[safeFlag] ?? FLAG_TRACK_COLOR.clear;
+
+//   // Fallback to the first coordinate of the track outline if no explicit finish line is provided
+//   const startLine = finishLine || (trackOutline?.length > 0 ? trackOutline[0] : null);
+
+//   return (
+//     <div className="w-full h-full">
+//       <svg
+//         viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H}`}
+//         className="w-full h-full"
+//         style={{ overflow: "visible" }}
+//       >
+//         {/* ── Track rendering — 3 layered strokes ── */}
+
+//         {/* Layer 1: wide outer glow — gives the "circuit lit up" feel */}
+//         <path
+//           d={trackPathD}
+//           stroke={trackColor}
+//           strokeWidth="28"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.18"
+//         />
+
+//         {/* Layer 2: main tarmac surface */}
+//         <path
+//           d={trackPathD}
+//           stroke={trackColor}
+//           strokeWidth="14"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.9"
+//         />
+
+//         {/* Layer 3: inner edge highlight — the bright centre line
+//             subtle white line that gives the track a 3D "lit from above" feel */}
+//         <path
+//           d={trackPathD}
+//           stroke="#ffffff"
+//           strokeWidth="2"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.12"
+//         />
+
+//         {/* ── Finish line ── */}
+//         {startLine && (
+//           <FinishLineMark
+//             finishLine={startLine}
+//             trackOutline={trackOutline}
+//             project={project}
+//           />
+//         )}
+
+//         {/* ── Cars ── */}
+//         {drivers.map((d) => {
+//           const pos = positions[d.code];
+//           if (!pos || isNaN(pos.x) || isNaN(pos.y)) return null;
+
+//           const { x, y } = project(pos.x, pos.y);
+//           const r        = pos.in_pit ? 5 : 8;
+//           const opacity  = pos.in_pit ? 0.55 : 1;
+
+//           return (
+//             <g
+//               key={d.code}
+//               opacity={opacity}
+//               style={{ transition: "opacity 0.3s" }}
+//             >
+//               {/* Drop shadow ring — makes cars pop off dark track */}
+//               <circle
+//                 cx={x} cy={y} r={r + 3}
+//                 fill="none"
+//                 stroke="#000000"
+//                 strokeWidth="3"
+//                 opacity="0.5"
+//                 style={{ transition: "cx 0.1s linear, cy 0.1s linear" }}
+//               />
+
+//               {/* Team color fill */}
+//               <circle
+//                 cx={x} cy={y} r={r}
+//                 fill={d.color}
+//                 stroke="#ffffff"
+//                 strokeWidth="1.5"
+//                 style={{ transition: "cx 0.1s linear, cy 0.1s linear" }}
+//               />
+
+//               {/* Driver name — only when toggled on via L key */}
+//               {showNames && (
+//                 <text
+//                   x={x + r + 5}
+//                   y={y + 4}
+//                   fontSize="11"
+//                   fontWeight="900"
+//                   fill="#ffffff"
+//                   stroke="#000000"
+//                   strokeWidth="3"
+//                   paintOrder="stroke"
+//                   style={{
+//                     transition:     "x 0.1s linear, y 0.1s linear",
+//                     userSelect:     "none",
+//                     pointerEvents:  "none",
+//                   }}
+//                 >
+//                   {d.code}
+//                 </text>
+//               )}
+//             </g>
+//           );
+//         })}
+//       </svg>
+//     </div>
+//   );
+// };
+
+// export default RaceTrack;
+
+// import { useMemo } from "react";
+
+// export interface Driver {
+//   code: string;
+//   color: string;
+// }
+
+// export interface CarPosition {
+//   x: number;
+//   y: number;
+//   lap: number | null;
+//   in_pit: boolean;
+// }
+
+// export interface TrackPoint {
+//   x: number;
+//   y: number;
+// }
+
+// export interface Bounds {
+//   x_min: number;
+//   x_max: number;
+//   y_min: number;
+//   y_max: number;
+// }
+
+// export interface FinishLine {
+//   x: number;
+//   y: number;
+// }
+
+// export interface RaceTrackProps {
+//   drivers: Driver[];
+//   positions: Record<string, CarPosition>;
+//   trackOutline: TrackPoint[];
+//   bounds: Bounds;
+//   flag?: string;
+//   showNames?: boolean;
+//   finishLine?: FinishLine | null;
+// }
+
+// // ─── constants ──────────────────────────────────────────────────────────────
+
+// const VIEWBOX_W = 1000;
+// const VIEWBOX_H = 1000;
+// // Decreased padding from 40 to 25 to increase the overall size of the track slightly
+// const PADDING   = 1;
+
+// const FLAG_TRACK_COLOR: Record<string, string> = {
+//   clear:      "#4a4a4a",
+//   yellow:     "#ca8a04",
+//   red:        "#dc2626",
+//   safety_car: "#d97706",
+//   vsc:        "#d97706",
+//   vsc_ending: "#d97706",
+// };
+
+// // ─── projection ─────────────────────────────────────────────────────────────
+
+// const makeProjector = (bounds: Bounds) => {
+//   const dataW = bounds.x_max - bounds.x_min || 1;
+//   const dataH = bounds.y_max - bounds.y_min || 1;
+//   const availW = VIEWBOX_W - PADDING * 2;
+//   const availH = VIEWBOX_H - PADDING * 2;
+
+//   // Uniform scale — keeps circuit shape undistorted
+//   const scale   = Math.min(availW / dataW, availH / dataH);
+//   const offsetX = PADDING + (availW - dataW * scale) / 2;
+//   const offsetY = PADDING + (availH - dataH * scale) / 2;
+
+//   return (x: number, y: number) => ({
+//     x: offsetX + (x - bounds.x_min) * scale,
+//     // SVG y-axis is inverted vs telemetry y-axis
+//     y: offsetY + (dataH - (y - bounds.y_min)) * scale,
+//   });
+// };
+
+// // ─── finish line helper ──────────────────────────────────────────────────────
+
+// /**
+//  * Draws a short perpendicular stroke across the track at the finish line.
+//  * We find the two track-outline points nearest the finish-line coordinate,
+//  * compute the tangent direction between them, then draw a line 90° to it.
+//  */
+// const FinishLineMark = ({
+//   finishLine,
+//   trackOutline,
+//   project,
+// }: {
+//   finishLine: FinishLine;
+//   trackOutline: TrackPoint[];
+//   project: (x: number, y: number) => { x: number; y: number };
+// }) => {
+//   const { x: fx, y: fy } = project(finishLine.x, finishLine.y);
+
+//   // Find the two outline points nearest the projected finish point
+//   let best1 = 0, best2 = 1, bestDist = Infinity;
+//   const projected = trackOutline.map((p) => project(p.x, p.y));
+
+//   for (let i = 0; i < projected.length - 1; i++) {
+//     const mx = (projected[i].x + projected[i + 1].x) / 2;
+//     const my = (projected[i].y + projected[i + 1].y) / 2;
+//     const d  = Math.hypot(mx - fx, my - fy);
+//     if (d < bestDist) {
+//       bestDist = d;
+//       best1    = i;
+//       best2    = i + 1;
+//     }
+//   }
+
+//   // Tangent vector along the track at that point
+//   const tx = projected[best2].x - projected[best1].x;
+//   const ty = projected[best2].y - projected[best1].y;
+//   const len = Math.hypot(tx, ty) || 1;
+
+//   // Perpendicular = rotate tangent 90°
+//   const nx = -ty / len;
+//   const ny =  tx / len;
+
+//   const half = 18; // half-length of the finish line mark in SVG units
+//   const x1   = fx + nx * half;
+//   const y1   = fy + ny * half;
+//   const x2   = fx - nx * half;
+//   const y2   = fy - ny * half;
+
+//   return (
+//     <g>
+//       {/* 1. Asphalt burn / shadow (gives the paint depth) */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#000000" strokeWidth="8" strokeLinecap="butt" opacity="0.5" />
+
+//       {/* 2. Base white paint layer */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="6" strokeLinecap="butt" />
+
+//       {/* 3. Crisp black squares (butt cap creates sharp checkerboard boxes) */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#111111" strokeWidth="6" strokeLinecap="butt"
+//         strokeDasharray="4,4" />
+
+//       {/* 4. Reflective paint highlight (only on the white squares) */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="2" strokeLinecap="butt"
+//         strokeDasharray="4,4" strokeDashoffset="4" opacity="0.9" />
+
+//       {/* 5. Soft ambient bloom/glow to match the rest of the track */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="14" strokeLinecap="round" opacity="0.12" />
+//     </g>
+//   );
+// };
+
+// // ─── component ──────────────────────────────────────────────────────────────
+
+// const RaceTrack = ({
+//   drivers,
+//   positions,
+//   trackOutline,
+//   bounds,
+//   flag       = "clear",
+//   showNames  = false,
+//   finishLine = null,
+// }: RaceTrackProps) => {
+//   const project = useMemo(() => makeProjector(bounds), [bounds]);
+
+//   // Build SVG path string once — only changes when track outline or bounds change
+//   const trackPathD = useMemo(() => {
+//     if (!trackOutline || trackOutline.length === 0) return "";
+//     const pts     = trackOutline.map((p) => project(p.x, p.y));
+//     const [first, ...rest] = pts;
+//     return rest.reduce(
+//       (acc, p) => `${acc} L ${p.x.toFixed(1)} ${p.y.toFixed(1)}`,
+//       `M ${first.x.toFixed(1)} ${first.y.toFixed(1)}`
+//     ) + " Z";
+//   }, [trackOutline, project]);
+
+//   const safeFlag   = (flag || "clear").toLowerCase().trim();
+//   const trackColor = FLAG_TRACK_COLOR[safeFlag] ?? FLAG_TRACK_COLOR.clear;
+
+//   // Fallback to the first coordinate of the track outline if no explicit finish line is provided
+//   const startLine = finishLine || (trackOutline?.length > 0 ? trackOutline[0] : null);
+
+//   return (
+//     <div className="w-full h-full">
+//       <svg
+//         viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H}`}
+//         className="w-full h-full"
+//         style={{ overflow: "visible" }}
+//       >
+//         {/* ── Track rendering — 3 layered strokes ── */}
+
+//         {/* Layer 1: wide outer glow — gives the "circuit lit up" feel */}
+//         <path
+//           d={trackPathD}
+//           stroke={trackColor}
+//           strokeWidth="28"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.18"
+//         />
+
+//         {/* Layer 2: main tarmac surface */}
+//         <path
+//           d={trackPathD}
+//           stroke={trackColor}
+//           strokeWidth="14"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.9"
+//         />
+
+//         {/* Layer 3: inner edge highlight — the bright centre line
+//             subtle white line that gives the track a 3D "lit from above" feel */}
+//         <path
+//           d={trackPathD}
+//           stroke="#ffffff"
+//           strokeWidth="2"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.12"
+//         />
+
+//         {/* ── Finish line ── */}
+//         {startLine && (
+//           <FinishLineMark
+//             finishLine={startLine}
+//             trackOutline={trackOutline}
+//             project={project}
+//           />
+//         )}
+
+//         {/* ── Cars ── */}
+//         {drivers.map((d) => {
+//           const pos = positions[d.code];
+//           if (!pos || isNaN(pos.x) || isNaN(pos.y)) return null;
+
+//           const { x, y } = project(pos.x, pos.y);
+//           const r        = pos.in_pit ? 5 : 8;
+//           const opacity  = pos.in_pit ? 0.55 : 1;
+
+//           return (
+//             <g
+//               key={d.code}
+//               opacity={opacity}
+//               style={{ transition: "opacity 0.3s" }}
+//             >
+//               {/* Drop shadow ring — makes cars pop off dark track */}
+//               <circle
+//                 cx={x} cy={y} r={r + 3}
+//                 fill="none"
+//                 stroke="#000000"
+//                 strokeWidth="3"
+//                 opacity="0.5"
+//                 style={{ transition: "cx 0.1s linear, cy 0.1s linear" }}
+//               />
+
+//               {/* Team color fill */}
+//               <circle
+//                 cx={x} cy={y} r={r}
+//                 fill={d.color}
+//                 stroke="#ffffff"
+//                 strokeWidth="1.5"
+//                 style={{ transition: "cx 0.1s linear, cy 0.1s linear" }}
+//               />
+
+//               {/* Driver name — only when toggled on via L key */}
+//               {showNames && (
+//                 <text
+//                   x={x + r + 5}
+//                   y={y + 4}
+//                   fontSize="11"
+//                   fontWeight="900"
+//                   fill="#ffffff"
+//                   stroke="#000000"
+//                   strokeWidth="3"
+//                   paintOrder="stroke"
+//                   style={{
+//                     transition:     "x 0.1s linear, y 0.1s linear",
+//                     userSelect:     "none",
+//                     pointerEvents:  "none",
+//                   }}
+//                 >
+//                   {d.code}
+//                 </text>
+//               )}
+//             </g>
+//           );
+//         })}
+//       </svg>
+//     </div>
+//   );
+// };
+
+// export default RaceTrack;\\
+// import { useMemo } from "react";
+
+// export interface Driver {
+//   code: string;
+//   color: string;
+// }
+
+// export interface CarPosition {
+//   x: number;
+//   y: number;
+//   lap: number | null;
+//   in_pit: boolean;
+// }
+
+// export interface TrackPoint {
+//   x: number;
+//   y: number;
+// }
+
+// export interface Bounds {
+//   x_min: number;
+//   x_max: number;
+//   y_min: number;
+//   y_max: number;
+// }
+
+// export interface FinishLine {
+//   x: number;
+//   y: number;
+// }
+
+// export interface RaceTrackProps {
+//   drivers: Driver[];
+//   positions: Record<string, CarPosition>;
+//   trackOutline: TrackPoint[];
+//   bounds: Bounds;
+//   flag?: string;
+//   showNames?: boolean;
+//   finishLine?: FinishLine | null;
+//   transitionMs?: number; // 🛠️ NEW: Dynamic sync for smooth gliding
+// }
+
+// // ─── constants ──────────────────────────────────────────────────────────────
+
+// const VIEWBOX_W = 1000;
+// const VIEWBOX_H = 1000;
+// const PADDING   = 1;
+
+// const FLAG_TRACK_COLOR: Record<string, string> = {
+//   clear:      "#4a4a4a",
+//   yellow:     "#ca8a04",
+//   red:        "#dc2626",
+//   safety_car: "#d97706",
+//   vsc:        "#d97706",
+//   vsc_ending: "#d97706",
+// };
+
+// // ─── projection ─────────────────────────────────────────────────────────────
+
+// const makeProjector = (bounds: Bounds) => {
+//   const dataW = bounds.x_max - bounds.x_min || 1;
+//   const dataH = bounds.y_max - bounds.y_min || 1;
+//   const availW = VIEWBOX_W - PADDING * 2;
+//   const availH = VIEWBOX_H - PADDING * 2;
+
+//   const scale   = Math.min(availW / dataW, availH / dataH);
+//   const offsetX = PADDING + (availW - dataW * scale) / 2;
+//   const offsetY = PADDING + (availH - dataH * scale) / 2;
+
+//   return (x: number, y: number) => ({
+//     x: offsetX + (x - bounds.x_min) * scale,
+//     y: offsetY + (dataH - (y - bounds.y_min)) * scale,
+//   });
+// };
+
+// // ─── finish line helper ──────────────────────────────────────────────────────
+
+// const FinishLineMark = ({
+//   finishLine,
+//   trackOutline,
+//   project,
+// }: {
+//   finishLine: FinishLine;
+//   trackOutline: TrackPoint[];
+//   project: (x: number, y: number) => { x: number; y: number };
+// }) => {
+//   const { x: fx, y: fy } = project(finishLine.x, finishLine.y);
+
+//   let best1 = 0, best2 = 1, bestDist = Infinity;
+//   const projected = trackOutline.map((p) => project(p.x, p.y));
+
+//   for (let i = 0; i < projected.length - 1; i++) {
+//     const mx = (projected[i].x + projected[i + 1].x) / 2;
+//     const my = (projected[i].y + projected[i + 1].y) / 2;
+//     const d  = Math.hypot(mx - fx, my - fy);
+//     if (d < bestDist) {
+//       bestDist = d;
+//       best1    = i;
+//       best2    = i + 1;
+//     }
+//   }
+
+//   const tx = projected[best2].x - projected[best1].x;
+//   const ty = projected[best2].y - projected[best1].y;
+//   const len = Math.hypot(tx, ty) || 1;
+
+//   const nx = -ty / len;
+//   const ny =  tx / len;
+
+//   const half = 18; 
+//   const x1   = fx + nx * half;
+//   const y1   = fy + ny * half;
+//   const x2   = fx - nx * half;
+//   const y2   = fy - ny * half;
+
+//   return (
+//     <g>
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#000000" strokeWidth="8" strokeLinecap="butt" opacity="0.5" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="6" strokeLinecap="butt" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#111111" strokeWidth="6" strokeLinecap="butt"
+//         strokeDasharray="4,4" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="2" strokeLinecap="butt"
+//         strokeDasharray="4,4" strokeDashoffset="4" opacity="0.9" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="14" strokeLinecap="round" opacity="0.12" />
+//     </g>
+//   );
+// };
+
+// // ─── component ──────────────────────────────────────────────────────────────
+
+// const RaceTrack = ({
+//   drivers,
+//   positions,
+//   trackOutline,
+//   bounds,
+//   flag       = "clear",
+//   showNames  = false,
+//   finishLine = null,
+//   transitionMs = 300, 
+// }: RaceTrackProps) => {
+//   const project = useMemo(() => makeProjector(bounds), [bounds]);
+
+//   const trackPathD = useMemo(() => {
+//     if (!trackOutline || trackOutline.length === 0) return "";
+//     const pts     = trackOutline.map((p) => project(p.x, p.y));
+//     const [first, ...rest] = pts;
+//     return rest.reduce(
+//       // 🛠️ FIX: Removed .toFixed(1) to stop the track line from rounding/shifting under the cars
+//       (acc, p) => `${acc} L ${p.x.toFixed(3)} ${p.y.toFixed(3)}`,
+//       `M ${first.x.toFixed(3)} ${first.y.toFixed(3)}`
+//     ) + " Z";
+//   }, [trackOutline, project]);
+
+//   const safeFlag   = (flag || "clear").toLowerCase().trim();
+//   const trackColor = FLAG_TRACK_COLOR[safeFlag] ?? FLAG_TRACK_COLOR.clear;
+//   const startLine = finishLine || (trackOutline?.length > 0 ? trackOutline[0] : null);
+
+//   // 🛠️ FIX: Perfect timing sync for CSS transitions
+//   const smoothTransform = `cx ${transitionMs}ms linear, cy ${transitionMs}ms linear`;
+//   const textTransform = `x ${transitionMs}ms linear, y ${transitionMs}ms linear`;
+
+//   return (
+//     <div className="w-full h-full">
+//       <svg
+//         viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H}`}
+//         className="w-full h-full"
+//         style={{ overflow: "visible" }}
+//       >
+//         <path d={trackPathD} stroke={trackColor} strokeWidth="28" fill="none" strokeLinejoin="round" strokeLinecap="round" opacity="0.18" />
+//         <path d={trackPathD} stroke={trackColor} strokeWidth="14" fill="none" strokeLinejoin="round" strokeLinecap="round" opacity="0.9" />
+//         <path d={trackPathD} stroke="#ffffff" strokeWidth="2" fill="none" strokeLinejoin="round" strokeLinecap="round" opacity="0.12" />
+
+//         {startLine && (
+//           <FinishLineMark finishLine={startLine} trackOutline={trackOutline} project={project} />
+//         )}
+
+//         {drivers.map((d) => {
+//           const pos = positions[d.code];
+//           if (!pos || isNaN(pos.x) || isNaN(pos.y)) return null;
+
+//           const { x, y } = project(pos.x, pos.y);
+//           // 🛠️ FIX: Locked all cars to size 8, regardless of pitting
+//           const r = 8;
+//           const opacity = pos.in_pit ? 0.55 : 1;
+
+//           return (
+//             <g key={d.code} opacity={opacity} style={{ transition: "opacity 0.2s" }}>
+//               <circle
+//                 cx={x} cy={y} r={r + 3}
+//                 fill="none" stroke="#000000" strokeWidth="3" opacity="0.5"
+//                 style={{ transition: smoothTransform }}
+//               />
+//               <circle
+//                 cx={x} cy={y} r={r}
+//                 fill={d.color} stroke="#ffffff" strokeWidth="1.5"
+//                 style={{ transition: smoothTransform }}
+//               />
+//               {showNames && (
+//                 <text
+//                   x={x + r + 5} y={y + 4}
+//                   fontSize="11" fontWeight="900" fill="#ffffff" stroke="#000000" strokeWidth="3" paintOrder="stroke"
+//                   style={{ transition: textTransform, userSelect: "none", pointerEvents: "none" }}
+//                 >
+//                   {d.code}
+//                 </text>
+//               )}
+//             </g>
+//           );
+//         })}
+//       </svg>
+//     </div>
+//   );
+// };
+
+// export default RaceTrack;
+
+// import { useMemo, useRef } from "react";
+
+// export interface Driver {
+//   code: string;
+//   color: string;
+// }
+
+// export interface CarPosition {
+//   x: number;
+//   y: number;
+//   lap: number | null;
+//   in_pit: boolean;
+// }
+
+// export interface TrackPoint {
+//   x: number;
+//   y: number;
+// }
+
+// export interface Bounds {
+//   x_min: number;
+//   x_max: number;
+//   y_min: number;
+//   y_max: number;
+// }
+
+// export interface FinishLine {
+//   x: number;
+//   y: number;
+// }
+
+// export interface RaceTrackProps {
+//   drivers: Driver[];
+//   positions: Record<string, CarPosition>;
+//   trackOutline: TrackPoint[];
+//   bounds: Bounds;
+//   flag?: string;
+//   showNames?: boolean;
+//   finishLine?: FinishLine | null;
+//   transitionMs?: number;
+// }
+
+// // ─── constants ───────────────────────────────────────────────────────────────
+
+// const VIEWBOX_W = 1000;
+// const VIEWBOX_H = 1000;
+// // Generous padding so cars at the edge are never clipped
+// const PADDING   = 40;
+
+// // Car sizes
+// const CAR_R_RACING = 8;
+// const CAR_R_PIT    = 5;
+
+// // Pit debounce: how many consecutive in_pit=true frames before we confirm pit state.
+// // Must match Leaderboard.tsx so both update at the same frame.
+// const PIT_CONFIRM_THRESHOLD = 3;
+
+// const FLAG_TRACK_COLOR: Record<string, string> = {
+//   clear:      "#5a5a5a",
+//   yellow:     "#ca8a04",
+//   red:        "#dc2626",
+//   safety_car: "#d97706",
+//   vsc:        "#d97706",
+//   vsc_ending: "#d97706",
+// };
+
+// // ─── projection ──────────────────────────────────────────────────────────────
+
+// const makeProjector = (bounds: Bounds) => {
+//   const dataW  = bounds.x_max - bounds.x_min || 1;
+//   const dataH  = bounds.y_max - bounds.y_min || 1;
+//   const availW = VIEWBOX_W - PADDING * 2;
+//   const availH = VIEWBOX_H - PADDING * 2;
+
+//   const scale   = Math.min(availW / dataW, availH / dataH);
+//   const offsetX = PADDING + (availW - dataW * scale) / 2;
+//   const offsetY = PADDING + (availH - dataH * scale) / 2;
+
+//   return (x: number, y: number) => ({
+//     x: offsetX + (x - bounds.x_min) * scale,
+//     // FastF1 Y increases upward, SVG Y increases downward — flip it
+//     y: offsetY + (dataH - (y - bounds.y_min)) * scale,
+//   });
+// };
+
+// // ─── finish line ─────────────────────────────────────────────────────────────
+
+// const FinishLineMark = ({
+//   finishLine,
+//   trackOutline,
+//   project,
+// }: {
+//   finishLine: FinishLine;
+//   trackOutline: TrackPoint[];
+//   project: (x: number, y: number) => { x: number; y: number };
+// }) => {
+//   const { x: fx, y: fy } = project(finishLine.x, finishLine.y);
+//   const projected = trackOutline.map((p) => project(p.x, p.y));
+
+//   let best1 = 0, best2 = 1, bestDist = Infinity;
+//   for (let i = 0; i < projected.length - 1; i++) {
+//     const mx = (projected[i].x + projected[i + 1].x) / 2;
+//     const my = (projected[i].y + projected[i + 1].y) / 2;
+//     const d  = Math.hypot(mx - fx, my - fy);
+//     if (d < bestDist) { bestDist = d; best1 = i; best2 = i + 1; }
+//   }
+
+//   const tx  = projected[best2].x - projected[best1].x;
+//   const ty  = projected[best2].y - projected[best1].y;
+//   const len = Math.hypot(tx, ty) || 1;
+//   const nx  = -ty / len;
+//   const ny  =  tx / len;
+//   const half = 20;
+
+//   const x1 = fx + nx * half, y1 = fy + ny * half;
+//   const x2 = fx - nx * half, y2 = fy - ny * half;
+
+//   return (
+//     <g>
+//       <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#000" strokeWidth="10" strokeLinecap="butt" opacity="0.4" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#fff" strokeWidth="7"  strokeLinecap="butt" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#111" strokeWidth="7"  strokeLinecap="butt" strokeDasharray="5,5" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#fff" strokeWidth="2"  strokeLinecap="butt" strokeDasharray="5,5" strokeDashoffset="5" opacity="0.9" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#fff" strokeWidth="16" strokeLinecap="round" opacity="0.08" />
+//     </g>
+//   );
+// };
+
+// // ─── main component ──────────────────────────────────────────────────────────
+
+// const RaceTrack = ({
+//   drivers,
+//   positions,
+//   trackOutline,
+//   bounds,
+//   flag         = "clear",
+//   showNames    = false,
+//   finishLine   = null,
+//   transitionMs = 300,
+// }: RaceTrackProps) => {
+//   const project = useMemo(() => makeProjector(bounds), [bounds]);
+
+//   // ── debounced pit state (mirrors Leaderboard.tsx logic exactly) ──
+//   const pitCounterRef = useRef<Map<string, number>>(new Map());
+
+//   const trackPathD = useMemo(() => {
+//     if (!trackOutline || trackOutline.length === 0) return "";
+//     const pts          = trackOutline.map((p) => project(p.x, p.y));
+//     const [first, ...rest] = pts;
+//     return (
+//       rest.reduce(
+//         (acc, p) => `${acc} L ${p.x.toFixed(3)} ${p.y.toFixed(3)}`,
+//         `M ${first.x.toFixed(3)} ${first.y.toFixed(3)}`
+//       ) + " Z"
+//     );
+//   }, [trackOutline, project]);
+
+//   const safeFlag   = (flag || "clear").toLowerCase().trim();
+//   const trackColor = FLAG_TRACK_COLOR[safeFlag] ?? FLAG_TRACK_COLOR.clear;
+//   const startLine  = finishLine || (trackOutline?.length > 0 ? trackOutline[0] : null);
+
+//   const smoothTransform = `cx ${transitionMs}ms linear, cy ${transitionMs}ms linear`;
+//   const textTransform   = `x ${transitionMs}ms linear, y ${transitionMs}ms linear`;
+//   const sizeTransition  = `r 200ms ease-in-out`;
+
+//   // Build confirmed pit states for all drivers this render
+//   const confirmedPitMap = useMemo(() => {
+//     const map = new Map<string, boolean>();
+//     drivers.forEach((d) => {
+//       const pos      = positions[d.code];
+//       const rawInPit = pos?.in_pit || false;
+//       const prev     = pitCounterRef.current.get(d.code) ?? 0;
+//       const next     = rawInPit ? prev + 1 : 0;
+//       pitCounterRef.current.set(d.code, next);
+//       map.set(d.code, next >= PIT_CONFIRM_THRESHOLD);
+//     });
+//     return map;
+//   }, [drivers, positions]);
+
+//   return (
+//     <div className="w-full h-full">
+//       <svg
+//         viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H}`}
+//         className="w-full h-full"
+//         style={{ overflow: "visible" }}
+//       >
+//         {/* ── track layers ── */}
+//         {/* Outer glow */}
+//         <path d={trackPathD} stroke={trackColor} strokeWidth="38" fill="none"
+//           strokeLinejoin="round" strokeLinecap="round" opacity="0.10" />
+//         {/* Road body — wider than before so car dots sit inside it */}
+//         <path d={trackPathD} stroke={trackColor} strokeWidth="22" fill="none"
+//           strokeLinejoin="round" strokeLinecap="round" opacity="0.85" />
+//         {/* Kerb highlight */}
+//         <path d={trackPathD} stroke="#ffffff" strokeWidth="2" fill="none"
+//           strokeLinejoin="round" strokeLinecap="round" opacity="0.08" />
+
+//         {startLine && (
+//           <FinishLineMark
+//             finishLine={startLine}
+//             trackOutline={trackOutline}
+//             project={project}
+//           />
+//         )}
+
+//         {/* ── cars ── */}
+//         {drivers.map((d) => {
+//           const pos = positions[d.code];
+//           if (!pos || isNaN(pos.x) || isNaN(pos.y)) return null;
+
+//           const { x, y }   = project(pos.x, pos.y);
+//           const isPitting   = confirmedPitMap.get(d.code) ?? false;
+//           const r           = isPitting ? CAR_R_PIT : CAR_R_RACING;
+
+//           return (
+//             <g key={d.code}>
+//               {/* ── shadow ring (always present, gives depth) ── */}
+//               <circle
+//                 cx={x} cy={y} r={r + 4}
+//                 fill="none" stroke="#000000" strokeWidth="4" opacity="0.35"
+//                 style={{ transition: `${smoothTransform}, ${sizeTransition}` }}
+//               />
+
+//               {/* ── pit indicator ring (only visible when pitting) ── */}
+//               {isPitting && (
+//                 <circle
+//                   cx={x} cy={y} r={r + 7}
+//                   fill="none"
+//                   stroke="#facc15"
+//                   strokeWidth="1.5"
+//                   strokeDasharray="3 3"
+//                   opacity="0.7"
+//                   style={{ transition: smoothTransform }}
+//                 />
+//               )}
+
+//               {/* ── car body ── */}
+//               <circle
+//                 cx={x} cy={y} r={r}
+//                 fill={isPitting ? "#4a4a4a" : d.color}
+//                 stroke={isPitting ? "#888888" : "#ffffff"}
+//                 strokeWidth={isPitting ? 1 : 1.5}
+//                 opacity={isPitting ? 0.6 : 1}
+//                 style={{ transition: `${smoothTransform}, ${sizeTransition}, opacity 200ms ease-in-out` }}
+//               />
+
+//               {/* ── driver label ── */}
+//               {showNames && (
+//                 <text
+//                   x={x + r + 5} y={y + 4}
+//                   fontSize="11" fontWeight="900"
+//                   fill={isPitting ? "#888" : "#ffffff"}
+//                   stroke="#000000" strokeWidth="3" paintOrder="stroke"
+//                   style={{
+//                     transition: textTransform,
+//                     userSelect: "none",
+//                     pointerEvents: "none",
+//                   }}
+//                 >
+//                   {d.code}
+//                 </text>
+//               )}
+//             </g>
+//           );
+//         })}
+//       </svg>
+//     </div>
+//   );
+// };
+
+// export default RaceTrack;
+
+// import { useMemo } from "react";
+
+// export interface Driver {
+//   code: string;
+//   color: string;
+// }
+
+// export interface CarPosition {
+//   x: number;
+//   y: number;
+//   lap: number | null;
+//   in_pit: boolean;
+// }
+
+// export interface TrackPoint {
+//   x: number;
+//   y: number;
+// }
+
+// export interface Bounds {
+//   x_min: number;
+//   x_max: number;
+//   y_min: number;
+//   y_max: number;
+// }
+
+// export interface RaceTrackProps {
+//   drivers: Driver[];
+//   positions: Record<string, CarPosition>;
+//   trackOutline: TrackPoint[];
+//   bounds: Bounds;
+//   flag?: string; 
+// }
+
+// const VIEWBOX_WIDTH = 1000;
+// const VIEWBOX_HEIGHT = 1000;
+// const PADDING = 45; 
+
+// const FLAG_COLORS: Record<string, string> = {
+//   clear: "#525252", 
+//   "1": "#525252",
+//   yellow: "#e6c900",
+//   "2": "#e6c900",
+//   red: "#dc2626",
+//   "5": "#dc2626",
+//   safety_car: "#f59e0b",
+//   "4": "#f59e0b",
+//   vsc: "#f59e0b",
+//   "6": "#f59e0b",
+//   vsc_ending: "#f59e0b",
+//   "7": "#f59e0b",
+// };
+
+// const FLAG_LABELS: Record<string, string> = {
+//   yellow: "YELLOW FLAG",
+//   "2": "YELLOW FLAG",
+//   red: "RED FLAG",
+//   "5": "RED FLAG",
+//   safety_car: "SAFETY CAR DEPLOYED",
+//   "4": "SAFETY CAR DEPLOYED",
+//   vsc: "VIRTUAL SAFETY CAR",
+//   "6": "VIRTUAL SAFETY CAR",
+//   vsc_ending: "VSC ENDING",
+//   "7": "VSC ENDING",
+// };
+
+// const makeProjector = (bounds: Bounds) => {
+//   const dataWidth = bounds.x_max - bounds.x_min || 1;
+//   const dataHeight = bounds.y_max - bounds.y_min || 1;
+//   const availableWidth = VIEWBOX_WIDTH - PADDING * 2;
+//   const availableHeight = VIEWBOX_HEIGHT - PADDING * 2;
+//   const scale = Math.min(availableWidth / dataWidth, availableHeight / dataHeight);
+//   const offsetX = PADDING + (availableWidth - dataWidth * scale) / 2;
+//   const offsetY = PADDING + (availableHeight - dataHeight * scale) / 2;
+
+//   return (x: number, y: number) => {
+//     const svgX = offsetX + (x - bounds.x_min) * scale;
+//     const svgY = offsetY + (dataHeight - (y - bounds.y_min)) * scale;
+//     return { x: svgX, y: svgY };
+//   };
+// };
+
+// const RaceTrack = ({ drivers, positions, trackOutline, bounds, flag }: RaceTrackProps) => {
+//   const project = useMemo(() => makeProjector(bounds), [bounds]);
+
+//   const trackPathD = useMemo(() => {
+//     if (!trackOutline || trackOutline.length === 0) return "";
+//     const points = trackOutline.map((p) => project(p.x, p.y));
+//     const [first, ...rest] = points;
+//     const path = rest.reduce(
+//       (acc, p) => `${acc} L ${p.x.toFixed(2)} ${p.y.toFixed(2)}`,
+//       `M ${first.x.toFixed(2)} ${first.y.toFixed(2)}`
+//     );
+//     return `${path} Z`;
+//   }, [trackOutline, project]);
+
+//   const safeFlag = (flag || "clear").toString().toLowerCase().trim();
+//   const trackColor = FLAG_COLORS[safeFlag] || FLAG_COLORS.clear;
+//   const isFlagActive = safeFlag !== "clear" && safeFlag !== "1" && !!FLAG_LABELS[safeFlag];
+
+//   return (
+//     <div className="w-full h-full flex items-center justify-center relative">
+      
+//       {/* 🛠️ FIX: Sleek, F1 Broadcast Style Flag Banner */}
+//       {isFlagActive && (
+//         <div className="absolute top-8 left-1/2 -translate-x-1/2 z-[100] flex items-stretch bg-neutral-900/95 backdrop-blur-md border border-neutral-700/50 rounded-lg shadow-[0_10px_40px_rgba(0,0,0,0.8)] overflow-hidden">
+//           <div className="w-2" style={{ backgroundColor: trackColor }} />
+//           <div className="px-6 py-2.5 flex items-center gap-3">
+//             <span 
+//               className="w-3 h-3 rounded-full animate-pulse" 
+//               style={{ backgroundColor: trackColor, boxShadow: `0 0 10px ${trackColor}` }} 
+//             />
+//             <span className="font-black text-sm tracking-widest text-white uppercase">
+//               {FLAG_LABELS[safeFlag]}
+//             </span>
+//           </div>
+//         </div>
+//       )}
+
+//       <svg viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`} className="w-full h-full drop-shadow-2xl">
+//         <path d={trackPathD} stroke={trackColor} strokeWidth="24" fill="none" strokeLinejoin="round" opacity="0.3" />
+//         <path d={trackPathD} stroke={trackColor} strokeWidth="12" fill="none" strokeLinejoin="round" />
+//         <path d={trackPathD} stroke="#ffffff" strokeWidth="1.5" strokeDasharray="4,6" fill="none" strokeLinejoin="round" opacity="0.4" />
+
+//         {drivers.map((d) => {
+//           const pos = positions[d.code];
+//           if (!pos || isNaN(pos.x)) return null;
+          
+//           const { x, y } = project(pos.x, pos.y);
+//           return (
+//             <g key={d.code} style={{ transition: "transform 0.1s linear" }}>
+//               <circle
+//                 cx={x} cy={y}
+//                 r="8"
+//                 fill={d.color}
+//                 stroke="#fff"
+//                 strokeWidth="1.5"
+//                 style={{ transition: "cx 0.1s linear, cy 0.1s linear" }}
+//               />
+//               <text
+//                 x={x + 12} y={y + 3}
+//                 fontSize="11"
+//                 fontWeight="900"
+//                 fill="#fff"
+//                 className="drop-shadow-md"
+//                 style={{ transition: "x 0.1s linear, y 0.1s linear" }}
+//               >
+//                 {d.code}
+//               </text>
+//             </g>
+//           );
+//         })}
+//       </svg>
+//     </div>
+//   );
+// };
+
+// export default RaceTrack;
+
+// import { useMemo } from "react";
+
+// export interface Driver {
+//   code: string;
+//   color: string;
+// }
+
+// export interface CarPosition {
+//   x: number;
+//   y: number;
+//   lap: number | null;
+//   in_pit: boolean;
+// }
+
+// export interface TrackPoint {
+//   x: number;
+//   y: number;
+// }
+
+// export interface Bounds {
+//   x_min: number;
+//   x_max: number;
+//   y_min: number;
+//   y_max: number;
+// }
+
+// export interface FinishLine {
+//   x: number;
+//   y: number;
+// }
+
+// export interface RaceTrackProps {
+//   drivers: Driver[];
+//   positions: Record<string, CarPosition>;
+//   trackOutline: TrackPoint[];
+//   bounds: Bounds;
+//   flag?: string;
+//   showNames?: boolean;
+//   finishLine?: FinishLine | null;
+// }
+
+// // ─── constants ──────────────────────────────────────────────────────────────
+
+// const VIEWBOX_W = 1000;
+// const VIEWBOX_H = 1000;
+// const PADDING   = 40;
+
+// const FLAG_TRACK_COLOR: Record<string, string> = {
+//   clear:      "#4a4a4a",
+//   yellow:     "#ca8a04",
+//   red:        "#dc2626",
+//   safety_car: "#d97706",
+//   vsc:        "#d97706",
+//   vsc_ending: "#d97706",
+// };
+
+// // ─── projection ─────────────────────────────────────────────────────────────
+
+// const makeProjector = (bounds: Bounds) => {
+//   const dataW = bounds.x_max - bounds.x_min || 1;
+//   const dataH = bounds.y_max - bounds.y_min || 1;
+//   const availW = VIEWBOX_W - PADDING * 2;
+//   const availH = VIEWBOX_H - PADDING * 2;
+
+//   // Uniform scale — keeps circuit shape undistorted
+//   const scale   = Math.min(availW / dataW, availH / dataH);
+//   const offsetX = PADDING + (availW - dataW * scale) / 2;
+//   const offsetY = PADDING + (availH - dataH * scale) / 2;
+
+//   return (x: number, y: number) => ({
+//     x: offsetX + (x - bounds.x_min) * scale,
+//     // SVG y-axis is inverted vs telemetry y-axis
+//     y: offsetY + (dataH - (y - bounds.y_min)) * scale,
+//   });
+// };
+
+// // ─── finish line helper ──────────────────────────────────────────────────────
+
+// /**
+//  * Draws a short perpendicular stroke across the track at the finish line.
+//  * We find the two track-outline points nearest the finish-line coordinate,
+//  * compute the tangent direction between them, then draw a line 90° to it.
+//  */
+// const FinishLineMark = ({
+//   finishLine,
+//   trackOutline,
+//   project,
+// }: {
+//   finishLine: FinishLine;
+//   trackOutline: TrackPoint[];
+//   project: (x: number, y: number) => { x: number; y: number };
+// }) => {
+//   const { x: fx, y: fy } = project(finishLine.x, finishLine.y);
+
+//   // Find the two outline points nearest the projected finish point
+//   let best1 = 0, best2 = 1, bestDist = Infinity;
+//   const projected = trackOutline.map((p) => project(p.x, p.y));
+
+//   for (let i = 0; i < projected.length - 1; i++) {
+//     const mx = (projected[i].x + projected[i + 1].x) / 2;
+//     const my = (projected[i].y + projected[i + 1].y) / 2;
+//     const d  = Math.hypot(mx - fx, my - fy);
+//     if (d < bestDist) {
+//       bestDist = d;
+//       best1    = i;
+//       best2    = i + 1;
+//     }
+//   }
+
+//   // Tangent vector along the track at that point
+//   const tx = projected[best2].x - projected[best1].x;
+//   const ty = projected[best2].y - projected[best1].y;
+//   const len = Math.hypot(tx, ty) || 1;
+
+//   // Perpendicular = rotate tangent 90°
+//   const nx = -ty / len;
+//   const ny =  tx / len;
+
+//   const half = 18; // half-length of the finish line mark in SVG units
+//   const x1   = fx + nx * half;
+//   const y1   = fy + ny * half;
+//   const x2   = fx - nx * half;
+//   const y2   = fy - ny * half;
+
+//   return (
+//     <g>
+//       {/* Chequered flag effect: alternating black/white segments */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="5" strokeLinecap="round" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#000000" strokeWidth="5" strokeLinecap="round"
+//         strokeDasharray="4,4" />
+//       {/* Outer glow */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="9" strokeLinecap="round" opacity="0.15" />
+//     </g>
+//   );
+// };
+
+// // ─── component ──────────────────────────────────────────────────────────────
+
+// const RaceTrack = ({
+//   drivers,
+//   positions,
+//   trackOutline,
+//   bounds,
+//   flag       = "clear",
+//   showNames  = false,
+//   finishLine = null,
+// }: RaceTrackProps) => {
+//   const project = useMemo(() => makeProjector(bounds), [bounds]);
+
+//   // Build SVG path string once — only changes when track outline or bounds change
+//   const trackPathD = useMemo(() => {
+//     if (!trackOutline || trackOutline.length === 0) return "";
+//     const pts     = trackOutline.map((p) => project(p.x, p.y));
+//     const [first, ...rest] = pts;
+//     return rest.reduce(
+//       (acc, p) => `${acc} L ${p.x.toFixed(1)} ${p.y.toFixed(1)}`,
+//       `M ${first.x.toFixed(1)} ${first.y.toFixed(1)}`
+//     ) + " Z";
+//   }, [trackOutline, project]);
+
+//   const safeFlag   = (flag || "clear").toLowerCase().trim();
+//   const trackColor = FLAG_TRACK_COLOR[safeFlag] ?? FLAG_TRACK_COLOR.clear;
+
+//   return (
+//     <div className="w-full h-full">
+//       <svg
+//         viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H}`}
+//         className="w-full h-full"
+//         style={{ overflow: "visible" }}
+//       >
+//         {/* ── Track rendering — 3 layered strokes ── */}
+
+//         {/* Layer 1: wide outer glow — gives the "circuit lit up" feel */}
+//         <path
+//           d={trackPathD}
+//           stroke={trackColor}
+//           strokeWidth="28"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.18"
+//         />
+
+//         {/* Layer 2: main tarmac surface */}
+//         <path
+//           d={trackPathD}
+//           stroke={trackColor}
+//           strokeWidth="14"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.9"
+//         />
+
+//         {/* Layer 3: inner edge highlight — the bright centre line
+//             subtle white line that gives the track a 3D "lit from above" feel */}
+//         <path
+//           d={trackPathD}
+//           stroke="#ffffff"
+//           strokeWidth="2"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.12"
+//         />
+
+//         {/* ── Finish line ── */}
+//         {finishLine && (
+//           <FinishLineMark
+//             finishLine={finishLine}
+//             trackOutline={trackOutline}
+//             project={project}
+//           />
+//         )}
+
+//         {/* ── Cars ── */}
+//         {drivers.map((d) => {
+//           const pos = positions[d.code];
+//           if (!pos || isNaN(pos.x) || isNaN(pos.y)) return null;
+
+//           const { x, y } = project(pos.x, pos.y);
+//           const r        = pos.in_pit ? 5 : 8;
+//           const opacity  = pos.in_pit ? 0.55 : 1;
+
+//           return (
+//             <g
+//               key={d.code}
+//               opacity={opacity}
+//               style={{ transition: "opacity 0.3s" }}
+//             >
+//               {/* Drop shadow ring — makes cars pop off dark track */}
+//               <circle
+//                 cx={x} cy={y} r={r + 3}
+//                 fill="none"
+//                 stroke="#000000"
+//                 strokeWidth="3"
+//                 opacity="0.5"
+//                 style={{ transition: "cx 0.1s linear, cy 0.1s linear" }}
+//               />
+
+//               {/* Team color fill */}
+//               <circle
+//                 cx={x} cy={y} r={r}
+//                 fill={d.color}
+//                 stroke="#ffffff"
+//                 strokeWidth="1.5"
+//                 style={{ transition: "cx 0.1s linear, cy 0.1s linear" }}
+//               />
+
+//               {/* Driver name — only when toggled on via L key */}
+//               {showNames && (
+//                 <text
+//                   x={x + r + 5}
+//                   y={y + 4}
+//                   fontSize="11"
+//                   fontWeight="900"
+//                   fill="#ffffff"
+//                   stroke="#000000"
+//                   strokeWidth="3"
+//                   paintOrder="stroke"
+//                   style={{
+//                     transition:     "x 0.1s linear, y 0.1s linear",
+//                     userSelect:     "none",
+//                     pointerEvents:  "none",
+//                   }}
+//                 >
+//                   {d.code}
+//                 </text>
+//               )}
+//             </g>
+//           );
+//         })}
+//       </svg>
+//     </div>
+//   );
+// };
+
+// export default RaceTrack;
+
+// import { useMemo } from "react";
+
+// export interface Driver {
+//   code: string;
+//   color: string;
+// }
+
+// export interface CarPosition {
+//   x: number;
+//   y: number;
+//   lap: number | null;
+//   in_pit: boolean;
+// }
+
+// export interface TrackPoint {
+//   x: number;
+//   y: number;
+// }
+
+// export interface Bounds {
+//   x_min: number;
+//   x_max: number;
+//   y_min: number;
+//   y_max: number;
+// }
+
+// export interface FinishLine {
+//   x: number;
+//   y: number;
+// }
+
+// export interface RaceTrackProps {
+//   drivers: Driver[];
+//   positions: Record<string, CarPosition>;
+//   trackOutline: TrackPoint[];
+//   bounds: Bounds;
+//   flag?: string;
+//   showNames?: boolean;
+//   finishLine?: FinishLine | null;
+// }
+
+// // ─── constants ──────────────────────────────────────────────────────────────
+
+// const VIEWBOX_W = 1000;
+// const VIEWBOX_H = 1000;
+// // Decreased padding from 40 to 25 to increase the overall size of the track slightly
+// const PADDING   = 25;
+
+// const FLAG_TRACK_COLOR: Record<string, string> = {
+//   clear:      "#4a4a4a",
+//   yellow:     "#ca8a04",
+//   red:        "#dc2626",
+//   safety_car: "#d97706",
+//   vsc:        "#d97706",
+//   vsc_ending: "#d97706",
+// };
+
+// // ─── projection ─────────────────────────────────────────────────────────────
+
+// const makeProjector = (bounds: Bounds) => {
+//   const dataW = bounds.x_max - bounds.x_min || 1;
+//   const dataH = bounds.y_max - bounds.y_min || 1;
+//   const availW = VIEWBOX_W - PADDING * 2;
+//   const availH = VIEWBOX_H - PADDING * 2;
+
+//   // Uniform scale — keeps circuit shape undistorted
+//   const scale   = Math.min(availW / dataW, availH / dataH);
+//   const offsetX = PADDING + (availW - dataW * scale) / 2;
+//   const offsetY = PADDING + (availH - dataH * scale) / 2;
+
+//   return (x: number, y: number) => ({
+//     x: offsetX + (x - bounds.x_min) * scale,
+//     // SVG y-axis is inverted vs telemetry y-axis
+//     y: offsetY + (dataH - (y - bounds.y_min)) * scale,
+//   });
+// };
+
+// // ─── finish line helper ──────────────────────────────────────────────────────
+
+// /**
+//  * Draws a short perpendicular stroke across the track at the finish line.
+//  * We find the two track-outline points nearest the finish-line coordinate,
+//  * compute the tangent direction between them, then draw a line 90° to it.
+//  */
+// const FinishLineMark = ({
+//   finishLine,
+//   trackOutline,
+//   project,
+// }: {
+//   finishLine: FinishLine;
+//   trackOutline: TrackPoint[];
+//   project: (x: number, y: number) => { x: number; y: number };
+// }) => {
+//   const { x: fx, y: fy } = project(finishLine.x, finishLine.y);
+
+//   // Find the two outline points nearest the projected finish point
+//   let best1 = 0, best2 = 1, bestDist = Infinity;
+//   const projected = trackOutline.map((p) => project(p.x, p.y));
+
+//   for (let i = 0; i < projected.length - 1; i++) {
+//     const mx = (projected[i].x + projected[i + 1].x) / 2;
+//     const my = (projected[i].y + projected[i + 1].y) / 2;
+//     const d  = Math.hypot(mx - fx, my - fy);
+//     if (d < bestDist) {
+//       bestDist = d;
+//       best1    = i;
+//       best2    = i + 1;
+//     }
+//   }
+
+//   // Tangent vector along the track at that point
+//   const tx = projected[best2].x - projected[best1].x;
+//   const ty = projected[best2].y - projected[best1].y;
+//   const len = Math.hypot(tx, ty) || 1;
+
+//   // Perpendicular = rotate tangent 90°
+//   const nx = -ty / len;
+//   const ny =  tx / len;
+
+//   const half = 18; // half-length of the finish line mark in SVG units
+//   const x1   = fx + nx * half;
+//   const y1   = fy + ny * half;
+//   const x2   = fx - nx * half;
+//   const y2   = fy - ny * half;
+
+//   return (
+//     <g>
+//       {/* Chequered flag effect: alternating black/white segments */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="5" strokeLinecap="round" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#000000" strokeWidth="5" strokeLinecap="round"
+//         strokeDasharray="4,4" />
+//       {/* Outer glow */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="9" strokeLinecap="round" opacity="0.15" />
+//     </g>
+//   );
+// };
+
+// // ─── component ──────────────────────────────────────────────────────────────
+
+// const RaceTrack = ({
+//   drivers,
+//   positions,
+//   trackOutline,
+//   bounds,
+//   flag       = "clear",
+//   showNames  = false,
+//   finishLine = null,
+// }: RaceTrackProps) => {
+//   const project = useMemo(() => makeProjector(bounds), [bounds]);
+
+//   // Build SVG path string once — only changes when track outline or bounds change
+//   const trackPathD = useMemo(() => {
+//     if (!trackOutline || trackOutline.length === 0) return "";
+//     const pts     = trackOutline.map((p) => project(p.x, p.y));
+//     const [first, ...rest] = pts;
+//     return rest.reduce(
+//       (acc, p) => `${acc} L ${p.x.toFixed(1)} ${p.y.toFixed(1)}`,
+//       `M ${first.x.toFixed(1)} ${first.y.toFixed(1)}`
+//     ) + " Z";
+//   }, [trackOutline, project]);
+
+//   const safeFlag   = (flag || "clear").toLowerCase().trim();
+//   const trackColor = FLAG_TRACK_COLOR[safeFlag] ?? FLAG_TRACK_COLOR.clear;
+
+//   // Fallback to the first coordinate of the track outline if no explicit finish line is provided
+//   const startLine = finishLine || (trackOutline?.length > 0 ? trackOutline[0] : null);
+
+//   return (
+//     <div className="w-full h-full">
+//       <svg
+//         viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H}`}
+//         className="w-full h-full"
+//         style={{ overflow: "visible" }}
+//       >
+//         {/* ── Track rendering — 3 layered strokes ── */}
+
+//         {/* Layer 1: wide outer glow — gives the "circuit lit up" feel */}
+//         <path
+//           d={trackPathD}
+//           stroke={trackColor}
+//           strokeWidth="28"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.18"
+//         />
+
+//         {/* Layer 2: main tarmac surface */}
+//         <path
+//           d={trackPathD}
+//           stroke={trackColor}
+//           strokeWidth="14"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.9"
+//         />
+
+//         {/* Layer 3: inner edge highlight — the bright centre line
+//             subtle white line that gives the track a 3D "lit from above" feel */}
+//         <path
+//           d={trackPathD}
+//           stroke="#ffffff"
+//           strokeWidth="2"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.12"
+//         />
+
+//         {/* ── Finish line ── */}
+//         {startLine && (
+//           <FinishLineMark
+//             finishLine={startLine}
+//             trackOutline={trackOutline}
+//             project={project}
+//           />
+//         )}
+
+//         {/* ── Cars ── */}
+//         {drivers.map((d) => {
+//           const pos = positions[d.code];
+//           if (!pos || isNaN(pos.x) || isNaN(pos.y)) return null;
+
+//           const { x, y } = project(pos.x, pos.y);
+//           const r        = pos.in_pit ? 5 : 8;
+//           const opacity  = pos.in_pit ? 0.55 : 1;
+
+//           return (
+//             <g
+//               key={d.code}
+//               opacity={opacity}
+//               style={{ transition: "opacity 0.3s" }}
+//             >
+//               {/* Drop shadow ring — makes cars pop off dark track */}
+//               <circle
+//                 cx={x} cy={y} r={r + 3}
+//                 fill="none"
+//                 stroke="#000000"
+//                 strokeWidth="3"
+//                 opacity="0.5"
+//                 style={{ transition: "cx 0.1s linear, cy 0.1s linear" }}
+//               />
+
+//               {/* Team color fill */}
+//               <circle
+//                 cx={x} cy={y} r={r}
+//                 fill={d.color}
+//                 stroke="#ffffff"
+//                 strokeWidth="1.5"
+//                 style={{ transition: "cx 0.1s linear, cy 0.1s linear" }}
+//               />
+
+//               {/* Driver name — only when toggled on via L key */}
+//               {showNames && (
+//                 <text
+//                   x={x + r + 5}
+//                   y={y + 4}
+//                   fontSize="11"
+//                   fontWeight="900"
+//                   fill="#ffffff"
+//                   stroke="#000000"
+//                   strokeWidth="3"
+//                   paintOrder="stroke"
+//                   style={{
+//                     transition:     "x 0.1s linear, y 0.1s linear",
+//                     userSelect:     "none",
+//                     pointerEvents:  "none",
+//                   }}
+//                 >
+//                   {d.code}
+//                 </text>
+//               )}
+//             </g>
+//           );
+//         })}
+//       </svg>
+//     </div>
+//   );
+// };
+
+// export default RaceTrack;
+
+// import { useMemo } from "react";
+
+// export interface Driver {
+//   code: string;
+//   color: string;
+// }
+
+// export interface CarPosition {
+//   x: number;
+//   y: number;
+//   lap: number | null;
+//   in_pit: boolean;
+// }
+
+// export interface TrackPoint {
+//   x: number;
+//   y: number;
+// }
+
+// export interface Bounds {
+//   x_min: number;
+//   x_max: number;
+//   y_min: number;
+//   y_max: number;
+// }
+
+// export interface FinishLine {
+//   x: number;
+//   y: number;
+// }
+
+// export interface RaceTrackProps {
+//   drivers: Driver[];
+//   positions: Record<string, CarPosition>;
+//   trackOutline: TrackPoint[];
+//   bounds: Bounds;
+//   flag?: string;
+//   showNames?: boolean;
+//   finishLine?: FinishLine | null;
+// }
+
+// // ─── constants ──────────────────────────────────────────────────────────────
+
+// const VIEWBOX_W = 1000;
+// const VIEWBOX_H = 1000;
+// // Decreased padding from 40 to 25 to increase the overall size of the track slightly
+// const PADDING   = 1;
+
+// const FLAG_TRACK_COLOR: Record<string, string> = {
+//   clear:      "#4a4a4a",
+//   yellow:     "#ca8a04",
+//   red:        "#dc2626",
+//   safety_car: "#d97706",
+//   vsc:        "#d97706",
+//   vsc_ending: "#d97706",
+// };
+
+// // ─── projection ─────────────────────────────────────────────────────────────
+
+// const makeProjector = (bounds: Bounds) => {
+//   const dataW = bounds.x_max - bounds.x_min || 1;
+//   const dataH = bounds.y_max - bounds.y_min || 1;
+//   const availW = VIEWBOX_W - PADDING * 2;
+//   const availH = VIEWBOX_H - PADDING * 2;
+
+//   // Uniform scale — keeps circuit shape undistorted
+//   const scale   = Math.min(availW / dataW, availH / dataH);
+//   const offsetX = PADDING + (availW - dataW * scale) / 2;
+//   const offsetY = PADDING + (availH - dataH * scale) / 2;
+
+//   return (x: number, y: number) => ({
+//     x: offsetX + (x - bounds.x_min) * scale,
+//     // SVG y-axis is inverted vs telemetry y-axis
+//     y: offsetY + (dataH - (y - bounds.y_min)) * scale,
+//   });
+// };
+
+// // ─── finish line helper ──────────────────────────────────────────────────────
+
+// /**
+//  * Draws a short perpendicular stroke across the track at the finish line.
+//  * We find the two track-outline points nearest the finish-line coordinate,
+//  * compute the tangent direction between them, then draw a line 90° to it.
+//  */
+// const FinishLineMark = ({
+//   finishLine,
+//   trackOutline,
+//   project,
+// }: {
+//   finishLine: FinishLine;
+//   trackOutline: TrackPoint[];
+//   project: (x: number, y: number) => { x: number; y: number };
+// }) => {
+//   const { x: fx, y: fy } = project(finishLine.x, finishLine.y);
+
+//   // Find the two outline points nearest the projected finish point
+//   let best1 = 0, best2 = 1, bestDist = Infinity;
+//   const projected = trackOutline.map((p) => project(p.x, p.y));
+
+//   for (let i = 0; i < projected.length - 1; i++) {
+//     const mx = (projected[i].x + projected[i + 1].x) / 2;
+//     const my = (projected[i].y + projected[i + 1].y) / 2;
+//     const d  = Math.hypot(mx - fx, my - fy);
+//     if (d < bestDist) {
+//       bestDist = d;
+//       best1    = i;
+//       best2    = i + 1;
+//     }
+//   }
+
+//   // Tangent vector along the track at that point
+//   const tx = projected[best2].x - projected[best1].x;
+//   const ty = projected[best2].y - projected[best1].y;
+//   const len = Math.hypot(tx, ty) || 1;
+
+//   // Perpendicular = rotate tangent 90°
+//   const nx = -ty / len;
+//   const ny =  tx / len;
+
+//   const half = 18; // half-length of the finish line mark in SVG units
+//   const x1   = fx + nx * half;
+//   const y1   = fy + ny * half;
+//   const x2   = fx - nx * half;
+//   const y2   = fy - ny * half;
+
+//   return (
+//     <g>
+//       {/* 1. Asphalt burn / shadow (gives the paint depth) */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#000000" strokeWidth="8" strokeLinecap="butt" opacity="0.5" />
+
+//       {/* 2. Base white paint layer */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="6" strokeLinecap="butt" />
+
+//       {/* 3. Crisp black squares (butt cap creates sharp checkerboard boxes) */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#111111" strokeWidth="6" strokeLinecap="butt"
+//         strokeDasharray="4,4" />
+
+//       {/* 4. Reflective paint highlight (only on the white squares) */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="2" strokeLinecap="butt"
+//         strokeDasharray="4,4" strokeDashoffset="4" opacity="0.9" />
+
+//       {/* 5. Soft ambient bloom/glow to match the rest of the track */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="14" strokeLinecap="round" opacity="0.12" />
+//     </g>
+//   );
+// };
+
+// // ─── component ──────────────────────────────────────────────────────────────
+
+// const RaceTrack = ({
+//   drivers,
+//   positions,
+//   trackOutline,
+//   bounds,
+//   flag       = "clear",
+//   showNames  = false,
+//   finishLine = null,
+// }: RaceTrackProps) => {
+//   const project = useMemo(() => makeProjector(bounds), [bounds]);
+
+//   // Build SVG path string once — only changes when track outline or bounds change
+//   const trackPathD = useMemo(() => {
+//     if (!trackOutline || trackOutline.length === 0) return "";
+//     const pts     = trackOutline.map((p) => project(p.x, p.y));
+//     const [first, ...rest] = pts;
+//     return rest.reduce(
+//       (acc, p) => `${acc} L ${p.x.toFixed(1)} ${p.y.toFixed(1)}`,
+//       `M ${first.x.toFixed(1)} ${first.y.toFixed(1)}`
+//     ) + " Z";
+//   }, [trackOutline, project]);
+
+//   const safeFlag   = (flag || "clear").toLowerCase().trim();
+//   const trackColor = FLAG_TRACK_COLOR[safeFlag] ?? FLAG_TRACK_COLOR.clear;
+
+//   // Fallback to the first coordinate of the track outline if no explicit finish line is provided
+//   const startLine = finishLine || (trackOutline?.length > 0 ? trackOutline[0] : null);
+
+//   return (
+//     <div className="w-full h-full">
+//       <svg
+//         viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H}`}
+//         className="w-full h-full"
+//         style={{ overflow: "visible" }}
+//       >
+//         {/* ── Track rendering — 3 layered strokes ── */}
+
+//         {/* Layer 1: wide outer glow — gives the "circuit lit up" feel */}
+//         <path
+//           d={trackPathD}
+//           stroke={trackColor}
+//           strokeWidth="28"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.18"
+//         />
+
+//         {/* Layer 2: main tarmac surface */}
+//         <path
+//           d={trackPathD}
+//           stroke={trackColor}
+//           strokeWidth="14"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.9"
+//         />
+
+//         {/* Layer 3: inner edge highlight — the bright centre line
+//             subtle white line that gives the track a 3D "lit from above" feel */}
+//         <path
+//           d={trackPathD}
+//           stroke="#ffffff"
+//           strokeWidth="2"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.12"
+//         />
+
+//         {/* ── Finish line ── */}
+//         {startLine && (
+//           <FinishLineMark
+//             finishLine={startLine}
+//             trackOutline={trackOutline}
+//             project={project}
+//           />
+//         )}
+
+//         {/* ── Cars ── */}
+//         {drivers.map((d) => {
+//           const pos = positions[d.code];
+//           if (!pos || isNaN(pos.x) || isNaN(pos.y)) return null;
+
+//           const { x, y } = project(pos.x, pos.y);
+//           const r        = pos.in_pit ? 5 : 8;
+//           const opacity  = pos.in_pit ? 0.55 : 1;
+
+//           return (
+//             <g
+//               key={d.code}
+//               opacity={opacity}
+//               style={{ transition: "opacity 0.3s" }}
+//             >
+//               {/* Drop shadow ring — makes cars pop off dark track */}
+//               <circle
+//                 cx={x} cy={y} r={r + 3}
+//                 fill="none"
+//                 stroke="#000000"
+//                 strokeWidth="3"
+//                 opacity="0.5"
+//                 style={{ transition: "cx 0.1s linear, cy 0.1s linear" }}
+//               />
+
+//               {/* Team color fill */}
+//               <circle
+//                 cx={x} cy={y} r={r}
+//                 fill={d.color}
+//                 stroke="#ffffff"
+//                 strokeWidth="1.5"
+//                 style={{ transition: "cx 0.1s linear, cy 0.1s linear" }}
+//               />
+
+//               {/* Driver name — only when toggled on via L key */}
+//               {showNames && (
+//                 <text
+//                   x={x + r + 5}
+//                   y={y + 4}
+//                   fontSize="11"
+//                   fontWeight="900"
+//                   fill="#ffffff"
+//                   stroke="#000000"
+//                   strokeWidth="3"
+//                   paintOrder="stroke"
+//                   style={{
+//                     transition:     "x 0.1s linear, y 0.1s linear",
+//                     userSelect:     "none",
+//                     pointerEvents:  "none",
+//                   }}
+//                 >
+//                   {d.code}
+//                 </text>
+//               )}
+//             </g>
+//           );
+//         })}
+//       </svg>
+//     </div>
+//   );
+// };
+
+// export default RaceTrack;\\
+// import { useMemo } from "react";
+
+// export interface Driver {
+//   code: string;
+//   color: string;
+// }
+
+// export interface CarPosition {
+//   x: number;
+//   y: number;
+//   lap: number | null;
+//   in_pit: boolean;
+// }
+
+// export interface TrackPoint {
+//   x: number;
+//   y: number;
+// }
+
+// export interface Bounds {
+//   x_min: number;
+//   x_max: number;
+//   y_min: number;
+//   y_max: number;
+// }
+
+// export interface FinishLine {
+//   x: number;
+//   y: number;
+// }
+
+// export interface RaceTrackProps {
+//   drivers: Driver[];
+//   positions: Record<string, CarPosition>;
+//   trackOutline: TrackPoint[];
+//   bounds: Bounds;
+//   flag?: string;
+//   showNames?: boolean;
+//   finishLine?: FinishLine | null;
+//   transitionMs?: number; // 🛠️ NEW: Dynamic sync for smooth gliding
+// }
+
+// // ─── constants ──────────────────────────────────────────────────────────────
+
+// const VIEWBOX_W = 1000;
+// const VIEWBOX_H = 1000;
+// const PADDING   = 1;
+
+// const FLAG_TRACK_COLOR: Record<string, string> = {
+//   clear:      "#4a4a4a",
+//   yellow:     "#ca8a04",
+//   red:        "#dc2626",
+//   safety_car: "#d97706",
+//   vsc:        "#d97706",
+//   vsc_ending: "#d97706",
+// };
+
+// // ─── projection ─────────────────────────────────────────────────────────────
+
+// const makeProjector = (bounds: Bounds) => {
+//   const dataW = bounds.x_max - bounds.x_min || 1;
+//   const dataH = bounds.y_max - bounds.y_min || 1;
+//   const availW = VIEWBOX_W - PADDING * 2;
+//   const availH = VIEWBOX_H - PADDING * 2;
+
+//   const scale   = Math.min(availW / dataW, availH / dataH);
+//   const offsetX = PADDING + (availW - dataW * scale) / 2;
+//   const offsetY = PADDING + (availH - dataH * scale) / 2;
+
+//   return (x: number, y: number) => ({
+//     x: offsetX + (x - bounds.x_min) * scale,
+//     y: offsetY + (dataH - (y - bounds.y_min)) * scale,
+//   });
+// };
+
+// // ─── finish line helper ──────────────────────────────────────────────────────
+
+// const FinishLineMark = ({
+//   finishLine,
+//   trackOutline,
+//   project,
+// }: {
+//   finishLine: FinishLine;
+//   trackOutline: TrackPoint[];
+//   project: (x: number, y: number) => { x: number; y: number };
+// }) => {
+//   const { x: fx, y: fy } = project(finishLine.x, finishLine.y);
+
+//   let best1 = 0, best2 = 1, bestDist = Infinity;
+//   const projected = trackOutline.map((p) => project(p.x, p.y));
+
+//   for (let i = 0; i < projected.length - 1; i++) {
+//     const mx = (projected[i].x + projected[i + 1].x) / 2;
+//     const my = (projected[i].y + projected[i + 1].y) / 2;
+//     const d  = Math.hypot(mx - fx, my - fy);
+//     if (d < bestDist) {
+//       bestDist = d;
+//       best1    = i;
+//       best2    = i + 1;
+//     }
+//   }
+
+//   const tx = projected[best2].x - projected[best1].x;
+//   const ty = projected[best2].y - projected[best1].y;
+//   const len = Math.hypot(tx, ty) || 1;
+
+//   const nx = -ty / len;
+//   const ny =  tx / len;
+
+//   const half = 18; 
+//   const x1   = fx + nx * half;
+//   const y1   = fy + ny * half;
+//   const x2   = fx - nx * half;
+//   const y2   = fy - ny * half;
+
+//   return (
+//     <g>
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#000000" strokeWidth="8" strokeLinecap="butt" opacity="0.5" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="6" strokeLinecap="butt" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#111111" strokeWidth="6" strokeLinecap="butt"
+//         strokeDasharray="4,4" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="2" strokeLinecap="butt"
+//         strokeDasharray="4,4" strokeDashoffset="4" opacity="0.9" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="14" strokeLinecap="round" opacity="0.12" />
+//     </g>
+//   );
+// };
+
+// // ─── component ──────────────────────────────────────────────────────────────
+
+// const RaceTrack = ({
+//   drivers,
+//   positions,
+//   trackOutline,
+//   bounds,
+//   flag       = "clear",
+//   showNames  = false,
+//   finishLine = null,
+//   transitionMs = 300, 
+// }: RaceTrackProps) => {
+//   const project = useMemo(() => makeProjector(bounds), [bounds]);
+
+//   const trackPathD = useMemo(() => {
+//     if (!trackOutline || trackOutline.length === 0) return "";
+//     const pts     = trackOutline.map((p) => project(p.x, p.y));
+//     const [first, ...rest] = pts;
+//     return rest.reduce(
+//       // 🛠️ FIX: Removed .toFixed(1) to stop the track line from rounding/shifting under the cars
+//       (acc, p) => `${acc} L ${p.x.toFixed(3)} ${p.y.toFixed(3)}`,
+//       `M ${first.x.toFixed(3)} ${first.y.toFixed(3)}`
+//     ) + " Z";
+//   }, [trackOutline, project]);
+
+//   const safeFlag   = (flag || "clear").toLowerCase().trim();
+//   const trackColor = FLAG_TRACK_COLOR[safeFlag] ?? FLAG_TRACK_COLOR.clear;
+//   const startLine = finishLine || (trackOutline?.length > 0 ? trackOutline[0] : null);
+
+//   // 🛠️ FIX: Perfect timing sync for CSS transitions
+//   const smoothTransform = `cx ${transitionMs}ms linear, cy ${transitionMs}ms linear`;
+//   const textTransform = `x ${transitionMs}ms linear, y ${transitionMs}ms linear`;
+
+//   return (
+//     <div className="w-full h-full">
+//       <svg
+//         viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H}`}
+//         className="w-full h-full"
+//         style={{ overflow: "visible" }}
+//       >
+//         <path d={trackPathD} stroke={trackColor} strokeWidth="28" fill="none" strokeLinejoin="round" strokeLinecap="round" opacity="0.18" />
+//         <path d={trackPathD} stroke={trackColor} strokeWidth="14" fill="none" strokeLinejoin="round" strokeLinecap="round" opacity="0.9" />
+//         <path d={trackPathD} stroke="#ffffff" strokeWidth="2" fill="none" strokeLinejoin="round" strokeLinecap="round" opacity="0.12" />
+
+//         {startLine && (
+//           <FinishLineMark finishLine={startLine} trackOutline={trackOutline} project={project} />
+//         )}
+
+//         {drivers.map((d) => {
+//           const pos = positions[d.code];
+//           if (!pos || isNaN(pos.x) || isNaN(pos.y)) return null;
+
+//           const { x, y } = project(pos.x, pos.y);
+//           // 🛠️ FIX: Locked all cars to size 8, regardless of pitting
+//           const r = 8;
+//           const opacity = pos.in_pit ? 0.55 : 1;
+
+//           return (
+//             <g key={d.code} opacity={opacity} style={{ transition: "opacity 0.2s" }}>
+//               <circle
+//                 cx={x} cy={y} r={r + 3}
+//                 fill="none" stroke="#000000" strokeWidth="3" opacity="0.5"
+//                 style={{ transition: smoothTransform }}
+//               />
+//               <circle
+//                 cx={x} cy={y} r={r}
+//                 fill={d.color} stroke="#ffffff" strokeWidth="1.5"
+//                 style={{ transition: smoothTransform }}
+//               />
+//               {showNames && (
+//                 <text
+//                   x={x + r + 5} y={y + 4}
+//                   fontSize="11" fontWeight="900" fill="#ffffff" stroke="#000000" strokeWidth="3" paintOrder="stroke"
+//                   style={{ transition: textTransform, userSelect: "none", pointerEvents: "none" }}
+//                 >
+//                   {d.code}
+//                 </text>
+//               )}
+//             </g>
+//           );
+//         })}
+//       </svg>
+//     </div>
+//   );
+// };
+
+// export default RaceTrack;
+
+// import { useMemo, useRef } from "react";
+
+// export interface Driver {
+//   code: string;
+//   color: string;
+// }
+
+// export interface CarPosition {
+//   x: number;
+//   y: number;
+//   lap: number | null;
+//   in_pit: boolean;
+// }
+
+// export interface TrackPoint {
+//   x: number;
+//   y: number;
+// }
+
+// export interface Bounds {
+//   x_min: number;
+//   x_max: number;
+//   y_min: number;
+//   y_max: number;
+// }
+
+// export interface FinishLine {
+//   x: number;
+//   y: number;
+// }
+
+// export interface RaceTrackProps {
+//   drivers: Driver[];
+//   positions: Record<string, CarPosition>;
+//   trackOutline: TrackPoint[];
+//   bounds: Bounds;
+//   flag?: string;
+//   showNames?: boolean;
+//   finishLine?: FinishLine | null;
+//   transitionMs?: number;
+//   // Set of driver codes who have retired — their circles are removed from the track entirely.
+//   // The backend keeps sending their last known coordinates, so we must filter them out explicitly.
+//   retiredDrivers?: Set<string>;
+// }
+
+// // ─── constants ───────────────────────────────────────────────────────────────
+
+// const VIEWBOX_W = 1000;
+// const VIEWBOX_H = 1000;
+// // Generous padding so cars at the edge are never clipped
+// const PADDING   = 40;
+
+// // Car sizes
+// const CAR_R_RACING = 8;
+// const CAR_R_PIT    = 5;
+
+// // Pit debounce: how many consecutive in_pit=true frames before we confirm pit state.
+// // Must match Leaderboard.tsx so both update at the same frame.
+// const PIT_CONFIRM_THRESHOLD = 3;
+
+// // If a car's dist jumped more than this many meters since the last render,
+// // it's moving at racing speed — clear the pit flag even if backend says
+// // in_pit=true. Must match Leaderboard.tsx's RACING_SPEED_DIST_THRESHOLD so
+// // the track dot and the leaderboard badge come back to normal on the same
+// // frame instead of the dot staying dimmed/small after the badge clears.
+// const RACING_SPEED_DIST_THRESHOLD = 45;
+
+// const FLAG_TRACK_COLOR: Record<string, string> = {
+//   clear:      "#5a5a5a",
+//   yellow:     "#ca8a04",
+//   red:        "#dc2626",
+//   safety_car: "#d97706",
+//   vsc:        "#d97706",
+//   vsc_ending: "#d97706",
+// };
+
+// // ─── projection ──────────────────────────────────────────────────────────────
+
+// const makeProjector = (bounds: Bounds) => {
+//   const dataW  = bounds.x_max - bounds.x_min || 1;
+//   const dataH  = bounds.y_max - bounds.y_min || 1;
+//   const availW = VIEWBOX_W - PADDING * 2;
+//   const availH = VIEWBOX_H - PADDING * 2;
+
+//   const scale   = Math.min(availW / dataW, availH / dataH);
+//   const offsetX = PADDING + (availW - dataW * scale) / 2;
+//   const offsetY = PADDING + (availH - dataH * scale) / 2;
+
+//   return (x: number, y: number) => ({
+//     x: offsetX + (x - bounds.x_min) * scale,
+//     // FastF1 Y increases upward, SVG Y increases downward — flip it
+//     y: offsetY + (dataH - (y - bounds.y_min)) * scale,
+//   });
+// };
+
+// // ─── finish line ─────────────────────────────────────────────────────────────
+
+// const FinishLineMark = ({
+//   finishLine,
+//   trackOutline,
+//   project,
+// }: {
+//   finishLine: FinishLine;
+//   trackOutline: TrackPoint[];
+//   project: (x: number, y: number) => { x: number; y: number };
+// }) => {
+//   const { x: fx, y: fy } = project(finishLine.x, finishLine.y);
+//   const projected = trackOutline.map((p) => project(p.x, p.y));
+
+//   let best1 = 0, best2 = 1, bestDist = Infinity;
+//   for (let i = 0; i < projected.length - 1; i++) {
+//     const mx = (projected[i].x + projected[i + 1].x) / 2;
+//     const my = (projected[i].y + projected[i + 1].y) / 2;
+//     const d  = Math.hypot(mx - fx, my - fy);
+//     if (d < bestDist) { bestDist = d; best1 = i; best2 = i + 1; }
+//   }
+
+//   const tx  = projected[best2].x - projected[best1].x;
+//   const ty  = projected[best2].y - projected[best1].y;
+//   const len = Math.hypot(tx, ty) || 1;
+//   const nx  = -ty / len;
+//   const ny  =  tx / len;
+//   const half = 20;
+
+//   const x1 = fx + nx * half, y1 = fy + ny * half;
+//   const x2 = fx - nx * half, y2 = fy - ny * half;
+
+//   return (
+//     <g>
+//       <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#000" strokeWidth="10" strokeLinecap="butt" opacity="0.4" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#fff" strokeWidth="7"  strokeLinecap="butt" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#111" strokeWidth="7"  strokeLinecap="butt" strokeDasharray="5,5" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#fff" strokeWidth="2"  strokeLinecap="butt" strokeDasharray="5,5" strokeDashoffset="5" opacity="0.9" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#fff" strokeWidth="16" strokeLinecap="round" opacity="0.08" />
+//     </g>
+//   );
+// };
+
+// // ─── main component ──────────────────────────────────────────────────────────
+
+// const RaceTrack = ({
+//   drivers,
+//   positions,
+//   trackOutline,
+//   bounds,
+//   flag            = "clear",
+//   showNames       = false,
+//   finishLine      = null,
+//   transitionMs    = 300,
+//   retiredDrivers  = new Set<string>(),
+// }: RaceTrackProps) => {
+//   const project = useMemo(() => makeProjector(bounds), [bounds]);
+
+//   // ── debounced pit state (mirrors Leaderboard.tsx logic exactly) ──
+//   const pitCounterRef = useRef<Map<string, number>>(new Map());
+//   // Tracks each driver's dist from the previous render (for exit speed check)
+//   const prevDistRef = useRef<Map<string, number>>(new Map());
+
+//   const trackPathD = useMemo(() => {
+//     if (!trackOutline || trackOutline.length === 0) return "";
+//     const pts          = trackOutline.map((p) => project(p.x, p.y));
+//     const [first, ...rest] = pts;
+//     return (
+//       rest.reduce(
+//         (acc, p) => `${acc} L ${p.x.toFixed(3)} ${p.y.toFixed(3)}`,
+//         `M ${first.x.toFixed(3)} ${first.y.toFixed(3)}`
+//       ) + " Z"
+//     );
+//   }, [trackOutline, project]);
+
+//   const safeFlag   = (flag || "clear").toLowerCase().trim();
+//   const trackColor = FLAG_TRACK_COLOR[safeFlag] ?? FLAG_TRACK_COLOR.clear;
+//   const startLine  = finishLine || (trackOutline?.length > 0 ? trackOutline[0] : null);
+
+//   const smoothTransform = `cx ${transitionMs}ms linear, cy ${transitionMs}ms linear`;
+//   const textTransform   = `x ${transitionMs}ms linear, y ${transitionMs}ms linear`;
+//   const sizeTransition  = `r 200ms ease-in-out`;
+
+//   // Build confirmed pit states for all drivers this render
+//   const confirmedPitMap = useMemo(() => {
+//     const map = new Map<string, boolean>();
+//     drivers.forEach((d) => {
+//       const pos  = positions[d.code];
+//       const dist = pos?.distance ?? pos?.dist ?? 0;
+
+//       // ── Speed-based exit override ──────────────────────────────────────
+//       // If the car moved more than RACING_SPEED_DIST_THRESHOLD meters since
+//       // the last render, it's back at racing speed → not in the pit
+//       // regardless of what the backend flag says. Without this, the dot
+//       // stays dimmed/small for as long as the backend's in_pit stays true,
+//       // which is why it wasn't returning to its original color/size.
+//       const prevDist      = prevDistRef.current.get(d.code) ?? dist;
+//       const distDelta     = dist - prevDist;
+//       prevDistRef.current.set(d.code, dist);
+//       const isMovingFast  = distDelta > RACING_SPEED_DIST_THRESHOLD;
+
+//       const rawInPit = (pos?.in_pit || false) && !isMovingFast;
+//       const prev     = pitCounterRef.current.get(d.code) ?? 0;
+//       const next     = rawInPit ? prev + 1 : 0;
+//       pitCounterRef.current.set(d.code, next);
+//       map.set(d.code, next >= PIT_CONFIRM_THRESHOLD);
+//     });
+//     return map;
+//   }, [drivers, positions]);
+
+//   return (
+//     <div className="w-full h-full">
+//       <svg
+//         viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H}`}
+//         className="w-full h-full"
+//         style={{ overflow: "visible" }}
+//       >
+//         {/* ── track layers ── */}
+//         {/* Outer glow */}
+//         <path d={trackPathD} stroke={trackColor} strokeWidth="38" fill="none"
+//           strokeLinejoin="round" strokeLinecap="round" opacity="0.10" />
+//         {/* Road body — wider than before so car dots sit inside it */}
+//         <path d={trackPathD} stroke={trackColor} strokeWidth="22" fill="none"
+//           strokeLinejoin="round" strokeLinecap="round" opacity="0.85" />
+//         {/* Kerb highlight */}
+//         <path d={trackPathD} stroke="#ffffff" strokeWidth="2" fill="none"
+//           strokeLinejoin="round" strokeLinecap="round" opacity="0.08" />
+
+//         {startLine && (
+//           <FinishLineMark
+//             finishLine={startLine}
+//             trackOutline={trackOutline}
+//             project={project}
+//           />
+//         )}
+
+//         {/* ── cars ── */}
+//         {drivers.map((d) => {
+//           // Retired drivers: backend keeps sending last known coordinates,
+//           // so we must explicitly skip them here rather than relying on !pos.
+//           if (retiredDrivers.has(d.code)) return null;
+
+//           const pos = positions[d.code];
+//           if (!pos || isNaN(pos.x) || isNaN(pos.y)) return null;
+
+//           const { x, y }   = project(pos.x, pos.y);
+//           const isPitting   = confirmedPitMap.get(d.code) ?? false;
+//           const r           = isPitting ? CAR_R_PIT : CAR_R_RACING;
+
+//           return (
+//             <g key={d.code}>
+//               {/* ── shadow ring (always present, gives depth) ── */}
+//               <circle
+//                 cx={x} cy={y} r={r + 4}
+//                 fill="none" stroke="#000000" strokeWidth="4" opacity="0.35"
+//                 style={{ transition: `${smoothTransform}, ${sizeTransition}` }}
+//               />
+
+//               {/* ── pit indicator ring (only visible when pitting) ── */}
+//               {isPitting && (
+//                 <circle
+//                   cx={x} cy={y} r={r + 7}
+//                   fill="none"
+//                   stroke="#facc15"
+//                   strokeWidth="1.5"
+//                   strokeDasharray="3 3"
+//                   opacity="0.7"
+//                   style={{ transition: smoothTransform }}
+//                 />
+//               )}
+
+//               {/* ── car body ── */}
+//               <circle
+//                 cx={x} cy={y} r={r}
+//                 fill={isPitting ? "#4a4a4a" : d.color}
+//                 stroke={isPitting ? "#888888" : "#ffffff"}
+//                 strokeWidth={isPitting ? 1 : 1.5}
+//                 opacity={isPitting ? 0.6 : 1}
+//                 style={{ transition: `${smoothTransform}, ${sizeTransition}, opacity 200ms ease-in-out` }}
+//               />
+
+//               {/* ── driver label ── */}
+//               {showNames && (
+//                 <text
+//                   x={x + r + 5} y={y + 4}
+//                   fontSize="11" fontWeight="900"
+//                   fill={isPitting ? "#888" : "#ffffff"}
+//                   stroke="#000000" strokeWidth="3" paintOrder="stroke"
+//                   style={{
+//                     transition: textTransform,
+//                     userSelect: "none",
+//                     pointerEvents: "none",
+//                   }}
+//                 >
+//                   {d.code}
+//                 </text>
+//               )}
+//             </g>
+//           );
+//         })}
+//       </svg>
+//     </div>
+//   );
+// };
+
+// export default RaceTrack;
+
+// import { useMemo } from "react";
+
+// export interface Driver {
+//   code: string;
+//   color: string;
+// }
+
+// export interface CarPosition {
+//   x: number;
+//   y: number;
+//   lap: number | null;
+//   in_pit: boolean;
+// }
+
+// export interface TrackPoint {
+//   x: number;
+//   y: number;
+// }
+
+// export interface Bounds {
+//   x_min: number;
+//   x_max: number;
+//   y_min: number;
+//   y_max: number;
+// }
+
+// export interface RaceTrackProps {
+//   drivers: Driver[];
+//   positions: Record<string, CarPosition>;
+//   trackOutline: TrackPoint[];
+//   bounds: Bounds;
+//   flag?: string; 
+// }
+
+// const VIEWBOX_WIDTH = 1000;
+// const VIEWBOX_HEIGHT = 1000;
+// const PADDING = 45; 
+
+// const FLAG_COLORS: Record<string, string> = {
+//   clear: "#525252", 
+//   "1": "#525252",
+//   yellow: "#e6c900",
+//   "2": "#e6c900",
+//   red: "#dc2626",
+//   "5": "#dc2626",
+//   safety_car: "#f59e0b",
+//   "4": "#f59e0b",
+//   vsc: "#f59e0b",
+//   "6": "#f59e0b",
+//   vsc_ending: "#f59e0b",
+//   "7": "#f59e0b",
+// };
+
+// const FLAG_LABELS: Record<string, string> = {
+//   yellow: "YELLOW FLAG",
+//   "2": "YELLOW FLAG",
+//   red: "RED FLAG",
+//   "5": "RED FLAG",
+//   safety_car: "SAFETY CAR DEPLOYED",
+//   "4": "SAFETY CAR DEPLOYED",
+//   vsc: "VIRTUAL SAFETY CAR",
+//   "6": "VIRTUAL SAFETY CAR",
+//   vsc_ending: "VSC ENDING",
+//   "7": "VSC ENDING",
+// };
+
+// const makeProjector = (bounds: Bounds) => {
+//   const dataWidth = bounds.x_max - bounds.x_min || 1;
+//   const dataHeight = bounds.y_max - bounds.y_min || 1;
+//   const availableWidth = VIEWBOX_WIDTH - PADDING * 2;
+//   const availableHeight = VIEWBOX_HEIGHT - PADDING * 2;
+//   const scale = Math.min(availableWidth / dataWidth, availableHeight / dataHeight);
+//   const offsetX = PADDING + (availableWidth - dataWidth * scale) / 2;
+//   const offsetY = PADDING + (availableHeight - dataHeight * scale) / 2;
+
+//   return (x: number, y: number) => {
+//     const svgX = offsetX + (x - bounds.x_min) * scale;
+//     const svgY = offsetY + (dataHeight - (y - bounds.y_min)) * scale;
+//     return { x: svgX, y: svgY };
+//   };
+// };
+
+// const RaceTrack = ({ drivers, positions, trackOutline, bounds, flag }: RaceTrackProps) => {
+//   const project = useMemo(() => makeProjector(bounds), [bounds]);
+
+//   const trackPathD = useMemo(() => {
+//     if (!trackOutline || trackOutline.length === 0) return "";
+//     const points = trackOutline.map((p) => project(p.x, p.y));
+//     const [first, ...rest] = points;
+//     const path = rest.reduce(
+//       (acc, p) => `${acc} L ${p.x.toFixed(2)} ${p.y.toFixed(2)}`,
+//       `M ${first.x.toFixed(2)} ${first.y.toFixed(2)}`
+//     );
+//     return `${path} Z`;
+//   }, [trackOutline, project]);
+
+//   const safeFlag = (flag || "clear").toString().toLowerCase().trim();
+//   const trackColor = FLAG_COLORS[safeFlag] || FLAG_COLORS.clear;
+//   const isFlagActive = safeFlag !== "clear" && safeFlag !== "1" && !!FLAG_LABELS[safeFlag];
+
+//   return (
+//     <div className="w-full h-full flex items-center justify-center relative">
+      
+//       {/* 🛠️ FIX: Sleek, F1 Broadcast Style Flag Banner */}
+//       {isFlagActive && (
+//         <div className="absolute top-8 left-1/2 -translate-x-1/2 z-[100] flex items-stretch bg-neutral-900/95 backdrop-blur-md border border-neutral-700/50 rounded-lg shadow-[0_10px_40px_rgba(0,0,0,0.8)] overflow-hidden">
+//           <div className="w-2" style={{ backgroundColor: trackColor }} />
+//           <div className="px-6 py-2.5 flex items-center gap-3">
+//             <span 
+//               className="w-3 h-3 rounded-full animate-pulse" 
+//               style={{ backgroundColor: trackColor, boxShadow: `0 0 10px ${trackColor}` }} 
+//             />
+//             <span className="font-black text-sm tracking-widest text-white uppercase">
+//               {FLAG_LABELS[safeFlag]}
+//             </span>
+//           </div>
+//         </div>
+//       )}
+
+//       <svg viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`} className="w-full h-full drop-shadow-2xl">
+//         <path d={trackPathD} stroke={trackColor} strokeWidth="24" fill="none" strokeLinejoin="round" opacity="0.3" />
+//         <path d={trackPathD} stroke={trackColor} strokeWidth="12" fill="none" strokeLinejoin="round" />
+//         <path d={trackPathD} stroke="#ffffff" strokeWidth="1.5" strokeDasharray="4,6" fill="none" strokeLinejoin="round" opacity="0.4" />
+
+//         {drivers.map((d) => {
+//           const pos = positions[d.code];
+//           if (!pos || isNaN(pos.x)) return null;
+          
+//           const { x, y } = project(pos.x, pos.y);
+//           return (
+//             <g key={d.code} style={{ transition: "transform 0.1s linear" }}>
+//               <circle
+//                 cx={x} cy={y}
+//                 r="8"
+//                 fill={d.color}
+//                 stroke="#fff"
+//                 strokeWidth="1.5"
+//                 style={{ transition: "cx 0.1s linear, cy 0.1s linear" }}
+//               />
+//               <text
+//                 x={x + 12} y={y + 3}
+//                 fontSize="11"
+//                 fontWeight="900"
+//                 fill="#fff"
+//                 className="drop-shadow-md"
+//                 style={{ transition: "x 0.1s linear, y 0.1s linear" }}
+//               >
+//                 {d.code}
+//               </text>
+//             </g>
+//           );
+//         })}
+//       </svg>
+//     </div>
+//   );
+// };
+
+// export default RaceTrack;
+
+// import { useMemo } from "react";
+
+// export interface Driver {
+//   code: string;
+//   color: string;
+// }
+
+// export interface CarPosition {
+//   x: number;
+//   y: number;
+//   lap: number | null;
+//   in_pit: boolean;
+// }
+
+// export interface TrackPoint {
+//   x: number;
+//   y: number;
+// }
+
+// export interface Bounds {
+//   x_min: number;
+//   x_max: number;
+//   y_min: number;
+//   y_max: number;
+// }
+
+// export interface FinishLine {
+//   x: number;
+//   y: number;
+// }
+
+// export interface RaceTrackProps {
+//   drivers: Driver[];
+//   positions: Record<string, CarPosition>;
+//   trackOutline: TrackPoint[];
+//   bounds: Bounds;
+//   flag?: string;
+//   showNames?: boolean;
+//   finishLine?: FinishLine | null;
+// }
+
+// // ─── constants ──────────────────────────────────────────────────────────────
+
+// const VIEWBOX_W = 1000;
+// const VIEWBOX_H = 1000;
+// const PADDING   = 40;
+
+// const FLAG_TRACK_COLOR: Record<string, string> = {
+//   clear:      "#4a4a4a",
+//   yellow:     "#ca8a04",
+//   red:        "#dc2626",
+//   safety_car: "#d97706",
+//   vsc:        "#d97706",
+//   vsc_ending: "#d97706",
+// };
+
+// // ─── projection ─────────────────────────────────────────────────────────────
+
+// const makeProjector = (bounds: Bounds) => {
+//   const dataW = bounds.x_max - bounds.x_min || 1;
+//   const dataH = bounds.y_max - bounds.y_min || 1;
+//   const availW = VIEWBOX_W - PADDING * 2;
+//   const availH = VIEWBOX_H - PADDING * 2;
+
+//   // Uniform scale — keeps circuit shape undistorted
+//   const scale   = Math.min(availW / dataW, availH / dataH);
+//   const offsetX = PADDING + (availW - dataW * scale) / 2;
+//   const offsetY = PADDING + (availH - dataH * scale) / 2;
+
+//   return (x: number, y: number) => ({
+//     x: offsetX + (x - bounds.x_min) * scale,
+//     // SVG y-axis is inverted vs telemetry y-axis
+//     y: offsetY + (dataH - (y - bounds.y_min)) * scale,
+//   });
+// };
+
+// // ─── finish line helper ──────────────────────────────────────────────────────
+
+// /**
+//  * Draws a short perpendicular stroke across the track at the finish line.
+//  * We find the two track-outline points nearest the finish-line coordinate,
+//  * compute the tangent direction between them, then draw a line 90° to it.
+//  */
+// const FinishLineMark = ({
+//   finishLine,
+//   trackOutline,
+//   project,
+// }: {
+//   finishLine: FinishLine;
+//   trackOutline: TrackPoint[];
+//   project: (x: number, y: number) => { x: number; y: number };
+// }) => {
+//   const { x: fx, y: fy } = project(finishLine.x, finishLine.y);
+
+//   // Find the two outline points nearest the projected finish point
+//   let best1 = 0, best2 = 1, bestDist = Infinity;
+//   const projected = trackOutline.map((p) => project(p.x, p.y));
+
+//   for (let i = 0; i < projected.length - 1; i++) {
+//     const mx = (projected[i].x + projected[i + 1].x) / 2;
+//     const my = (projected[i].y + projected[i + 1].y) / 2;
+//     const d  = Math.hypot(mx - fx, my - fy);
+//     if (d < bestDist) {
+//       bestDist = d;
+//       best1    = i;
+//       best2    = i + 1;
+//     }
+//   }
+
+//   // Tangent vector along the track at that point
+//   const tx = projected[best2].x - projected[best1].x;
+//   const ty = projected[best2].y - projected[best1].y;
+//   const len = Math.hypot(tx, ty) || 1;
+
+//   // Perpendicular = rotate tangent 90°
+//   const nx = -ty / len;
+//   const ny =  tx / len;
+
+//   const half = 18; // half-length of the finish line mark in SVG units
+//   const x1   = fx + nx * half;
+//   const y1   = fy + ny * half;
+//   const x2   = fx - nx * half;
+//   const y2   = fy - ny * half;
+
+//   return (
+//     <g>
+//       {/* Chequered flag effect: alternating black/white segments */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="5" strokeLinecap="round" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#000000" strokeWidth="5" strokeLinecap="round"
+//         strokeDasharray="4,4" />
+//       {/* Outer glow */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="9" strokeLinecap="round" opacity="0.15" />
+//     </g>
+//   );
+// };
+
+// // ─── component ──────────────────────────────────────────────────────────────
+
+// const RaceTrack = ({
+//   drivers,
+//   positions,
+//   trackOutline,
+//   bounds,
+//   flag       = "clear",
+//   showNames  = false,
+//   finishLine = null,
+// }: RaceTrackProps) => {
+//   const project = useMemo(() => makeProjector(bounds), [bounds]);
+
+//   // Build SVG path string once — only changes when track outline or bounds change
+//   const trackPathD = useMemo(() => {
+//     if (!trackOutline || trackOutline.length === 0) return "";
+//     const pts     = trackOutline.map((p) => project(p.x, p.y));
+//     const [first, ...rest] = pts;
+//     return rest.reduce(
+//       (acc, p) => `${acc} L ${p.x.toFixed(1)} ${p.y.toFixed(1)}`,
+//       `M ${first.x.toFixed(1)} ${first.y.toFixed(1)}`
+//     ) + " Z";
+//   }, [trackOutline, project]);
+
+//   const safeFlag   = (flag || "clear").toLowerCase().trim();
+//   const trackColor = FLAG_TRACK_COLOR[safeFlag] ?? FLAG_TRACK_COLOR.clear;
+
+//   return (
+//     <div className="w-full h-full">
+//       <svg
+//         viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H}`}
+//         className="w-full h-full"
+//         style={{ overflow: "visible" }}
+//       >
+//         {/* ── Track rendering — 3 layered strokes ── */}
+
+//         {/* Layer 1: wide outer glow — gives the "circuit lit up" feel */}
+//         <path
+//           d={trackPathD}
+//           stroke={trackColor}
+//           strokeWidth="28"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.18"
+//         />
+
+//         {/* Layer 2: main tarmac surface */}
+//         <path
+//           d={trackPathD}
+//           stroke={trackColor}
+//           strokeWidth="14"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.9"
+//         />
+
+//         {/* Layer 3: inner edge highlight — the bright centre line
+//             subtle white line that gives the track a 3D "lit from above" feel */}
+//         <path
+//           d={trackPathD}
+//           stroke="#ffffff"
+//           strokeWidth="2"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.12"
+//         />
+
+//         {/* ── Finish line ── */}
+//         {finishLine && (
+//           <FinishLineMark
+//             finishLine={finishLine}
+//             trackOutline={trackOutline}
+//             project={project}
+//           />
+//         )}
+
+//         {/* ── Cars ── */}
+//         {drivers.map((d) => {
+//           const pos = positions[d.code];
+//           if (!pos || isNaN(pos.x) || isNaN(pos.y)) return null;
+
+//           const { x, y } = project(pos.x, pos.y);
+//           const r        = pos.in_pit ? 5 : 8;
+//           const opacity  = pos.in_pit ? 0.55 : 1;
+
+//           return (
+//             <g
+//               key={d.code}
+//               opacity={opacity}
+//               style={{ transition: "opacity 0.3s" }}
+//             >
+//               {/* Drop shadow ring — makes cars pop off dark track */}
+//               <circle
+//                 cx={x} cy={y} r={r + 3}
+//                 fill="none"
+//                 stroke="#000000"
+//                 strokeWidth="3"
+//                 opacity="0.5"
+//                 style={{ transition: "cx 0.1s linear, cy 0.1s linear" }}
+//               />
+
+//               {/* Team color fill */}
+//               <circle
+//                 cx={x} cy={y} r={r}
+//                 fill={d.color}
+//                 stroke="#ffffff"
+//                 strokeWidth="1.5"
+//                 style={{ transition: "cx 0.1s linear, cy 0.1s linear" }}
+//               />
+
+//               {/* Driver name — only when toggled on via L key */}
+//               {showNames && (
+//                 <text
+//                   x={x + r + 5}
+//                   y={y + 4}
+//                   fontSize="11"
+//                   fontWeight="900"
+//                   fill="#ffffff"
+//                   stroke="#000000"
+//                   strokeWidth="3"
+//                   paintOrder="stroke"
+//                   style={{
+//                     transition:     "x 0.1s linear, y 0.1s linear",
+//                     userSelect:     "none",
+//                     pointerEvents:  "none",
+//                   }}
+//                 >
+//                   {d.code}
+//                 </text>
+//               )}
+//             </g>
+//           );
+//         })}
+//       </svg>
+//     </div>
+//   );
+// };
+
+// export default RaceTrack;
+
+// import { useMemo } from "react";
+
+// export interface Driver {
+//   code: string;
+//   color: string;
+// }
+
+// export interface CarPosition {
+//   x: number;
+//   y: number;
+//   lap: number | null;
+//   in_pit: boolean;
+// }
+
+// export interface TrackPoint {
+//   x: number;
+//   y: number;
+// }
+
+// export interface Bounds {
+//   x_min: number;
+//   x_max: number;
+//   y_min: number;
+//   y_max: number;
+// }
+
+// export interface FinishLine {
+//   x: number;
+//   y: number;
+// }
+
+// export interface RaceTrackProps {
+//   drivers: Driver[];
+//   positions: Record<string, CarPosition>;
+//   trackOutline: TrackPoint[];
+//   bounds: Bounds;
+//   flag?: string;
+//   showNames?: boolean;
+//   finishLine?: FinishLine | null;
+// }
+
+// // ─── constants ──────────────────────────────────────────────────────────────
+
+// const VIEWBOX_W = 1000;
+// const VIEWBOX_H = 1000;
+// // Decreased padding from 40 to 25 to increase the overall size of the track slightly
+// const PADDING   = 25;
+
+// const FLAG_TRACK_COLOR: Record<string, string> = {
+//   clear:      "#4a4a4a",
+//   yellow:     "#ca8a04",
+//   red:        "#dc2626",
+//   safety_car: "#d97706",
+//   vsc:        "#d97706",
+//   vsc_ending: "#d97706",
+// };
+
+// // ─── projection ─────────────────────────────────────────────────────────────
+
+// const makeProjector = (bounds: Bounds) => {
+//   const dataW = bounds.x_max - bounds.x_min || 1;
+//   const dataH = bounds.y_max - bounds.y_min || 1;
+//   const availW = VIEWBOX_W - PADDING * 2;
+//   const availH = VIEWBOX_H - PADDING * 2;
+
+//   // Uniform scale — keeps circuit shape undistorted
+//   const scale   = Math.min(availW / dataW, availH / dataH);
+//   const offsetX = PADDING + (availW - dataW * scale) / 2;
+//   const offsetY = PADDING + (availH - dataH * scale) / 2;
+
+//   return (x: number, y: number) => ({
+//     x: offsetX + (x - bounds.x_min) * scale,
+//     // SVG y-axis is inverted vs telemetry y-axis
+//     y: offsetY + (dataH - (y - bounds.y_min)) * scale,
+//   });
+// };
+
+// // ─── finish line helper ──────────────────────────────────────────────────────
+
+// /**
+//  * Draws a short perpendicular stroke across the track at the finish line.
+//  * We find the two track-outline points nearest the finish-line coordinate,
+//  * compute the tangent direction between them, then draw a line 90° to it.
+//  */
+// const FinishLineMark = ({
+//   finishLine,
+//   trackOutline,
+//   project,
+// }: {
+//   finishLine: FinishLine;
+//   trackOutline: TrackPoint[];
+//   project: (x: number, y: number) => { x: number; y: number };
+// }) => {
+//   const { x: fx, y: fy } = project(finishLine.x, finishLine.y);
+
+//   // Find the two outline points nearest the projected finish point
+//   let best1 = 0, best2 = 1, bestDist = Infinity;
+//   const projected = trackOutline.map((p) => project(p.x, p.y));
+
+//   for (let i = 0; i < projected.length - 1; i++) {
+//     const mx = (projected[i].x + projected[i + 1].x) / 2;
+//     const my = (projected[i].y + projected[i + 1].y) / 2;
+//     const d  = Math.hypot(mx - fx, my - fy);
+//     if (d < bestDist) {
+//       bestDist = d;
+//       best1    = i;
+//       best2    = i + 1;
+//     }
+//   }
+
+//   // Tangent vector along the track at that point
+//   const tx = projected[best2].x - projected[best1].x;
+//   const ty = projected[best2].y - projected[best1].y;
+//   const len = Math.hypot(tx, ty) || 1;
+
+//   // Perpendicular = rotate tangent 90°
+//   const nx = -ty / len;
+//   const ny =  tx / len;
+
+//   const half = 18; // half-length of the finish line mark in SVG units
+//   const x1   = fx + nx * half;
+//   const y1   = fy + ny * half;
+//   const x2   = fx - nx * half;
+//   const y2   = fy - ny * half;
+
+//   return (
+//     <g>
+//       {/* Chequered flag effect: alternating black/white segments */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="5" strokeLinecap="round" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#000000" strokeWidth="5" strokeLinecap="round"
+//         strokeDasharray="4,4" />
+//       {/* Outer glow */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="9" strokeLinecap="round" opacity="0.15" />
+//     </g>
+//   );
+// };
+
+// // ─── component ──────────────────────────────────────────────────────────────
+
+// const RaceTrack = ({
+//   drivers,
+//   positions,
+//   trackOutline,
+//   bounds,
+//   flag       = "clear",
+//   showNames  = false,
+//   finishLine = null,
+// }: RaceTrackProps) => {
+//   const project = useMemo(() => makeProjector(bounds), [bounds]);
+
+//   // Build SVG path string once — only changes when track outline or bounds change
+//   const trackPathD = useMemo(() => {
+//     if (!trackOutline || trackOutline.length === 0) return "";
+//     const pts     = trackOutline.map((p) => project(p.x, p.y));
+//     const [first, ...rest] = pts;
+//     return rest.reduce(
+//       (acc, p) => `${acc} L ${p.x.toFixed(1)} ${p.y.toFixed(1)}`,
+//       `M ${first.x.toFixed(1)} ${first.y.toFixed(1)}`
+//     ) + " Z";
+//   }, [trackOutline, project]);
+
+//   const safeFlag   = (flag || "clear").toLowerCase().trim();
+//   const trackColor = FLAG_TRACK_COLOR[safeFlag] ?? FLAG_TRACK_COLOR.clear;
+
+//   // Fallback to the first coordinate of the track outline if no explicit finish line is provided
+//   const startLine = finishLine || (trackOutline?.length > 0 ? trackOutline[0] : null);
+
+//   return (
+//     <div className="w-full h-full">
+//       <svg
+//         viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H}`}
+//         className="w-full h-full"
+//         style={{ overflow: "visible" }}
+//       >
+//         {/* ── Track rendering — 3 layered strokes ── */}
+
+//         {/* Layer 1: wide outer glow — gives the "circuit lit up" feel */}
+//         <path
+//           d={trackPathD}
+//           stroke={trackColor}
+//           strokeWidth="28"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.18"
+//         />
+
+//         {/* Layer 2: main tarmac surface */}
+//         <path
+//           d={trackPathD}
+//           stroke={trackColor}
+//           strokeWidth="14"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.9"
+//         />
+
+//         {/* Layer 3: inner edge highlight — the bright centre line
+//             subtle white line that gives the track a 3D "lit from above" feel */}
+//         <path
+//           d={trackPathD}
+//           stroke="#ffffff"
+//           strokeWidth="2"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.12"
+//         />
+
+//         {/* ── Finish line ── */}
+//         {startLine && (
+//           <FinishLineMark
+//             finishLine={startLine}
+//             trackOutline={trackOutline}
+//             project={project}
+//           />
+//         )}
+
+//         {/* ── Cars ── */}
+//         {drivers.map((d) => {
+//           const pos = positions[d.code];
+//           if (!pos || isNaN(pos.x) || isNaN(pos.y)) return null;
+
+//           const { x, y } = project(pos.x, pos.y);
+//           const r        = pos.in_pit ? 5 : 8;
+//           const opacity  = pos.in_pit ? 0.55 : 1;
+
+//           return (
+//             <g
+//               key={d.code}
+//               opacity={opacity}
+//               style={{ transition: "opacity 0.3s" }}
+//             >
+//               {/* Drop shadow ring — makes cars pop off dark track */}
+//               <circle
+//                 cx={x} cy={y} r={r + 3}
+//                 fill="none"
+//                 stroke="#000000"
+//                 strokeWidth="3"
+//                 opacity="0.5"
+//                 style={{ transition: "cx 0.1s linear, cy 0.1s linear" }}
+//               />
+
+//               {/* Team color fill */}
+//               <circle
+//                 cx={x} cy={y} r={r}
+//                 fill={d.color}
+//                 stroke="#ffffff"
+//                 strokeWidth="1.5"
+//                 style={{ transition: "cx 0.1s linear, cy 0.1s linear" }}
+//               />
+
+//               {/* Driver name — only when toggled on via L key */}
+//               {showNames && (
+//                 <text
+//                   x={x + r + 5}
+//                   y={y + 4}
+//                   fontSize="11"
+//                   fontWeight="900"
+//                   fill="#ffffff"
+//                   stroke="#000000"
+//                   strokeWidth="3"
+//                   paintOrder="stroke"
+//                   style={{
+//                     transition:     "x 0.1s linear, y 0.1s linear",
+//                     userSelect:     "none",
+//                     pointerEvents:  "none",
+//                   }}
+//                 >
+//                   {d.code}
+//                 </text>
+//               )}
+//             </g>
+//           );
+//         })}
+//       </svg>
+//     </div>
+//   );
+// };
+
+// export default RaceTrack;
+
+// import { useMemo } from "react";
+
+// export interface Driver {
+//   code: string;
+//   color: string;
+// }
+
+// export interface CarPosition {
+//   x: number;
+//   y: number;
+//   lap: number | null;
+//   in_pit: boolean;
+// }
+
+// export interface TrackPoint {
+//   x: number;
+//   y: number;
+// }
+
+// export interface Bounds {
+//   x_min: number;
+//   x_max: number;
+//   y_min: number;
+//   y_max: number;
+// }
+
+// export interface FinishLine {
+//   x: number;
+//   y: number;
+// }
+
+// export interface RaceTrackProps {
+//   drivers: Driver[];
+//   positions: Record<string, CarPosition>;
+//   trackOutline: TrackPoint[];
+//   bounds: Bounds;
+//   flag?: string;
+//   showNames?: boolean;
+//   finishLine?: FinishLine | null;
+// }
+
+// // ─── constants ──────────────────────────────────────────────────────────────
+
+// const VIEWBOX_W = 1000;
+// const VIEWBOX_H = 1000;
+// // Decreased padding from 40 to 25 to increase the overall size of the track slightly
+// const PADDING   = 1;
+
+// const FLAG_TRACK_COLOR: Record<string, string> = {
+//   clear:      "#4a4a4a",
+//   yellow:     "#ca8a04",
+//   red:        "#dc2626",
+//   safety_car: "#d97706",
+//   vsc:        "#d97706",
+//   vsc_ending: "#d97706",
+// };
+
+// // ─── projection ─────────────────────────────────────────────────────────────
+
+// const makeProjector = (bounds: Bounds) => {
+//   const dataW = bounds.x_max - bounds.x_min || 1;
+//   const dataH = bounds.y_max - bounds.y_min || 1;
+//   const availW = VIEWBOX_W - PADDING * 2;
+//   const availH = VIEWBOX_H - PADDING * 2;
+
+//   // Uniform scale — keeps circuit shape undistorted
+//   const scale   = Math.min(availW / dataW, availH / dataH);
+//   const offsetX = PADDING + (availW - dataW * scale) / 2;
+//   const offsetY = PADDING + (availH - dataH * scale) / 2;
+
+//   return (x: number, y: number) => ({
+//     x: offsetX + (x - bounds.x_min) * scale,
+//     // SVG y-axis is inverted vs telemetry y-axis
+//     y: offsetY + (dataH - (y - bounds.y_min)) * scale,
+//   });
+// };
+
+// // ─── finish line helper ──────────────────────────────────────────────────────
+
+// /**
+//  * Draws a short perpendicular stroke across the track at the finish line.
+//  * We find the two track-outline points nearest the finish-line coordinate,
+//  * compute the tangent direction between them, then draw a line 90° to it.
+//  */
+// const FinishLineMark = ({
+//   finishLine,
+//   trackOutline,
+//   project,
+// }: {
+//   finishLine: FinishLine;
+//   trackOutline: TrackPoint[];
+//   project: (x: number, y: number) => { x: number; y: number };
+// }) => {
+//   const { x: fx, y: fy } = project(finishLine.x, finishLine.y);
+
+//   // Find the two outline points nearest the projected finish point
+//   let best1 = 0, best2 = 1, bestDist = Infinity;
+//   const projected = trackOutline.map((p) => project(p.x, p.y));
+
+//   for (let i = 0; i < projected.length - 1; i++) {
+//     const mx = (projected[i].x + projected[i + 1].x) / 2;
+//     const my = (projected[i].y + projected[i + 1].y) / 2;
+//     const d  = Math.hypot(mx - fx, my - fy);
+//     if (d < bestDist) {
+//       bestDist = d;
+//       best1    = i;
+//       best2    = i + 1;
+//     }
+//   }
+
+//   // Tangent vector along the track at that point
+//   const tx = projected[best2].x - projected[best1].x;
+//   const ty = projected[best2].y - projected[best1].y;
+//   const len = Math.hypot(tx, ty) || 1;
+
+//   // Perpendicular = rotate tangent 90°
+//   const nx = -ty / len;
+//   const ny =  tx / len;
+
+//   const half = 18; // half-length of the finish line mark in SVG units
+//   const x1   = fx + nx * half;
+//   const y1   = fy + ny * half;
+//   const x2   = fx - nx * half;
+//   const y2   = fy - ny * half;
+
+//   return (
+//     <g>
+//       {/* 1. Asphalt burn / shadow (gives the paint depth) */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#000000" strokeWidth="8" strokeLinecap="butt" opacity="0.5" />
+
+//       {/* 2. Base white paint layer */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="6" strokeLinecap="butt" />
+
+//       {/* 3. Crisp black squares (butt cap creates sharp checkerboard boxes) */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#111111" strokeWidth="6" strokeLinecap="butt"
+//         strokeDasharray="4,4" />
+
+//       {/* 4. Reflective paint highlight (only on the white squares) */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="2" strokeLinecap="butt"
+//         strokeDasharray="4,4" strokeDashoffset="4" opacity="0.9" />
+
+//       {/* 5. Soft ambient bloom/glow to match the rest of the track */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="14" strokeLinecap="round" opacity="0.12" />
+//     </g>
+//   );
+// };
+
+// // ─── component ──────────────────────────────────────────────────────────────
+
+// const RaceTrack = ({
+//   drivers,
+//   positions,
+//   trackOutline,
+//   bounds,
+//   flag       = "clear",
+//   showNames  = false,
+//   finishLine = null,
+// }: RaceTrackProps) => {
+//   const project = useMemo(() => makeProjector(bounds), [bounds]);
+
+//   // Build SVG path string once — only changes when track outline or bounds change
+//   const trackPathD = useMemo(() => {
+//     if (!trackOutline || trackOutline.length === 0) return "";
+//     const pts     = trackOutline.map((p) => project(p.x, p.y));
+//     const [first, ...rest] = pts;
+//     return rest.reduce(
+//       (acc, p) => `${acc} L ${p.x.toFixed(1)} ${p.y.toFixed(1)}`,
+//       `M ${first.x.toFixed(1)} ${first.y.toFixed(1)}`
+//     ) + " Z";
+//   }, [trackOutline, project]);
+
+//   const safeFlag   = (flag || "clear").toLowerCase().trim();
+//   const trackColor = FLAG_TRACK_COLOR[safeFlag] ?? FLAG_TRACK_COLOR.clear;
+
+//   // Fallback to the first coordinate of the track outline if no explicit finish line is provided
+//   const startLine = finishLine || (trackOutline?.length > 0 ? trackOutline[0] : null);
+
+//   return (
+//     <div className="w-full h-full">
+//       <svg
+//         viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H}`}
+//         className="w-full h-full"
+//         style={{ overflow: "visible" }}
+//       >
+//         {/* ── Track rendering — 3 layered strokes ── */}
+
+//         {/* Layer 1: wide outer glow — gives the "circuit lit up" feel */}
+//         <path
+//           d={trackPathD}
+//           stroke={trackColor}
+//           strokeWidth="28"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.18"
+//         />
+
+//         {/* Layer 2: main tarmac surface */}
+//         <path
+//           d={trackPathD}
+//           stroke={trackColor}
+//           strokeWidth="14"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.9"
+//         />
+
+//         {/* Layer 3: inner edge highlight — the bright centre line
+//             subtle white line that gives the track a 3D "lit from above" feel */}
+//         <path
+//           d={trackPathD}
+//           stroke="#ffffff"
+//           strokeWidth="2"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.12"
+//         />
+
+//         {/* ── Finish line ── */}
+//         {startLine && (
+//           <FinishLineMark
+//             finishLine={startLine}
+//             trackOutline={trackOutline}
+//             project={project}
+//           />
+//         )}
+
+//         {/* ── Cars ── */}
+//         {drivers.map((d) => {
+//           const pos = positions[d.code];
+//           if (!pos || isNaN(pos.x) || isNaN(pos.y)) return null;
+
+//           const { x, y } = project(pos.x, pos.y);
+//           const r        = pos.in_pit ? 5 : 8;
+//           const opacity  = pos.in_pit ? 0.55 : 1;
+
+//           return (
+//             <g
+//               key={d.code}
+//               opacity={opacity}
+//               style={{ transition: "opacity 0.3s" }}
+//             >
+//               {/* Drop shadow ring — makes cars pop off dark track */}
+//               <circle
+//                 cx={x} cy={y} r={r + 3}
+//                 fill="none"
+//                 stroke="#000000"
+//                 strokeWidth="3"
+//                 opacity="0.5"
+//                 style={{ transition: "cx 0.1s linear, cy 0.1s linear" }}
+//               />
+
+//               {/* Team color fill */}
+//               <circle
+//                 cx={x} cy={y} r={r}
+//                 fill={d.color}
+//                 stroke="#ffffff"
+//                 strokeWidth="1.5"
+//                 style={{ transition: "cx 0.1s linear, cy 0.1s linear" }}
+//               />
+
+//               {/* Driver name — only when toggled on via L key */}
+//               {showNames && (
+//                 <text
+//                   x={x + r + 5}
+//                   y={y + 4}
+//                   fontSize="11"
+//                   fontWeight="900"
+//                   fill="#ffffff"
+//                   stroke="#000000"
+//                   strokeWidth="3"
+//                   paintOrder="stroke"
+//                   style={{
+//                     transition:     "x 0.1s linear, y 0.1s linear",
+//                     userSelect:     "none",
+//                     pointerEvents:  "none",
+//                   }}
+//                 >
+//                   {d.code}
+//                 </text>
+//               )}
+//             </g>
+//           );
+//         })}
+//       </svg>
+//     </div>
+//   );
+// };
+
+// export default RaceTrack;\\
+// import { useMemo } from "react";
+
+// export interface Driver {
+//   code: string;
+//   color: string;
+// }
+
+// export interface CarPosition {
+//   x: number;
+//   y: number;
+//   lap: number | null;
+//   in_pit: boolean;
+// }
+
+// export interface TrackPoint {
+//   x: number;
+//   y: number;
+// }
+
+// export interface Bounds {
+//   x_min: number;
+//   x_max: number;
+//   y_min: number;
+//   y_max: number;
+// }
+
+// export interface FinishLine {
+//   x: number;
+//   y: number;
+// }
+
+// export interface RaceTrackProps {
+//   drivers: Driver[];
+//   positions: Record<string, CarPosition>;
+//   trackOutline: TrackPoint[];
+//   bounds: Bounds;
+//   flag?: string;
+//   showNames?: boolean;
+//   finishLine?: FinishLine | null;
+//   transitionMs?: number; // 🛠️ NEW: Dynamic sync for smooth gliding
+// }
+
+// // ─── constants ──────────────────────────────────────────────────────────────
+
+// const VIEWBOX_W = 1000;
+// const VIEWBOX_H = 1000;
+// const PADDING   = 1;
+
+// const FLAG_TRACK_COLOR: Record<string, string> = {
+//   clear:      "#4a4a4a",
+//   yellow:     "#ca8a04",
+//   red:        "#dc2626",
+//   safety_car: "#d97706",
+//   vsc:        "#d97706",
+//   vsc_ending: "#d97706",
+// };
+
+// // ─── projection ─────────────────────────────────────────────────────────────
+
+// const makeProjector = (bounds: Bounds) => {
+//   const dataW = bounds.x_max - bounds.x_min || 1;
+//   const dataH = bounds.y_max - bounds.y_min || 1;
+//   const availW = VIEWBOX_W - PADDING * 2;
+//   const availH = VIEWBOX_H - PADDING * 2;
+
+//   const scale   = Math.min(availW / dataW, availH / dataH);
+//   const offsetX = PADDING + (availW - dataW * scale) / 2;
+//   const offsetY = PADDING + (availH - dataH * scale) / 2;
+
+//   return (x: number, y: number) => ({
+//     x: offsetX + (x - bounds.x_min) * scale,
+//     y: offsetY + (dataH - (y - bounds.y_min)) * scale,
+//   });
+// };
+
+// // ─── finish line helper ──────────────────────────────────────────────────────
+
+// const FinishLineMark = ({
+//   finishLine,
+//   trackOutline,
+//   project,
+// }: {
+//   finishLine: FinishLine;
+//   trackOutline: TrackPoint[];
+//   project: (x: number, y: number) => { x: number; y: number };
+// }) => {
+//   const { x: fx, y: fy } = project(finishLine.x, finishLine.y);
+
+//   let best1 = 0, best2 = 1, bestDist = Infinity;
+//   const projected = trackOutline.map((p) => project(p.x, p.y));
+
+//   for (let i = 0; i < projected.length - 1; i++) {
+//     const mx = (projected[i].x + projected[i + 1].x) / 2;
+//     const my = (projected[i].y + projected[i + 1].y) / 2;
+//     const d  = Math.hypot(mx - fx, my - fy);
+//     if (d < bestDist) {
+//       bestDist = d;
+//       best1    = i;
+//       best2    = i + 1;
+//     }
+//   }
+
+//   const tx = projected[best2].x - projected[best1].x;
+//   const ty = projected[best2].y - projected[best1].y;
+//   const len = Math.hypot(tx, ty) || 1;
+
+//   const nx = -ty / len;
+//   const ny =  tx / len;
+
+//   const half = 18; 
+//   const x1   = fx + nx * half;
+//   const y1   = fy + ny * half;
+//   const x2   = fx - nx * half;
+//   const y2   = fy - ny * half;
+
+//   return (
+//     <g>
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#000000" strokeWidth="8" strokeLinecap="butt" opacity="0.5" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="6" strokeLinecap="butt" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#111111" strokeWidth="6" strokeLinecap="butt"
+//         strokeDasharray="4,4" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="2" strokeLinecap="butt"
+//         strokeDasharray="4,4" strokeDashoffset="4" opacity="0.9" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="14" strokeLinecap="round" opacity="0.12" />
+//     </g>
+//   );
+// };
+
+// // ─── component ──────────────────────────────────────────────────────────────
+
+// const RaceTrack = ({
+//   drivers,
+//   positions,
+//   trackOutline,
+//   bounds,
+//   flag       = "clear",
+//   showNames  = false,
+//   finishLine = null,
+//   transitionMs = 300, 
+// }: RaceTrackProps) => {
+//   const project = useMemo(() => makeProjector(bounds), [bounds]);
+
+//   const trackPathD = useMemo(() => {
+//     if (!trackOutline || trackOutline.length === 0) return "";
+//     const pts     = trackOutline.map((p) => project(p.x, p.y));
+//     const [first, ...rest] = pts;
+//     return rest.reduce(
+//       // 🛠️ FIX: Removed .toFixed(1) to stop the track line from rounding/shifting under the cars
+//       (acc, p) => `${acc} L ${p.x.toFixed(3)} ${p.y.toFixed(3)}`,
+//       `M ${first.x.toFixed(3)} ${first.y.toFixed(3)}`
+//     ) + " Z";
+//   }, [trackOutline, project]);
+
+//   const safeFlag   = (flag || "clear").toLowerCase().trim();
+//   const trackColor = FLAG_TRACK_COLOR[safeFlag] ?? FLAG_TRACK_COLOR.clear;
+//   const startLine = finishLine || (trackOutline?.length > 0 ? trackOutline[0] : null);
+
+//   // 🛠️ FIX: Perfect timing sync for CSS transitions
+//   const smoothTransform = `cx ${transitionMs}ms linear, cy ${transitionMs}ms linear`;
+//   const textTransform = `x ${transitionMs}ms linear, y ${transitionMs}ms linear`;
+
+//   return (
+//     <div className="w-full h-full">
+//       <svg
+//         viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H}`}
+//         className="w-full h-full"
+//         style={{ overflow: "visible" }}
+//       >
+//         <path d={trackPathD} stroke={trackColor} strokeWidth="28" fill="none" strokeLinejoin="round" strokeLinecap="round" opacity="0.18" />
+//         <path d={trackPathD} stroke={trackColor} strokeWidth="14" fill="none" strokeLinejoin="round" strokeLinecap="round" opacity="0.9" />
+//         <path d={trackPathD} stroke="#ffffff" strokeWidth="2" fill="none" strokeLinejoin="round" strokeLinecap="round" opacity="0.12" />
+
+//         {startLine && (
+//           <FinishLineMark finishLine={startLine} trackOutline={trackOutline} project={project} />
+//         )}
+
+//         {drivers.map((d) => {
+//           const pos = positions[d.code];
+//           if (!pos || isNaN(pos.x) || isNaN(pos.y)) return null;
+
+//           const { x, y } = project(pos.x, pos.y);
+//           // 🛠️ FIX: Locked all cars to size 8, regardless of pitting
+//           const r = 8;
+//           const opacity = pos.in_pit ? 0.55 : 1;
+
+//           return (
+//             <g key={d.code} opacity={opacity} style={{ transition: "opacity 0.2s" }}>
+//               <circle
+//                 cx={x} cy={y} r={r + 3}
+//                 fill="none" stroke="#000000" strokeWidth="3" opacity="0.5"
+//                 style={{ transition: smoothTransform }}
+//               />
+//               <circle
+//                 cx={x} cy={y} r={r}
+//                 fill={d.color} stroke="#ffffff" strokeWidth="1.5"
+//                 style={{ transition: smoothTransform }}
+//               />
+//               {showNames && (
+//                 <text
+//                   x={x + r + 5} y={y + 4}
+//                   fontSize="11" fontWeight="900" fill="#ffffff" stroke="#000000" strokeWidth="3" paintOrder="stroke"
+//                   style={{ transition: textTransform, userSelect: "none", pointerEvents: "none" }}
+//                 >
+//                   {d.code}
+//                 </text>
+//               )}
+//             </g>
+//           );
+//         })}
+//       </svg>
+//     </div>
+//   );
+// };
+
+// export default RaceTrack;
+
+// import { useMemo, useRef } from "react";
+
+// export interface Driver {
+//   code: string;
+//   color: string;
+// }
+
+// export interface CarPosition {
+//   x: number;
+//   y: number;
+//   lap: number | null;
+//   in_pit: boolean;
+// }
+
+// export interface TrackPoint {
+//   x: number;
+//   y: number;
+// }
+
+// export interface Bounds {
+//   x_min: number;
+//   x_max: number;
+//   y_min: number;
+//   y_max: number;
+// }
+
+// export interface FinishLine {
+//   x: number;
+//   y: number;
+// }
+
+// export interface RaceTrackProps {
+//   drivers: Driver[];
+//   positions: Record<string, CarPosition>;
+//   trackOutline: TrackPoint[];
+//   bounds: Bounds;
+//   flag?: string;
+//   showNames?: boolean;
+//   finishLine?: FinishLine | null;
+//   transitionMs?: number;
+// }
+
+// // ─── constants ───────────────────────────────────────────────────────────────
+
+// const VIEWBOX_W = 1000;
+// const VIEWBOX_H = 1000;
+// // Generous padding so cars at the edge are never clipped
+// const PADDING   = 40;
+
+// // Car sizes
+// const CAR_R_RACING = 8;
+// const CAR_R_PIT    = 5;
+
+// // Pit debounce: how many consecutive in_pit=true frames before we confirm pit state.
+// // Must match Leaderboard.tsx so both update at the same frame.
+// const PIT_CONFIRM_THRESHOLD = 3;
+
+// const FLAG_TRACK_COLOR: Record<string, string> = {
+//   clear:      "#5a5a5a",
+//   yellow:     "#ca8a04",
+//   red:        "#dc2626",
+//   safety_car: "#d97706",
+//   vsc:        "#d97706",
+//   vsc_ending: "#d97706",
+// };
+
+// // ─── projection ──────────────────────────────────────────────────────────────
+
+// const makeProjector = (bounds: Bounds) => {
+//   const dataW  = bounds.x_max - bounds.x_min || 1;
+//   const dataH  = bounds.y_max - bounds.y_min || 1;
+//   const availW = VIEWBOX_W - PADDING * 2;
+//   const availH = VIEWBOX_H - PADDING * 2;
+
+//   const scale   = Math.min(availW / dataW, availH / dataH);
+//   const offsetX = PADDING + (availW - dataW * scale) / 2;
+//   const offsetY = PADDING + (availH - dataH * scale) / 2;
+
+//   return (x: number, y: number) => ({
+//     x: offsetX + (x - bounds.x_min) * scale,
+//     // FastF1 Y increases upward, SVG Y increases downward — flip it
+//     y: offsetY + (dataH - (y - bounds.y_min)) * scale,
+//   });
+// };
+
+// // ─── finish line ─────────────────────────────────────────────────────────────
+
+// const FinishLineMark = ({
+//   finishLine,
+//   trackOutline,
+//   project,
+// }: {
+//   finishLine: FinishLine;
+//   trackOutline: TrackPoint[];
+//   project: (x: number, y: number) => { x: number; y: number };
+// }) => {
+//   const { x: fx, y: fy } = project(finishLine.x, finishLine.y);
+//   const projected = trackOutline.map((p) => project(p.x, p.y));
+
+//   let best1 = 0, best2 = 1, bestDist = Infinity;
+//   for (let i = 0; i < projected.length - 1; i++) {
+//     const mx = (projected[i].x + projected[i + 1].x) / 2;
+//     const my = (projected[i].y + projected[i + 1].y) / 2;
+//     const d  = Math.hypot(mx - fx, my - fy);
+//     if (d < bestDist) { bestDist = d; best1 = i; best2 = i + 1; }
+//   }
+
+//   const tx  = projected[best2].x - projected[best1].x;
+//   const ty  = projected[best2].y - projected[best1].y;
+//   const len = Math.hypot(tx, ty) || 1;
+//   const nx  = -ty / len;
+//   const ny  =  tx / len;
+//   const half = 20;
+
+//   const x1 = fx + nx * half, y1 = fy + ny * half;
+//   const x2 = fx - nx * half, y2 = fy - ny * half;
+
+//   return (
+//     <g>
+//       <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#000" strokeWidth="10" strokeLinecap="butt" opacity="0.4" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#fff" strokeWidth="7"  strokeLinecap="butt" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#111" strokeWidth="7"  strokeLinecap="butt" strokeDasharray="5,5" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#fff" strokeWidth="2"  strokeLinecap="butt" strokeDasharray="5,5" strokeDashoffset="5" opacity="0.9" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#fff" strokeWidth="16" strokeLinecap="round" opacity="0.08" />
+//     </g>
+//   );
+// };
+
+// // ─── main component ──────────────────────────────────────────────────────────
+
+// const RaceTrack = ({
+//   drivers,
+//   positions,
+//   trackOutline,
+//   bounds,
+//   flag         = "clear",
+//   showNames    = false,
+//   finishLine   = null,
+//   transitionMs = 300,
+// }: RaceTrackProps) => {
+//   const project = useMemo(() => makeProjector(bounds), [bounds]);
+
+//   // ── debounced pit state (mirrors Leaderboard.tsx logic exactly) ──
+//   const pitCounterRef = useRef<Map<string, number>>(new Map());
+
+//   const trackPathD = useMemo(() => {
+//     if (!trackOutline || trackOutline.length === 0) return "";
+//     const pts          = trackOutline.map((p) => project(p.x, p.y));
+//     const [first, ...rest] = pts;
+//     return (
+//       rest.reduce(
+//         (acc, p) => `${acc} L ${p.x.toFixed(3)} ${p.y.toFixed(3)}`,
+//         `M ${first.x.toFixed(3)} ${first.y.toFixed(3)}`
+//       ) + " Z"
+//     );
+//   }, [trackOutline, project]);
+
+//   const safeFlag   = (flag || "clear").toLowerCase().trim();
+//   const trackColor = FLAG_TRACK_COLOR[safeFlag] ?? FLAG_TRACK_COLOR.clear;
+//   const startLine  = finishLine || (trackOutline?.length > 0 ? trackOutline[0] : null);
+
+//   const smoothTransform = `cx ${transitionMs}ms linear, cy ${transitionMs}ms linear`;
+//   const textTransform   = `x ${transitionMs}ms linear, y ${transitionMs}ms linear`;
+//   const sizeTransition  = `r 200ms ease-in-out`;
+
+//   // Build confirmed pit states for all drivers this render
+//   const confirmedPitMap = useMemo(() => {
+//     const map = new Map<string, boolean>();
+//     drivers.forEach((d) => {
+//       const pos      = positions[d.code];
+//       const rawInPit = pos?.in_pit || false;
+//       const prev     = pitCounterRef.current.get(d.code) ?? 0;
+//       const next     = rawInPit ? prev + 1 : 0;
+//       pitCounterRef.current.set(d.code, next);
+//       map.set(d.code, next >= PIT_CONFIRM_THRESHOLD);
+//     });
+//     return map;
+//   }, [drivers, positions]);
+
+//   return (
+//     <div className="w-full h-full">
+//       <svg
+//         viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H}`}
+//         className="w-full h-full"
+//         style={{ overflow: "visible" }}
+//       >
+//         {/* ── track layers ── */}
+//         {/* Outer glow */}
+//         <path d={trackPathD} stroke={trackColor} strokeWidth="38" fill="none"
+//           strokeLinejoin="round" strokeLinecap="round" opacity="0.10" />
+//         {/* Road body — wider than before so car dots sit inside it */}
+//         <path d={trackPathD} stroke={trackColor} strokeWidth="22" fill="none"
+//           strokeLinejoin="round" strokeLinecap="round" opacity="0.85" />
+//         {/* Kerb highlight */}
+//         <path d={trackPathD} stroke="#ffffff" strokeWidth="2" fill="none"
+//           strokeLinejoin="round" strokeLinecap="round" opacity="0.08" />
+
+//         {startLine && (
+//           <FinishLineMark
+//             finishLine={startLine}
+//             trackOutline={trackOutline}
+//             project={project}
+//           />
+//         )}
+
+//         {/* ── cars ── */}
+//         {drivers.map((d) => {
+//           const pos = positions[d.code];
+//           if (!pos || isNaN(pos.x) || isNaN(pos.y)) return null;
+
+//           const { x, y }   = project(pos.x, pos.y);
+//           const isPitting   = confirmedPitMap.get(d.code) ?? false;
+//           const r           = isPitting ? CAR_R_PIT : CAR_R_RACING;
+
+//           return (
+//             <g key={d.code}>
+//               {/* ── shadow ring (always present, gives depth) ── */}
+//               <circle
+//                 cx={x} cy={y} r={r + 4}
+//                 fill="none" stroke="#000000" strokeWidth="4" opacity="0.35"
+//                 style={{ transition: `${smoothTransform}, ${sizeTransition}` }}
+//               />
+
+//               {/* ── pit indicator ring (only visible when pitting) ── */}
+//               {isPitting && (
+//                 <circle
+//                   cx={x} cy={y} r={r + 7}
+//                   fill="none"
+//                   stroke="#facc15"
+//                   strokeWidth="1.5"
+//                   strokeDasharray="3 3"
+//                   opacity="0.7"
+//                   style={{ transition: smoothTransform }}
+//                 />
+//               )}
+
+//               {/* ── car body ── */}
+//               <circle
+//                 cx={x} cy={y} r={r}
+//                 fill={isPitting ? "#4a4a4a" : d.color}
+//                 stroke={isPitting ? "#888888" : "#ffffff"}
+//                 strokeWidth={isPitting ? 1 : 1.5}
+//                 opacity={isPitting ? 0.6 : 1}
+//                 style={{ transition: `${smoothTransform}, ${sizeTransition}, opacity 200ms ease-in-out` }}
+//               />
+
+//               {/* ── driver label ── */}
+//               {showNames && (
+//                 <text
+//                   x={x + r + 5} y={y + 4}
+//                   fontSize="11" fontWeight="900"
+//                   fill={isPitting ? "#888" : "#ffffff"}
+//                   stroke="#000000" strokeWidth="3" paintOrder="stroke"
+//                   style={{
+//                     transition: textTransform,
+//                     userSelect: "none",
+//                     pointerEvents: "none",
+//                   }}
+//                 >
+//                   {d.code}
+//                 </text>
+//               )}
+//             </g>
+//           );
+//         })}
+//       </svg>
+//     </div>
+//   );
+// };
+
+// export default RaceTrack;
+
+// import { useMemo } from "react";
+
+// export interface Driver {
+//   code: string;
+//   color: string;
+// }
+
+// export interface CarPosition {
+//   x: number;
+//   y: number;
+//   lap: number | null;
+//   in_pit: boolean;
+// }
+
+// export interface TrackPoint {
+//   x: number;
+//   y: number;
+// }
+
+// export interface Bounds {
+//   x_min: number;
+//   x_max: number;
+//   y_min: number;
+//   y_max: number;
+// }
+
+// export interface RaceTrackProps {
+//   drivers: Driver[];
+//   positions: Record<string, CarPosition>;
+//   trackOutline: TrackPoint[];
+//   bounds: Bounds;
+//   flag?: string; 
+// }
+
+// const VIEWBOX_WIDTH = 1000;
+// const VIEWBOX_HEIGHT = 1000;
+// const PADDING = 45; 
+
+// const FLAG_COLORS: Record<string, string> = {
+//   clear: "#525252", 
+//   "1": "#525252",
+//   yellow: "#e6c900",
+//   "2": "#e6c900",
+//   red: "#dc2626",
+//   "5": "#dc2626",
+//   safety_car: "#f59e0b",
+//   "4": "#f59e0b",
+//   vsc: "#f59e0b",
+//   "6": "#f59e0b",
+//   vsc_ending: "#f59e0b",
+//   "7": "#f59e0b",
+// };
+
+// const FLAG_LABELS: Record<string, string> = {
+//   yellow: "YELLOW FLAG",
+//   "2": "YELLOW FLAG",
+//   red: "RED FLAG",
+//   "5": "RED FLAG",
+//   safety_car: "SAFETY CAR DEPLOYED",
+//   "4": "SAFETY CAR DEPLOYED",
+//   vsc: "VIRTUAL SAFETY CAR",
+//   "6": "VIRTUAL SAFETY CAR",
+//   vsc_ending: "VSC ENDING",
+//   "7": "VSC ENDING",
+// };
+
+// const makeProjector = (bounds: Bounds) => {
+//   const dataWidth = bounds.x_max - bounds.x_min || 1;
+//   const dataHeight = bounds.y_max - bounds.y_min || 1;
+//   const availableWidth = VIEWBOX_WIDTH - PADDING * 2;
+//   const availableHeight = VIEWBOX_HEIGHT - PADDING * 2;
+//   const scale = Math.min(availableWidth / dataWidth, availableHeight / dataHeight);
+//   const offsetX = PADDING + (availableWidth - dataWidth * scale) / 2;
+//   const offsetY = PADDING + (availableHeight - dataHeight * scale) / 2;
+
+//   return (x: number, y: number) => {
+//     const svgX = offsetX + (x - bounds.x_min) * scale;
+//     const svgY = offsetY + (dataHeight - (y - bounds.y_min)) * scale;
+//     return { x: svgX, y: svgY };
+//   };
+// };
+
+// const RaceTrack = ({ drivers, positions, trackOutline, bounds, flag }: RaceTrackProps) => {
+//   const project = useMemo(() => makeProjector(bounds), [bounds]);
+
+//   const trackPathD = useMemo(() => {
+//     if (!trackOutline || trackOutline.length === 0) return "";
+//     const points = trackOutline.map((p) => project(p.x, p.y));
+//     const [first, ...rest] = points;
+//     const path = rest.reduce(
+//       (acc, p) => `${acc} L ${p.x.toFixed(2)} ${p.y.toFixed(2)}`,
+//       `M ${first.x.toFixed(2)} ${first.y.toFixed(2)}`
+//     );
+//     return `${path} Z`;
+//   }, [trackOutline, project]);
+
+//   const safeFlag = (flag || "clear").toString().toLowerCase().trim();
+//   const trackColor = FLAG_COLORS[safeFlag] || FLAG_COLORS.clear;
+//   const isFlagActive = safeFlag !== "clear" && safeFlag !== "1" && !!FLAG_LABELS[safeFlag];
+
+//   return (
+//     <div className="w-full h-full flex items-center justify-center relative">
+      
+//       {/* 🛠️ FIX: Sleek, F1 Broadcast Style Flag Banner */}
+//       {isFlagActive && (
+//         <div className="absolute top-8 left-1/2 -translate-x-1/2 z-[100] flex items-stretch bg-neutral-900/95 backdrop-blur-md border border-neutral-700/50 rounded-lg shadow-[0_10px_40px_rgba(0,0,0,0.8)] overflow-hidden">
+//           <div className="w-2" style={{ backgroundColor: trackColor }} />
+//           <div className="px-6 py-2.5 flex items-center gap-3">
+//             <span 
+//               className="w-3 h-3 rounded-full animate-pulse" 
+//               style={{ backgroundColor: trackColor, boxShadow: `0 0 10px ${trackColor}` }} 
+//             />
+//             <span className="font-black text-sm tracking-widest text-white uppercase">
+//               {FLAG_LABELS[safeFlag]}
+//             </span>
+//           </div>
+//         </div>
+//       )}
+
+//       <svg viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`} className="w-full h-full drop-shadow-2xl">
+//         <path d={trackPathD} stroke={trackColor} strokeWidth="24" fill="none" strokeLinejoin="round" opacity="0.3" />
+//         <path d={trackPathD} stroke={trackColor} strokeWidth="12" fill="none" strokeLinejoin="round" />
+//         <path d={trackPathD} stroke="#ffffff" strokeWidth="1.5" strokeDasharray="4,6" fill="none" strokeLinejoin="round" opacity="0.4" />
+
+//         {drivers.map((d) => {
+//           const pos = positions[d.code];
+//           if (!pos || isNaN(pos.x)) return null;
+          
+//           const { x, y } = project(pos.x, pos.y);
+//           return (
+//             <g key={d.code} style={{ transition: "transform 0.1s linear" }}>
+//               <circle
+//                 cx={x} cy={y}
+//                 r="8"
+//                 fill={d.color}
+//                 stroke="#fff"
+//                 strokeWidth="1.5"
+//                 style={{ transition: "cx 0.1s linear, cy 0.1s linear" }}
+//               />
+//               <text
+//                 x={x + 12} y={y + 3}
+//                 fontSize="11"
+//                 fontWeight="900"
+//                 fill="#fff"
+//                 className="drop-shadow-md"
+//                 style={{ transition: "x 0.1s linear, y 0.1s linear" }}
+//               >
+//                 {d.code}
+//               </text>
+//             </g>
+//           );
+//         })}
+//       </svg>
+//     </div>
+//   );
+// };
+
+// export default RaceTrack;
+
+// import { useMemo } from "react";
+
+// export interface Driver {
+//   code: string;
+//   color: string;
+// }
+
+// export interface CarPosition {
+//   x: number;
+//   y: number;
+//   lap: number | null;
+//   in_pit: boolean;
+// }
+
+// export interface TrackPoint {
+//   x: number;
+//   y: number;
+// }
+
+// export interface Bounds {
+//   x_min: number;
+//   x_max: number;
+//   y_min: number;
+//   y_max: number;
+// }
+
+// export interface FinishLine {
+//   x: number;
+//   y: number;
+// }
+
+// export interface RaceTrackProps {
+//   drivers: Driver[];
+//   positions: Record<string, CarPosition>;
+//   trackOutline: TrackPoint[];
+//   bounds: Bounds;
+//   flag?: string;
+//   showNames?: boolean;
+//   finishLine?: FinishLine | null;
+// }
+
+// // ─── constants ──────────────────────────────────────────────────────────────
+
+// const VIEWBOX_W = 1000;
+// const VIEWBOX_H = 1000;
+// const PADDING   = 40;
+
+// const FLAG_TRACK_COLOR: Record<string, string> = {
+//   clear:      "#4a4a4a",
+//   yellow:     "#ca8a04",
+//   red:        "#dc2626",
+//   safety_car: "#d97706",
+//   vsc:        "#d97706",
+//   vsc_ending: "#d97706",
+// };
+
+// // ─── projection ─────────────────────────────────────────────────────────────
+
+// const makeProjector = (bounds: Bounds) => {
+//   const dataW = bounds.x_max - bounds.x_min || 1;
+//   const dataH = bounds.y_max - bounds.y_min || 1;
+//   const availW = VIEWBOX_W - PADDING * 2;
+//   const availH = VIEWBOX_H - PADDING * 2;
+
+//   // Uniform scale — keeps circuit shape undistorted
+//   const scale   = Math.min(availW / dataW, availH / dataH);
+//   const offsetX = PADDING + (availW - dataW * scale) / 2;
+//   const offsetY = PADDING + (availH - dataH * scale) / 2;
+
+//   return (x: number, y: number) => ({
+//     x: offsetX + (x - bounds.x_min) * scale,
+//     // SVG y-axis is inverted vs telemetry y-axis
+//     y: offsetY + (dataH - (y - bounds.y_min)) * scale,
+//   });
+// };
+
+// // ─── finish line helper ──────────────────────────────────────────────────────
+
+// /**
+//  * Draws a short perpendicular stroke across the track at the finish line.
+//  * We find the two track-outline points nearest the finish-line coordinate,
+//  * compute the tangent direction between them, then draw a line 90° to it.
+//  */
+// const FinishLineMark = ({
+//   finishLine,
+//   trackOutline,
+//   project,
+// }: {
+//   finishLine: FinishLine;
+//   trackOutline: TrackPoint[];
+//   project: (x: number, y: number) => { x: number; y: number };
+// }) => {
+//   const { x: fx, y: fy } = project(finishLine.x, finishLine.y);
+
+//   // Find the two outline points nearest the projected finish point
+//   let best1 = 0, best2 = 1, bestDist = Infinity;
+//   const projected = trackOutline.map((p) => project(p.x, p.y));
+
+//   for (let i = 0; i < projected.length - 1; i++) {
+//     const mx = (projected[i].x + projected[i + 1].x) / 2;
+//     const my = (projected[i].y + projected[i + 1].y) / 2;
+//     const d  = Math.hypot(mx - fx, my - fy);
+//     if (d < bestDist) {
+//       bestDist = d;
+//       best1    = i;
+//       best2    = i + 1;
+//     }
+//   }
+
+//   // Tangent vector along the track at that point
+//   const tx = projected[best2].x - projected[best1].x;
+//   const ty = projected[best2].y - projected[best1].y;
+//   const len = Math.hypot(tx, ty) || 1;
+
+//   // Perpendicular = rotate tangent 90°
+//   const nx = -ty / len;
+//   const ny =  tx / len;
+
+//   const half = 18; // half-length of the finish line mark in SVG units
+//   const x1   = fx + nx * half;
+//   const y1   = fy + ny * half;
+//   const x2   = fx - nx * half;
+//   const y2   = fy - ny * half;
+
+//   return (
+//     <g>
+//       {/* Chequered flag effect: alternating black/white segments */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="5" strokeLinecap="round" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#000000" strokeWidth="5" strokeLinecap="round"
+//         strokeDasharray="4,4" />
+//       {/* Outer glow */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="9" strokeLinecap="round" opacity="0.15" />
+//     </g>
+//   );
+// };
+
+// // ─── component ──────────────────────────────────────────────────────────────
+
+// const RaceTrack = ({
+//   drivers,
+//   positions,
+//   trackOutline,
+//   bounds,
+//   flag       = "clear",
+//   showNames  = false,
+//   finishLine = null,
+// }: RaceTrackProps) => {
+//   const project = useMemo(() => makeProjector(bounds), [bounds]);
+
+//   // Build SVG path string once — only changes when track outline or bounds change
+//   const trackPathD = useMemo(() => {
+//     if (!trackOutline || trackOutline.length === 0) return "";
+//     const pts     = trackOutline.map((p) => project(p.x, p.y));
+//     const [first, ...rest] = pts;
+//     return rest.reduce(
+//       (acc, p) => `${acc} L ${p.x.toFixed(1)} ${p.y.toFixed(1)}`,
+//       `M ${first.x.toFixed(1)} ${first.y.toFixed(1)}`
+//     ) + " Z";
+//   }, [trackOutline, project]);
+
+//   const safeFlag   = (flag || "clear").toLowerCase().trim();
+//   const trackColor = FLAG_TRACK_COLOR[safeFlag] ?? FLAG_TRACK_COLOR.clear;
+
+//   return (
+//     <div className="w-full h-full">
+//       <svg
+//         viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H}`}
+//         className="w-full h-full"
+//         style={{ overflow: "visible" }}
+//       >
+//         {/* ── Track rendering — 3 layered strokes ── */}
+
+//         {/* Layer 1: wide outer glow — gives the "circuit lit up" feel */}
+//         <path
+//           d={trackPathD}
+//           stroke={trackColor}
+//           strokeWidth="28"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.18"
+//         />
+
+//         {/* Layer 2: main tarmac surface */}
+//         <path
+//           d={trackPathD}
+//           stroke={trackColor}
+//           strokeWidth="14"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.9"
+//         />
+
+//         {/* Layer 3: inner edge highlight — the bright centre line
+//             subtle white line that gives the track a 3D "lit from above" feel */}
+//         <path
+//           d={trackPathD}
+//           stroke="#ffffff"
+//           strokeWidth="2"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.12"
+//         />
+
+//         {/* ── Finish line ── */}
+//         {finishLine && (
+//           <FinishLineMark
+//             finishLine={finishLine}
+//             trackOutline={trackOutline}
+//             project={project}
+//           />
+//         )}
+
+//         {/* ── Cars ── */}
+//         {drivers.map((d) => {
+//           const pos = positions[d.code];
+//           if (!pos || isNaN(pos.x) || isNaN(pos.y)) return null;
+
+//           const { x, y } = project(pos.x, pos.y);
+//           const r        = pos.in_pit ? 5 : 8;
+//           const opacity  = pos.in_pit ? 0.55 : 1;
+
+//           return (
+//             <g
+//               key={d.code}
+//               opacity={opacity}
+//               style={{ transition: "opacity 0.3s" }}
+//             >
+//               {/* Drop shadow ring — makes cars pop off dark track */}
+//               <circle
+//                 cx={x} cy={y} r={r + 3}
+//                 fill="none"
+//                 stroke="#000000"
+//                 strokeWidth="3"
+//                 opacity="0.5"
+//                 style={{ transition: "cx 0.1s linear, cy 0.1s linear" }}
+//               />
+
+//               {/* Team color fill */}
+//               <circle
+//                 cx={x} cy={y} r={r}
+//                 fill={d.color}
+//                 stroke="#ffffff"
+//                 strokeWidth="1.5"
+//                 style={{ transition: "cx 0.1s linear, cy 0.1s linear" }}
+//               />
+
+//               {/* Driver name — only when toggled on via L key */}
+//               {showNames && (
+//                 <text
+//                   x={x + r + 5}
+//                   y={y + 4}
+//                   fontSize="11"
+//                   fontWeight="900"
+//                   fill="#ffffff"
+//                   stroke="#000000"
+//                   strokeWidth="3"
+//                   paintOrder="stroke"
+//                   style={{
+//                     transition:     "x 0.1s linear, y 0.1s linear",
+//                     userSelect:     "none",
+//                     pointerEvents:  "none",
+//                   }}
+//                 >
+//                   {d.code}
+//                 </text>
+//               )}
+//             </g>
+//           );
+//         })}
+//       </svg>
+//     </div>
+//   );
+// };
+
+// export default RaceTrack;
+
+// import { useMemo } from "react";
+
+// export interface Driver {
+//   code: string;
+//   color: string;
+// }
+
+// export interface CarPosition {
+//   x: number;
+//   y: number;
+//   lap: number | null;
+//   in_pit: boolean;
+// }
+
+// export interface TrackPoint {
+//   x: number;
+//   y: number;
+// }
+
+// export interface Bounds {
+//   x_min: number;
+//   x_max: number;
+//   y_min: number;
+//   y_max: number;
+// }
+
+// export interface FinishLine {
+//   x: number;
+//   y: number;
+// }
+
+// export interface RaceTrackProps {
+//   drivers: Driver[];
+//   positions: Record<string, CarPosition>;
+//   trackOutline: TrackPoint[];
+//   bounds: Bounds;
+//   flag?: string;
+//   showNames?: boolean;
+//   finishLine?: FinishLine | null;
+// }
+
+// // ─── constants ──────────────────────────────────────────────────────────────
+
+// const VIEWBOX_W = 1000;
+// const VIEWBOX_H = 1000;
+// // Decreased padding from 40 to 25 to increase the overall size of the track slightly
+// const PADDING   = 25;
+
+// const FLAG_TRACK_COLOR: Record<string, string> = {
+//   clear:      "#4a4a4a",
+//   yellow:     "#ca8a04",
+//   red:        "#dc2626",
+//   safety_car: "#d97706",
+//   vsc:        "#d97706",
+//   vsc_ending: "#d97706",
+// };
+
+// // ─── projection ─────────────────────────────────────────────────────────────
+
+// const makeProjector = (bounds: Bounds) => {
+//   const dataW = bounds.x_max - bounds.x_min || 1;
+//   const dataH = bounds.y_max - bounds.y_min || 1;
+//   const availW = VIEWBOX_W - PADDING * 2;
+//   const availH = VIEWBOX_H - PADDING * 2;
+
+//   // Uniform scale — keeps circuit shape undistorted
+//   const scale   = Math.min(availW / dataW, availH / dataH);
+//   const offsetX = PADDING + (availW - dataW * scale) / 2;
+//   const offsetY = PADDING + (availH - dataH * scale) / 2;
+
+//   return (x: number, y: number) => ({
+//     x: offsetX + (x - bounds.x_min) * scale,
+//     // SVG y-axis is inverted vs telemetry y-axis
+//     y: offsetY + (dataH - (y - bounds.y_min)) * scale,
+//   });
+// };
+
+// // ─── finish line helper ──────────────────────────────────────────────────────
+
+// /**
+//  * Draws a short perpendicular stroke across the track at the finish line.
+//  * We find the two track-outline points nearest the finish-line coordinate,
+//  * compute the tangent direction between them, then draw a line 90° to it.
+//  */
+// const FinishLineMark = ({
+//   finishLine,
+//   trackOutline,
+//   project,
+// }: {
+//   finishLine: FinishLine;
+//   trackOutline: TrackPoint[];
+//   project: (x: number, y: number) => { x: number; y: number };
+// }) => {
+//   const { x: fx, y: fy } = project(finishLine.x, finishLine.y);
+
+//   // Find the two outline points nearest the projected finish point
+//   let best1 = 0, best2 = 1, bestDist = Infinity;
+//   const projected = trackOutline.map((p) => project(p.x, p.y));
+
+//   for (let i = 0; i < projected.length - 1; i++) {
+//     const mx = (projected[i].x + projected[i + 1].x) / 2;
+//     const my = (projected[i].y + projected[i + 1].y) / 2;
+//     const d  = Math.hypot(mx - fx, my - fy);
+//     if (d < bestDist) {
+//       bestDist = d;
+//       best1    = i;
+//       best2    = i + 1;
+//     }
+//   }
+
+//   // Tangent vector along the track at that point
+//   const tx = projected[best2].x - projected[best1].x;
+//   const ty = projected[best2].y - projected[best1].y;
+//   const len = Math.hypot(tx, ty) || 1;
+
+//   // Perpendicular = rotate tangent 90°
+//   const nx = -ty / len;
+//   const ny =  tx / len;
+
+//   const half = 18; // half-length of the finish line mark in SVG units
+//   const x1   = fx + nx * half;
+//   const y1   = fy + ny * half;
+//   const x2   = fx - nx * half;
+//   const y2   = fy - ny * half;
+
+//   return (
+//     <g>
+//       {/* Chequered flag effect: alternating black/white segments */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="5" strokeLinecap="round" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#000000" strokeWidth="5" strokeLinecap="round"
+//         strokeDasharray="4,4" />
+//       {/* Outer glow */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="9" strokeLinecap="round" opacity="0.15" />
+//     </g>
+//   );
+// };
+
+// // ─── component ──────────────────────────────────────────────────────────────
+
+// const RaceTrack = ({
+//   drivers,
+//   positions,
+//   trackOutline,
+//   bounds,
+//   flag       = "clear",
+//   showNames  = false,
+//   finishLine = null,
+// }: RaceTrackProps) => {
+//   const project = useMemo(() => makeProjector(bounds), [bounds]);
+
+//   // Build SVG path string once — only changes when track outline or bounds change
+//   const trackPathD = useMemo(() => {
+//     if (!trackOutline || trackOutline.length === 0) return "";
+//     const pts     = trackOutline.map((p) => project(p.x, p.y));
+//     const [first, ...rest] = pts;
+//     return rest.reduce(
+//       (acc, p) => `${acc} L ${p.x.toFixed(1)} ${p.y.toFixed(1)}`,
+//       `M ${first.x.toFixed(1)} ${first.y.toFixed(1)}`
+//     ) + " Z";
+//   }, [trackOutline, project]);
+
+//   const safeFlag   = (flag || "clear").toLowerCase().trim();
+//   const trackColor = FLAG_TRACK_COLOR[safeFlag] ?? FLAG_TRACK_COLOR.clear;
+
+//   // Fallback to the first coordinate of the track outline if no explicit finish line is provided
+//   const startLine = finishLine || (trackOutline?.length > 0 ? trackOutline[0] : null);
+
+//   return (
+//     <div className="w-full h-full">
+//       <svg
+//         viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H}`}
+//         className="w-full h-full"
+//         style={{ overflow: "visible" }}
+//       >
+//         {/* ── Track rendering — 3 layered strokes ── */}
+
+//         {/* Layer 1: wide outer glow — gives the "circuit lit up" feel */}
+//         <path
+//           d={trackPathD}
+//           stroke={trackColor}
+//           strokeWidth="28"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.18"
+//         />
+
+//         {/* Layer 2: main tarmac surface */}
+//         <path
+//           d={trackPathD}
+//           stroke={trackColor}
+//           strokeWidth="14"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.9"
+//         />
+
+//         {/* Layer 3: inner edge highlight — the bright centre line
+//             subtle white line that gives the track a 3D "lit from above" feel */}
+//         <path
+//           d={trackPathD}
+//           stroke="#ffffff"
+//           strokeWidth="2"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.12"
+//         />
+
+//         {/* ── Finish line ── */}
+//         {startLine && (
+//           <FinishLineMark
+//             finishLine={startLine}
+//             trackOutline={trackOutline}
+//             project={project}
+//           />
+//         )}
+
+//         {/* ── Cars ── */}
+//         {drivers.map((d) => {
+//           const pos = positions[d.code];
+//           if (!pos || isNaN(pos.x) || isNaN(pos.y)) return null;
+
+//           const { x, y } = project(pos.x, pos.y);
+//           const r        = pos.in_pit ? 5 : 8;
+//           const opacity  = pos.in_pit ? 0.55 : 1;
+
+//           return (
+//             <g
+//               key={d.code}
+//               opacity={opacity}
+//               style={{ transition: "opacity 0.3s" }}
+//             >
+//               {/* Drop shadow ring — makes cars pop off dark track */}
+//               <circle
+//                 cx={x} cy={y} r={r + 3}
+//                 fill="none"
+//                 stroke="#000000"
+//                 strokeWidth="3"
+//                 opacity="0.5"
+//                 style={{ transition: "cx 0.1s linear, cy 0.1s linear" }}
+//               />
+
+//               {/* Team color fill */}
+//               <circle
+//                 cx={x} cy={y} r={r}
+//                 fill={d.color}
+//                 stroke="#ffffff"
+//                 strokeWidth="1.5"
+//                 style={{ transition: "cx 0.1s linear, cy 0.1s linear" }}
+//               />
+
+//               {/* Driver name — only when toggled on via L key */}
+//               {showNames && (
+//                 <text
+//                   x={x + r + 5}
+//                   y={y + 4}
+//                   fontSize="11"
+//                   fontWeight="900"
+//                   fill="#ffffff"
+//                   stroke="#000000"
+//                   strokeWidth="3"
+//                   paintOrder="stroke"
+//                   style={{
+//                     transition:     "x 0.1s linear, y 0.1s linear",
+//                     userSelect:     "none",
+//                     pointerEvents:  "none",
+//                   }}
+//                 >
+//                   {d.code}
+//                 </text>
+//               )}
+//             </g>
+//           );
+//         })}
+//       </svg>
+//     </div>
+//   );
+// };
+
+// export default RaceTrack;
+
+// import { useMemo } from "react";
+
+// export interface Driver {
+//   code: string;
+//   color: string;
+// }
+
+// export interface CarPosition {
+//   x: number;
+//   y: number;
+//   lap: number | null;
+//   in_pit: boolean;
+// }
+
+// export interface TrackPoint {
+//   x: number;
+//   y: number;
+// }
+
+// export interface Bounds {
+//   x_min: number;
+//   x_max: number;
+//   y_min: number;
+//   y_max: number;
+// }
+
+// export interface FinishLine {
+//   x: number;
+//   y: number;
+// }
+
+// export interface RaceTrackProps {
+//   drivers: Driver[];
+//   positions: Record<string, CarPosition>;
+//   trackOutline: TrackPoint[];
+//   bounds: Bounds;
+//   flag?: string;
+//   showNames?: boolean;
+//   finishLine?: FinishLine | null;
+// }
+
+// // ─── constants ──────────────────────────────────────────────────────────────
+
+// const VIEWBOX_W = 1000;
+// const VIEWBOX_H = 1000;
+// // Decreased padding from 40 to 25 to increase the overall size of the track slightly
+// const PADDING   = 1;
+
+// const FLAG_TRACK_COLOR: Record<string, string> = {
+//   clear:      "#4a4a4a",
+//   yellow:     "#ca8a04",
+//   red:        "#dc2626",
+//   safety_car: "#d97706",
+//   vsc:        "#d97706",
+//   vsc_ending: "#d97706",
+// };
+
+// // ─── projection ─────────────────────────────────────────────────────────────
+
+// const makeProjector = (bounds: Bounds) => {
+//   const dataW = bounds.x_max - bounds.x_min || 1;
+//   const dataH = bounds.y_max - bounds.y_min || 1;
+//   const availW = VIEWBOX_W - PADDING * 2;
+//   const availH = VIEWBOX_H - PADDING * 2;
+
+//   // Uniform scale — keeps circuit shape undistorted
+//   const scale   = Math.min(availW / dataW, availH / dataH);
+//   const offsetX = PADDING + (availW - dataW * scale) / 2;
+//   const offsetY = PADDING + (availH - dataH * scale) / 2;
+
+//   return (x: number, y: number) => ({
+//     x: offsetX + (x - bounds.x_min) * scale,
+//     // SVG y-axis is inverted vs telemetry y-axis
+//     y: offsetY + (dataH - (y - bounds.y_min)) * scale,
+//   });
+// };
+
+// // ─── finish line helper ──────────────────────────────────────────────────────
+
+// /**
+//  * Draws a short perpendicular stroke across the track at the finish line.
+//  * We find the two track-outline points nearest the finish-line coordinate,
+//  * compute the tangent direction between them, then draw a line 90° to it.
+//  */
+// const FinishLineMark = ({
+//   finishLine,
+//   trackOutline,
+//   project,
+// }: {
+//   finishLine: FinishLine;
+//   trackOutline: TrackPoint[];
+//   project: (x: number, y: number) => { x: number; y: number };
+// }) => {
+//   const { x: fx, y: fy } = project(finishLine.x, finishLine.y);
+
+//   // Find the two outline points nearest the projected finish point
+//   let best1 = 0, best2 = 1, bestDist = Infinity;
+//   const projected = trackOutline.map((p) => project(p.x, p.y));
+
+//   for (let i = 0; i < projected.length - 1; i++) {
+//     const mx = (projected[i].x + projected[i + 1].x) / 2;
+//     const my = (projected[i].y + projected[i + 1].y) / 2;
+//     const d  = Math.hypot(mx - fx, my - fy);
+//     if (d < bestDist) {
+//       bestDist = d;
+//       best1    = i;
+//       best2    = i + 1;
+//     }
+//   }
+
+//   // Tangent vector along the track at that point
+//   const tx = projected[best2].x - projected[best1].x;
+//   const ty = projected[best2].y - projected[best1].y;
+//   const len = Math.hypot(tx, ty) || 1;
+
+//   // Perpendicular = rotate tangent 90°
+//   const nx = -ty / len;
+//   const ny =  tx / len;
+
+//   const half = 18; // half-length of the finish line mark in SVG units
+//   const x1   = fx + nx * half;
+//   const y1   = fy + ny * half;
+//   const x2   = fx - nx * half;
+//   const y2   = fy - ny * half;
+
+//   return (
+//     <g>
+//       {/* 1. Asphalt burn / shadow (gives the paint depth) */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#000000" strokeWidth="8" strokeLinecap="butt" opacity="0.5" />
+
+//       {/* 2. Base white paint layer */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="6" strokeLinecap="butt" />
+
+//       {/* 3. Crisp black squares (butt cap creates sharp checkerboard boxes) */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#111111" strokeWidth="6" strokeLinecap="butt"
+//         strokeDasharray="4,4" />
+
+//       {/* 4. Reflective paint highlight (only on the white squares) */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="2" strokeLinecap="butt"
+//         strokeDasharray="4,4" strokeDashoffset="4" opacity="0.9" />
+
+//       {/* 5. Soft ambient bloom/glow to match the rest of the track */}
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="14" strokeLinecap="round" opacity="0.12" />
+//     </g>
+//   );
+// };
+
+// // ─── component ──────────────────────────────────────────────────────────────
+
+// const RaceTrack = ({
+//   drivers,
+//   positions,
+//   trackOutline,
+//   bounds,
+//   flag       = "clear",
+//   showNames  = false,
+//   finishLine = null,
+// }: RaceTrackProps) => {
+//   const project = useMemo(() => makeProjector(bounds), [bounds]);
+
+//   // Build SVG path string once — only changes when track outline or bounds change
+//   const trackPathD = useMemo(() => {
+//     if (!trackOutline || trackOutline.length === 0) return "";
+//     const pts     = trackOutline.map((p) => project(p.x, p.y));
+//     const [first, ...rest] = pts;
+//     return rest.reduce(
+//       (acc, p) => `${acc} L ${p.x.toFixed(1)} ${p.y.toFixed(1)}`,
+//       `M ${first.x.toFixed(1)} ${first.y.toFixed(1)}`
+//     ) + " Z";
+//   }, [trackOutline, project]);
+
+//   const safeFlag   = (flag || "clear").toLowerCase().trim();
+//   const trackColor = FLAG_TRACK_COLOR[safeFlag] ?? FLAG_TRACK_COLOR.clear;
+
+//   // Fallback to the first coordinate of the track outline if no explicit finish line is provided
+//   const startLine = finishLine || (trackOutline?.length > 0 ? trackOutline[0] : null);
+
+//   return (
+//     <div className="w-full h-full">
+//       <svg
+//         viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H}`}
+//         className="w-full h-full"
+//         style={{ overflow: "visible" }}
+//       >
+//         {/* ── Track rendering — 3 layered strokes ── */}
+
+//         {/* Layer 1: wide outer glow — gives the "circuit lit up" feel */}
+//         <path
+//           d={trackPathD}
+//           stroke={trackColor}
+//           strokeWidth="28"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.18"
+//         />
+
+//         {/* Layer 2: main tarmac surface */}
+//         <path
+//           d={trackPathD}
+//           stroke={trackColor}
+//           strokeWidth="14"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.9"
+//         />
+
+//         {/* Layer 3: inner edge highlight — the bright centre line
+//             subtle white line that gives the track a 3D "lit from above" feel */}
+//         <path
+//           d={trackPathD}
+//           stroke="#ffffff"
+//           strokeWidth="2"
+//           fill="none"
+//           strokeLinejoin="round"
+//           strokeLinecap="round"
+//           opacity="0.12"
+//         />
+
+//         {/* ── Finish line ── */}
+//         {startLine && (
+//           <FinishLineMark
+//             finishLine={startLine}
+//             trackOutline={trackOutline}
+//             project={project}
+//           />
+//         )}
+
+//         {/* ── Cars ── */}
+//         {drivers.map((d) => {
+//           const pos = positions[d.code];
+//           if (!pos || isNaN(pos.x) || isNaN(pos.y)) return null;
+
+//           const { x, y } = project(pos.x, pos.y);
+//           const r        = pos.in_pit ? 5 : 8;
+//           const opacity  = pos.in_pit ? 0.55 : 1;
+
+//           return (
+//             <g
+//               key={d.code}
+//               opacity={opacity}
+//               style={{ transition: "opacity 0.3s" }}
+//             >
+//               {/* Drop shadow ring — makes cars pop off dark track */}
+//               <circle
+//                 cx={x} cy={y} r={r + 3}
+//                 fill="none"
+//                 stroke="#000000"
+//                 strokeWidth="3"
+//                 opacity="0.5"
+//                 style={{ transition: "cx 0.1s linear, cy 0.1s linear" }}
+//               />
+
+//               {/* Team color fill */}
+//               <circle
+//                 cx={x} cy={y} r={r}
+//                 fill={d.color}
+//                 stroke="#ffffff"
+//                 strokeWidth="1.5"
+//                 style={{ transition: "cx 0.1s linear, cy 0.1s linear" }}
+//               />
+
+//               {/* Driver name — only when toggled on via L key */}
+//               {showNames && (
+//                 <text
+//                   x={x + r + 5}
+//                   y={y + 4}
+//                   fontSize="11"
+//                   fontWeight="900"
+//                   fill="#ffffff"
+//                   stroke="#000000"
+//                   strokeWidth="3"
+//                   paintOrder="stroke"
+//                   style={{
+//                     transition:     "x 0.1s linear, y 0.1s linear",
+//                     userSelect:     "none",
+//                     pointerEvents:  "none",
+//                   }}
+//                 >
+//                   {d.code}
+//                 </text>
+//               )}
+//             </g>
+//           );
+//         })}
+//       </svg>
+//     </div>
+//   );
+// };
+
+// export default RaceTrack;\\
+// import { useMemo } from "react";
+
+// export interface Driver {
+//   code: string;
+//   color: string;
+// }
+
+// export interface CarPosition {
+//   x: number;
+//   y: number;
+//   lap: number | null;
+//   in_pit: boolean;
+// }
+
+// export interface TrackPoint {
+//   x: number;
+//   y: number;
+// }
+
+// export interface Bounds {
+//   x_min: number;
+//   x_max: number;
+//   y_min: number;
+//   y_max: number;
+// }
+
+// export interface FinishLine {
+//   x: number;
+//   y: number;
+// }
+
+// export interface RaceTrackProps {
+//   drivers: Driver[];
+//   positions: Record<string, CarPosition>;
+//   trackOutline: TrackPoint[];
+//   bounds: Bounds;
+//   flag?: string;
+//   showNames?: boolean;
+//   finishLine?: FinishLine | null;
+//   transitionMs?: number; // 🛠️ NEW: Dynamic sync for smooth gliding
+// }
+
+// // ─── constants ──────────────────────────────────────────────────────────────
+
+// const VIEWBOX_W = 1000;
+// const VIEWBOX_H = 1000;
+// const PADDING   = 1;
+
+// const FLAG_TRACK_COLOR: Record<string, string> = {
+//   clear:      "#4a4a4a",
+//   yellow:     "#ca8a04",
+//   red:        "#dc2626",
+//   safety_car: "#d97706",
+//   vsc:        "#d97706",
+//   vsc_ending: "#d97706",
+// };
+
+// // ─── projection ─────────────────────────────────────────────────────────────
+
+// const makeProjector = (bounds: Bounds) => {
+//   const dataW = bounds.x_max - bounds.x_min || 1;
+//   const dataH = bounds.y_max - bounds.y_min || 1;
+//   const availW = VIEWBOX_W - PADDING * 2;
+//   const availH = VIEWBOX_H - PADDING * 2;
+
+//   const scale   = Math.min(availW / dataW, availH / dataH);
+//   const offsetX = PADDING + (availW - dataW * scale) / 2;
+//   const offsetY = PADDING + (availH - dataH * scale) / 2;
+
+//   return (x: number, y: number) => ({
+//     x: offsetX + (x - bounds.x_min) * scale,
+//     y: offsetY + (dataH - (y - bounds.y_min)) * scale,
+//   });
+// };
+
+// // ─── finish line helper ──────────────────────────────────────────────────────
+
+// const FinishLineMark = ({
+//   finishLine,
+//   trackOutline,
+//   project,
+// }: {
+//   finishLine: FinishLine;
+//   trackOutline: TrackPoint[];
+//   project: (x: number, y: number) => { x: number; y: number };
+// }) => {
+//   const { x: fx, y: fy } = project(finishLine.x, finishLine.y);
+
+//   let best1 = 0, best2 = 1, bestDist = Infinity;
+//   const projected = trackOutline.map((p) => project(p.x, p.y));
+
+//   for (let i = 0; i < projected.length - 1; i++) {
+//     const mx = (projected[i].x + projected[i + 1].x) / 2;
+//     const my = (projected[i].y + projected[i + 1].y) / 2;
+//     const d  = Math.hypot(mx - fx, my - fy);
+//     if (d < bestDist) {
+//       bestDist = d;
+//       best1    = i;
+//       best2    = i + 1;
+//     }
+//   }
+
+//   const tx = projected[best2].x - projected[best1].x;
+//   const ty = projected[best2].y - projected[best1].y;
+//   const len = Math.hypot(tx, ty) || 1;
+
+//   const nx = -ty / len;
+//   const ny =  tx / len;
+
+//   const half = 18; 
+//   const x1   = fx + nx * half;
+//   const y1   = fy + ny * half;
+//   const x2   = fx - nx * half;
+//   const y2   = fy - ny * half;
+
+//   return (
+//     <g>
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#000000" strokeWidth="8" strokeLinecap="butt" opacity="0.5" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="6" strokeLinecap="butt" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#111111" strokeWidth="6" strokeLinecap="butt"
+//         strokeDasharray="4,4" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="2" strokeLinecap="butt"
+//         strokeDasharray="4,4" strokeDashoffset="4" opacity="0.9" />
+//       <line x1={x1} y1={y1} x2={x2} y2={y2}
+//         stroke="#ffffff" strokeWidth="14" strokeLinecap="round" opacity="0.12" />
+//     </g>
+//   );
+// };
+
+// // ─── component ──────────────────────────────────────────────────────────────
+
+// const RaceTrack = ({
+//   drivers,
+//   positions,
+//   trackOutline,
+//   bounds,
+//   flag       = "clear",
+//   showNames  = false,
+//   finishLine = null,
+//   transitionMs = 300, 
+// }: RaceTrackProps) => {
+//   const project = useMemo(() => makeProjector(bounds), [bounds]);
+
+//   const trackPathD = useMemo(() => {
+//     if (!trackOutline || trackOutline.length === 0) return "";
+//     const pts     = trackOutline.map((p) => project(p.x, p.y));
+//     const [first, ...rest] = pts;
+//     return rest.reduce(
+//       // 🛠️ FIX: Removed .toFixed(1) to stop the track line from rounding/shifting under the cars
+//       (acc, p) => `${acc} L ${p.x.toFixed(3)} ${p.y.toFixed(3)}`,
+//       `M ${first.x.toFixed(3)} ${first.y.toFixed(3)}`
+//     ) + " Z";
+//   }, [trackOutline, project]);
+
+//   const safeFlag   = (flag || "clear").toLowerCase().trim();
+//   const trackColor = FLAG_TRACK_COLOR[safeFlag] ?? FLAG_TRACK_COLOR.clear;
+//   const startLine = finishLine || (trackOutline?.length > 0 ? trackOutline[0] : null);
+
+//   // 🛠️ FIX: Perfect timing sync for CSS transitions
+//   const smoothTransform = `cx ${transitionMs}ms linear, cy ${transitionMs}ms linear`;
+//   const textTransform = `x ${transitionMs}ms linear, y ${transitionMs}ms linear`;
+
+//   return (
+//     <div className="w-full h-full">
+//       <svg
+//         viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H}`}
+//         className="w-full h-full"
+//         style={{ overflow: "visible" }}
+//       >
+//         <path d={trackPathD} stroke={trackColor} strokeWidth="28" fill="none" strokeLinejoin="round" strokeLinecap="round" opacity="0.18" />
+//         <path d={trackPathD} stroke={trackColor} strokeWidth="14" fill="none" strokeLinejoin="round" strokeLinecap="round" opacity="0.9" />
+//         <path d={trackPathD} stroke="#ffffff" strokeWidth="2" fill="none" strokeLinejoin="round" strokeLinecap="round" opacity="0.12" />
+
+//         {startLine && (
+//           <FinishLineMark finishLine={startLine} trackOutline={trackOutline} project={project} />
+//         )}
+
+//         {drivers.map((d) => {
+//           const pos = positions[d.code];
+//           if (!pos || isNaN(pos.x) || isNaN(pos.y)) return null;
+
+//           const { x, y } = project(pos.x, pos.y);
+//           // 🛠️ FIX: Locked all cars to size 8, regardless of pitting
+//           const r = 8;
+//           const opacity = pos.in_pit ? 0.55 : 1;
+
+//           return (
+//             <g key={d.code} opacity={opacity} style={{ transition: "opacity 0.2s" }}>
+//               <circle
+//                 cx={x} cy={y} r={r + 3}
+//                 fill="none" stroke="#000000" strokeWidth="3" opacity="0.5"
+//                 style={{ transition: smoothTransform }}
+//               />
+//               <circle
+//                 cx={x} cy={y} r={r}
+//                 fill={d.color} stroke="#ffffff" strokeWidth="1.5"
+//                 style={{ transition: smoothTransform }}
+//               />
+//               {showNames && (
+//                 <text
+//                   x={x + r + 5} y={y + 4}
+//                   fontSize="11" fontWeight="900" fill="#ffffff" stroke="#000000" strokeWidth="3" paintOrder="stroke"
+//                   style={{ transition: textTransform, userSelect: "none", pointerEvents: "none" }}
+//                 >
+//                   {d.code}
+//                 </text>
+//               )}
+//             </g>
+//           );
+//         })}
+//       </svg>
+//     </div>
+//   );
+// };
+
+// export default RaceTrack;
+
+import { useMemo, useRef } from "react";
 
 export interface Driver {
   code: string;
@@ -1404,8 +8877,9 @@ export interface CarPosition {
   x: number;
   y: number;
   lap: number | null;
-  dist: number;      
-  compound: string;  
+  in_pit: boolean;
+  distance?: number;  // total race distance from the generator (primary)
+  dist?: number;      // alias used by some older data.json builds
 }
 
 export interface TrackPoint {
@@ -1420,121 +8894,276 @@ export interface Bounds {
   y_max: number;
 }
 
-export interface RaceTrackProps {
-  drivers: Driver[];
-  positions: Record<string, CarPosition>; 
-  trackOutline: TrackPoint[];
-  bounds: Bounds;
-  transitionDuration: number; // CHANGED: Added dynamic duration prop
+export interface FinishLine {
+  x: number;
+  y: number;
 }
 
-const VIEWBOX_SIZE = 800; 
-const PADDING = 13; 
+export interface RaceTrackProps {
+  drivers: Driver[];
+  positions: Record<string, CarPosition>;
+  trackOutline: TrackPoint[];
+  bounds: Bounds;
+  flag?: string;
+  showNames?: boolean;
+  finishLine?: FinishLine | null;
+  transitionMs?: number;
+  // Set of driver codes who have retired — their circles are removed from the track entirely.
+  // The backend keeps sending their last known coordinates, so we must filter them out explicitly.
+  retiredDrivers?: Set<string>;
+}
 
-const makeProjector = (bounds: Bounds) => {
-  const dataWidth = bounds.x_max - bounds.x_min || 1;
-  const dataHeight = bounds.y_max - bounds.y_min || 1;
+// ─── constants ───────────────────────────────────────────────────────────────
 
-  const availableSize = VIEWBOX_SIZE - PADDING * 2;
-  const scale = Math.min(availableSize / dataWidth, availableSize / dataHeight);
+const VIEWBOX_W = 1000;
+const VIEWBOX_H = 1000;
+// Generous padding so cars at the edge are never clipped
+const PADDING   = 40;
 
-  const offsetX = PADDING + (availableSize - dataWidth * scale) / 2;
-  const offsetY = PADDING + (availableSize - dataHeight * scale) / 2;
+// Car sizes
+const CAR_R_RACING = 8;
+const CAR_R_PIT    = 5;
 
-  return (x: number, y: number) => {
-    const svgX = offsetX + (x - bounds.x_min) * scale;
-    const svgY = offsetY + (dataHeight - (y - bounds.y_min)) * scale;
-    return { x: svgX, y: svgY };
-  };
+// Pit debounce: how many consecutive in_pit=true frames before we confirm pit state.
+// Must match Leaderboard.tsx so both update at the same frame.
+const PIT_CONFIRM_THRESHOLD = 3;
+
+// If a car's dist jumped more than this many meters since the last render,
+// it's moving at racing speed — clear the pit flag even if backend says
+// in_pit=true. Must match Leaderboard.tsx's RACING_SPEED_DIST_THRESHOLD so
+// the track dot and the leaderboard badge come back to normal on the same
+// frame instead of the dot staying dimmed/small after the badge clears.
+const RACING_SPEED_DIST_THRESHOLD = 45;
+
+const FLAG_TRACK_COLOR: Record<string, string> = {
+  clear:      "#5a5a5a",
+  yellow:     "#ca8a04",
+  red:        "#dc2626",
+  safety_car: "#d97706",
+  vsc:        "#d97706",
+  vsc_ending: "#d97706",
 };
 
-const RaceTrack = ({ drivers, positions, trackOutline, bounds, transitionDuration }: RaceTrackProps) => {
-  const project = useMemo(() => makeProjector(bounds), [bounds]);
+// ─── projection ──────────────────────────────────────────────────────────────
 
-  const { trackPathD, finishLine } = useMemo(() => {
-    if (!trackOutline || trackOutline.length === 0) return { trackPathD: "", finishLine: null };
-    
-    const points = trackOutline.map((p) => project(p.x, p.y));
-    const [first, ...rest] = points;
-    
-    const path = rest.reduce(
-      (acc, p) => `${acc} L ${p.x.toFixed(2)} ${p.y.toFixed(2)}`,
-      `M ${first.x.toFixed(2)} ${first.y.toFixed(2)}`
-    );
+const makeProjector = (bounds: Bounds) => {
+  const dataW  = bounds.x_max - bounds.x_min || 1;
+  const dataH  = bounds.y_max - bounds.y_min || 1;
+  const availW = VIEWBOX_W - PADDING * 2;
+  const availH = VIEWBOX_H - PADDING * 2;
 
-    let finishLine = null;
-    if (points.length > 1) {
-      const p1 = points[0];
-      const p2 = points[1];
-      
-      const dx = p2.x - p1.x;
-      const dy = p2.y - p1.y;
-      const len = Math.sqrt(dx * dx + dy * dy);
-      
-      const nx = -dy / len;
-      const ny = dx / len;
-      
-      const width = 11; 
-      
-      finishLine = {
-        x1: p1.x + nx * width,
-        y1: p1.y + ny * width,
-        x2: p1.x - nx * width,
-        y2: p1.y - ny * width,
-      };
-    }
+  const scale   = Math.min(availW / dataW, availH / dataH);
+  const offsetX = PADDING + (availW - dataW * scale) / 2;
+  const offsetY = PADDING + (availH - dataH * scale) / 2;
 
-    return { trackPathD: `${path} Z`, finishLine };
-  }, [trackOutline, project]);
+  return (x: number, y: number) => ({
+    x: offsetX + (x - bounds.x_min) * scale,
+    // FastF1 Y increases upward, SVG Y increases downward — flip it
+    y: offsetY + (dataH - (y - bounds.y_min)) * scale,
+  });
+};
+
+// ─── finish line ─────────────────────────────────────────────────────────────
+
+const FinishLineMark = ({
+  finishLine,
+  trackOutline,
+  project,
+}: {
+  finishLine: FinishLine;
+  trackOutline: TrackPoint[];
+  project: (x: number, y: number) => { x: number; y: number };
+}) => {
+  const { x: fx, y: fy } = project(finishLine.x, finishLine.y);
+  const projected = trackOutline.map((p) => project(p.x, p.y));
+
+  let best1 = 0, best2 = 1, bestDist = Infinity;
+  for (let i = 0; i < projected.length - 1; i++) {
+    const mx = (projected[i].x + projected[i + 1].x) / 2;
+    const my = (projected[i].y + projected[i + 1].y) / 2;
+    const d  = Math.hypot(mx - fx, my - fy);
+    if (d < bestDist) { bestDist = d; best1 = i; best2 = i + 1; }
+  }
+
+  const tx  = projected[best2].x - projected[best1].x;
+  const ty  = projected[best2].y - projected[best1].y;
+  const len = Math.hypot(tx, ty) || 1;
+  const nx  = -ty / len;
+  const ny  =  tx / len;
+  const half = 20;
+
+  const x1 = fx + nx * half, y1 = fy + ny * half;
+  const x2 = fx - nx * half, y2 = fy - ny * half;
 
   return (
-    <div className="w-full h-full flex items-center justify-center font-sans">
-      <div className="w-full h-full relative flex items-center justify-center p-2">
-        <svg 
-          viewBox={`0 0 ${VIEWBOX_SIZE} ${VIEWBOX_SIZE}`} 
-          className="w-full h-full drop-shadow-2xl transform -rotate-90"
-        >
-          
-          <path d={trackPathD} stroke="#737373" strokeWidth="22" fill="none" strokeLinejoin="round" />
-          <path d={trackPathD} stroke="#0a0a0a" strokeWidth="18" fill="none" strokeLinejoin="round" />
-          <path d={trackPathD} stroke="#333333" strokeWidth="1" strokeDasharray="4 4" fill="none" strokeLinejoin="round" />
+    <g>
+      <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#000" strokeWidth="10" strokeLinecap="butt" opacity="0.4" />
+      <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#fff" strokeWidth="7"  strokeLinecap="butt" />
+      <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#111" strokeWidth="7"  strokeLinecap="butt" strokeDasharray="5,5" />
+      <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#fff" strokeWidth="2"  strokeLinecap="butt" strokeDasharray="5,5" strokeDashoffset="5" opacity="0.9" />
+      <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#fff" strokeWidth="16" strokeLinecap="round" opacity="0.08" />
+    </g>
+  );
+};
 
-          {finishLine && (
-            <line 
-              x1={finishLine.x1} y1={finishLine.y1} 
-              x2={finishLine.x2} y2={finishLine.y2} 
-              stroke="#ffffff" 
-              strokeWidth="3" 
-              strokeDasharray="3 3" 
-            />
-          )}
+// ─── main component ──────────────────────────────────────────────────────────
 
-          {drivers.map((d) => {
-            const pos = positions[d.code];
-            if (!pos || isNaN(pos.x)) return null; 
+const RaceTrack = ({
+  drivers,
+  positions,
+  trackOutline,
+  bounds,
+  flag            = "clear",
+  showNames       = false,
+  finishLine      = null,
+  transitionMs    = 300,
+  retiredDrivers  = new Set<string>(),
+}: RaceTrackProps) => {
+  const project = useMemo(() => makeProjector(bounds), [bounds]);
 
-            const { x, y } = project(pos.x, pos.y);
-            const isActive = pos.lap !== null;
+  // ── debounced pit state (mirrors Leaderboard.tsx logic exactly) ──
+  const pitCounterRef = useRef<Map<string, number>>(new Map());
+  // Tracks each driver's dist from the previous render (for exit speed check)
+  const prevDistRef = useRef<Map<string, number>>(new Map());
 
-            return (
+  const trackPathD = useMemo(() => {
+    if (!trackOutline || trackOutline.length === 0) return "";
+    const pts          = trackOutline.map((p) => project(p.x, p.y));
+    const [first, ...rest] = pts;
+    return (
+      rest.reduce(
+        (acc, p) => `${acc} L ${p.x.toFixed(3)} ${p.y.toFixed(3)}`,
+        `M ${first.x.toFixed(3)} ${first.y.toFixed(3)}`
+      ) + " Z"
+    );
+  }, [trackOutline, project]);
+
+  const safeFlag   = (flag || "clear").toLowerCase().trim();
+  const trackColor = FLAG_TRACK_COLOR[safeFlag] ?? FLAG_TRACK_COLOR.clear;
+  const startLine  = finishLine || (trackOutline?.length > 0 ? trackOutline[0] : null);
+
+  const smoothTransform = `cx ${transitionMs}ms linear, cy ${transitionMs}ms linear`;
+  const textTransform   = `x ${transitionMs}ms linear, y ${transitionMs}ms linear`;
+  const sizeTransition  = `r 200ms ease-in-out`;
+
+  // Build confirmed pit states for all drivers this render
+  const confirmedPitMap = useMemo(() => {
+    const map = new Map<string, boolean>();
+    drivers.forEach((d) => {
+      const pos  = positions[d.code];
+      const dist = pos?.distance ?? pos?.dist ?? 0;
+
+      // ── Speed-based exit override ──────────────────────────────────────
+      // If the car moved more than RACING_SPEED_DIST_THRESHOLD meters since
+      // the last render, it's back at racing speed → not in the pit
+      // regardless of what the backend flag says. Without this, the dot
+      // stays dimmed/small for as long as the backend's in_pit stays true,
+      // which is why it wasn't returning to its original color/size.
+      const prevDist      = prevDistRef.current.get(d.code) ?? dist;
+      const distDelta     = dist - prevDist;
+      prevDistRef.current.set(d.code, dist);
+      const isMovingFast  = distDelta > RACING_SPEED_DIST_THRESHOLD;
+
+      const rawInPit = (pos?.in_pit || false) && !isMovingFast;
+      const prev     = pitCounterRef.current.get(d.code) ?? 0;
+      const next     = rawInPit ? prev + 1 : 0;
+      pitCounterRef.current.set(d.code, next);
+      map.set(d.code, next >= PIT_CONFIRM_THRESHOLD);
+    });
+    return map;
+  }, [drivers, positions]);
+
+  return (
+    <div className="w-full h-full">
+      <svg
+        viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H}`}
+        className="w-full h-full"
+        style={{ overflow: "visible" }}
+      >
+        {/* ── track layers ── */}
+        {/* Outer glow */}
+        <path d={trackPathD} stroke={trackColor} strokeWidth="38" fill="none"
+          strokeLinejoin="round" strokeLinecap="round" opacity="0.10" />
+        {/* Road body — wider than before so car dots sit inside it */}
+        <path d={trackPathD} stroke={trackColor} strokeWidth="22" fill="none"
+          strokeLinejoin="round" strokeLinecap="round" opacity="0.85" />
+        {/* Kerb highlight */}
+        <path d={trackPathD} stroke="#ffffff" strokeWidth="2" fill="none"
+          strokeLinejoin="round" strokeLinecap="round" opacity="0.08" />
+
+        {startLine && (
+          <FinishLineMark
+            finishLine={startLine}
+            trackOutline={trackOutline}
+            project={project}
+          />
+        )}
+
+        {/* ── cars ── */}
+        {drivers.map((d) => {
+          // Retired drivers: backend keeps sending last known coordinates,
+          // so we must explicitly skip them here rather than relying on !pos.
+          if (retiredDrivers.has(d.code)) return null;
+
+          const pos = positions[d.code];
+          if (!pos || isNaN(pos.x) || isNaN(pos.y)) return null;
+
+          const { x, y }   = project(pos.x, pos.y);
+          const isPitting   = confirmedPitMap.get(d.code) ?? false;
+          const r           = isPitting ? CAR_R_PIT : CAR_R_RACING;
+
+          return (
+            <g key={d.code}>
+              {/* ── shadow ring (always present, gives depth) ── */}
               <circle
-                key={d.code}
-                cx={x}
-                cy={y}
-                r="6"
-                fill={d.color}
-                stroke="#ffffff"
-                strokeWidth="1.5"
-                opacity={isActive ? 1 : 0.2}
-                style={{
-                  // CHANGED: Transition time perfectly mimics real-time updates and halts immediately upon pausing!
-                  transition: `cx ${transitionDuration}ms linear, cy ${transitionDuration}ms linear, opacity 0.3s ease`,
-                }}
+                cx={x} cy={y} r={r + 4}
+                fill="none" stroke="#000000" strokeWidth="4" opacity="0.35"
+                style={{ transition: `${smoothTransform}, ${sizeTransition}` }}
               />
-            );
-          })}
-        </svg>
-      </div>
+
+              {/* ── pit indicator ring (only visible when pitting) ── */}
+              {isPitting && (
+                <circle
+                  cx={x} cy={y} r={r + 7}
+                  fill="none"
+                  stroke="#facc15"
+                  strokeWidth="1.5"
+                  strokeDasharray="3 3"
+                  opacity="0.7"
+                  style={{ transition: smoothTransform }}
+                />
+              )}
+
+              {/* ── car body ── */}
+              <circle
+                cx={x} cy={y} r={r}
+                fill={isPitting ? "#4a4a4a" : d.color}
+                stroke={isPitting ? "#888888" : "#ffffff"}
+                strokeWidth={isPitting ? 1 : 1.5}
+                opacity={isPitting ? 0.6 : 1}
+                style={{ transition: `${smoothTransform}, ${sizeTransition}, opacity 200ms ease-in-out` }}
+              />
+
+              {/* ── driver label ── */}
+              {showNames && (
+                <text
+                  x={x + r + 5} y={y + 4}
+                  fontSize="11" fontWeight="900"
+                  fill={isPitting ? "#888" : "#ffffff"}
+                  stroke="#000000" strokeWidth="3" paintOrder="stroke"
+                  style={{
+                    transition: textTransform,
+                    userSelect: "none",
+                    pointerEvents: "none",
+                  }}
+                >
+                  {d.code}
+                </text>
+              )}
+            </g>
+          );
+        })}
+      </svg>
     </div>
   );
 };

@@ -361,6 +361,8 @@ const SimulatorSetup = () => {
               onChange={(e) => setYear(e.target.value)}
               className="bg-neutral-950 border border-neutral-800 text-white p-3 rounded-lg font-bold focus:border-red-500 outline-none hover:bg-neutral-900 transition-colors cursor-pointer"
             >
+              <option value="2026">2026</option>
+              <option value="2025">2025</option>
               <option value="2024">2024</option>
               <option value="2023">2023</option>
               <option value="2022">2022</option>

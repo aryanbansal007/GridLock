@@ -11,6 +11,12 @@ export default defineConfig({
     watch: {
       // Tells Vite to stop reloading the page when Python drops new JSON files here!
       ignored: ['**/public/races/**'] 
+    },
+     proxy: {
+      '/api': {
+        target: 'http://localhost:5050',
+        changeOrigin: true,
+      }
     }
   }
 });
