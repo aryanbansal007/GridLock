@@ -2,6 +2,7 @@ import { exec } from 'child_process';
 import path from 'path';
 import fs from 'fs';
 import { CACHE_DIR, FASTF1_CACHE_DIR, SCRIPT_DIR, PYTHON_BIN } from '../config/paths.js';
+import { pushCacheToRemote } from './dataRepoSync.js';
 
 const SCRIPT_PATH = path.join(SCRIPT_DIR, 'full_race_generator.py');
 export { CACHE_DIR };
@@ -113,6 +114,7 @@ export const runPythonGenerator = (year: string, gp: string, session: string): P
                 return reject(new Error(stderr || error.message));
             }
             console.log(`Python Output: ${stdout}`);
+            pushCacheToRemote(`Add telemetry: ${year} ${gp} ${session}`);
             resolve(stdout);
         });
     });

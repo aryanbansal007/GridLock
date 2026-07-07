@@ -7,21 +7,28 @@
 # for the VITE_API_BASE it needs pointed at wherever this image ends up running).
 #
 # Build:  docker build -t gridlock-backend .
-# Run:    docker run -p 5050:5050 --env-file backend/.env -v gridlock-data:/data gridlock-backend
+# Run:    docker run -p 5050:5050 --env-file backend/.env gridlock-backend
 #
-# The -v flag above is the important part: /data is where this image expects a
-# PERSISTENT volume to be mounted (Render "disk", Railway "volume", or a plain
-# `docker volume`) — without it, every restart/redeploy wipes the generated
-# season/telemetry cache and FastF1's own HTTP cache, and you'd start from zero
-# every time. See CACHE_DIR/FASTF1_CACHE_DIR below.
+# No persistent volume needed. This image runs on a free/ephemeral-disk host (e.g.
+# Render's free tier) — CACHE_DIR/FASTF1_CACHE_DIR live on the container's own
+# writable filesystem and reset on every restart, same as any of its other files.
+# Persistence instead comes from `backend/src/services/dataRepoSync.ts`: on boot it
+# clones a public "gridlock-data" GitHub repo straight into CACHE_DIR (so a cold
+# start still comes up already warm with everything ever generated), and after each
+# new generation it commits + pushes the new files back to that repo. Requires
+# `GITHUB_DATA_TOKEN` (a fine-grained PAT scoped to that one repo, contents:
+# read+write) and `GITHUB_DATA_REPO` (`owner/repo`) set as env vars on the host —
+# without them this step just no-ops and the app behaves like a plain ephemeral
+# cache (still correct, just cold on every restart).
 
 FROM python:3.13-slim
 
-# ── Install Node.js 22 on top of the Python base image ──────────────────────
+# ── Install Node.js 22 + git on top of the Python base image ────────────────
 # (build-essential is needed because a couple of the Python deps — cryptography,
-# in particular — compile native extensions on install.)
+# in particular — compile native extensions on install. git is needed for the
+# boot-time cache clone described above, not for anything build-related.)
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl ca-certificates gnupg build-essential \
+    && apt-get install -y --no-install-recommends curl ca-certificates gnupg build-essential git \
     && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && rm -rf /var/lib/apt/lists/*
@@ -47,10 +54,10 @@ RUN cd backend && npm run build
 ENV NODE_ENV=production
 ENV PORT=5050
 ENV PYTHON_BIN=/app/data_scripts/venv/bin/python
-# Mount your platform's persistent volume at /data — these two paths are where
-# the generated JSON cache and FastF1's own raw telemetry cache are read/written.
-ENV CACHE_DIR=/data/cache
-ENV FASTF1_CACHE_DIR=/data/fastf1_cache
+# Plain paths on the container's own (ephemeral) filesystem — no volume mount
+# needed. CACHE_DIR's persistence comes from dataRepoSync.ts (see header comment).
+ENV CACHE_DIR=/app/cache
+ENV FASTF1_CACHE_DIR=/app/fastf1_cache
 
 EXPOSE 5050
 WORKDIR /app/backend

@@ -13,6 +13,7 @@ import sessionResultsRoute from './routes/sessionResults.js';
 
 import { connectDB } from './config/db.js';
 import { startSeasonDataScheduler } from './services/seasonDataScheduler.js';
+import { syncCacheFromRemote } from './services/dataRepoSync.js';
 
 dotenv.config();
 
@@ -46,6 +47,7 @@ app.get('/health', (req, res) => {
 // Mongo only backs auth + Race Engineer chat history, so a Mongo outage shouldn't
 // take down standings/calendar/analysis, which have zero Mongo dependency.
 const startServer = async () => {
+  syncCacheFromRemote();
   await connectDB();
   app.listen(PORT, () => {
     console.log(`🏎️  GridLock Backend roaring at http://localhost:${PORT}`);

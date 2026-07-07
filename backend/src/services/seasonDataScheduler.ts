@@ -2,6 +2,7 @@ import { exec } from 'child_process';
 import path from 'path';
 import cron from 'node-cron';
 import { CACHE_DIR as OUTPUT_DIR, FASTF1_CACHE_DIR, SCRIPT_DIR, PYTHON_BIN } from '../config/paths.js';
+import { pushCacheToRemote } from './dataRepoSync.js';
 
 const SCRIPT_PATH = path.join(SCRIPT_DIR, 'generate_season_data.py');
 
@@ -20,6 +21,7 @@ function refreshSeasonData(): void {
       return;
     }
     console.log(`[season-scheduler] Refreshed ${CURRENT_SEASON} season data.`);
+    pushCacheToRemote(`Refresh ${CURRENT_SEASON} season data`);
   });
 }
 
