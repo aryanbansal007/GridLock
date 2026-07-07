@@ -11,7 +11,7 @@ export { CACHE_DIR };
 // full_race_generator.py's write_driver_files().
 export const checkDriverCache = (year: string, gp: string, session: string, abbr: string): string | null => {
     const safeGpName = gp.toLowerCase().replace(/ /g, "_");
-    const safeSession = session.toLowerCase();
+    const safeSession = session.toUpperCase();
     const safeAbbr = abbr.toUpperCase();
     const targetFilePath = path.join(CACHE_DIR, year, safeGpName, safeSession, 'drivers', `${safeAbbr}.json`);
     return fs.existsSync(targetFilePath) ? targetFilePath : null;
@@ -21,7 +21,7 @@ export const checkDriverCache = (year: string, gp: string, session: string, abbr
 // lets the Analysis lap-simulation render the track without per-driver telemetry.
 export const checkTrackCache = (year: string, gp: string, session: string): string | null => {
     const safeGpName = gp.toLowerCase().replace(/ /g, "_");
-    const safeSession = session.toLowerCase();
+    const safeSession = session.toUpperCase();
     const targetFilePath = path.join(CACHE_DIR, year, safeGpName, safeSession, 'track.json');
     return fs.existsSync(targetFilePath) ? targetFilePath : null;
 };
@@ -31,7 +31,7 @@ export const checkTrackCache = (year: string, gp: string, session: string): stri
 // state without loading per-driver telemetry.
 export const checkConditionsCache = (year: string, gp: string, session: string): string | null => {
     const safeGpName = gp.toLowerCase().replace(/ /g, "_");
-    const safeSession = session.toLowerCase();
+    const safeSession = session.toUpperCase();
     const targetFilePath = path.join(CACHE_DIR, year, safeGpName, safeSession, 'conditions.json');
     return fs.existsSync(targetFilePath) ? targetFilePath : null;
 };
@@ -41,7 +41,7 @@ export const checkConditionsCache = (year: string, gp: string, session: string):
 // without needing to download every driver's full per-driver telemetry file.
 export const checkLapsCache = (year: string, gp: string, session: string): string | null => {
     const safeGpName = gp.toLowerCase().replace(/ /g, "_");
-    const safeSession = session.toLowerCase();
+    const safeSession = session.toUpperCase();
     const targetFilePath = path.join(CACHE_DIR, year, safeGpName, safeSession, 'laps.json');
     return fs.existsSync(targetFilePath) ? targetFilePath : null;
 };
@@ -50,7 +50,7 @@ export const checkLapsCache = (year: string, gp: string, session: string): strin
 // quali sessions cached BEFORE segment tagging existed, so they get regenerated.
 export const checkLapsHaveSegments = (year: string, gp: string, session: string): boolean => {
     const safeGpName = gp.toLowerCase().replace(/ /g, "_");
-    const safeSession = session.toLowerCase();
+    const safeSession = session.toUpperCase();
     const lapsPath = path.join(CACHE_DIR, year, safeGpName, safeSession, 'laps.json');
     if (!fs.existsSync(lapsPath)) return false;
     try {
@@ -63,7 +63,7 @@ export const checkLapsHaveSegments = (year: string, gp: string, session: string)
 
 export const getDriverManifest = (year: string, gp: string, session: string): Record<string, unknown> | null => {
     const safeGpName = gp.toLowerCase().replace(/ /g, "_");
-    const safeSession = session.toLowerCase();
+    const safeSession = session.toUpperCase();
     const manifestPath = path.join(CACHE_DIR, year, safeGpName, safeSession, 'drivers', 'index.json');
     if (!fs.existsSync(manifestPath)) return null;
     try {
