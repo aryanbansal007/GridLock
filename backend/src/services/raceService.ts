@@ -109,7 +109,11 @@ export const runPythonGenerator = (year: string, gp: string, session: string): P
         // (there was previously no timeout at all here).
         exec(command, { cwd: SCRIPT_DIR, maxBuffer: 1024 * 1024 * 50, timeout: 10 * 60_000 }, (error, stdout, stderr) => {
             if (error) {
-                console.error(`Error generating telemetry: ${error.message}`);
+                // signal/code distinguish "Python raised an exception" (code set, no signal)
+                // from "the process was killed from outside" (signal set, e.g. SIGKILL from an
+                // OOM-killer) — stderr alone can't tell them apart since a killed process just
+                // stops mid-log with no traceback, exactly like a clean run's progress output.
+                console.error(`Error generating telemetry: ${error.message} (signal: ${error.signal ?? 'none'}, code: ${error.code ?? 'none'})`);
                 console.error(`stderr: ${stderr}`);
                 return reject(new Error(stderr || error.message));
             }
@@ -120,7 +124,14 @@ export const runPythonGenerator = (year: string, gp: string, session: string): P
     });
 
     inFlightGenerations.set(key, promise);
-    promise.finally(() => inFlightGenerations.delete(key));
+    // .finally() returns its own derived promise chain, separate from the one below that's
+    // actually returned to (and properly try/caught by) the caller. When `promise` rejects,
+    // that rejection also propagates through THIS chain — and since nothing was observing it,
+    // Node treated it as an unhandled rejection and crashed the entire process (confirmed live:
+    // a failed generation on Render took down the whole backend, not just that one request).
+    // The trailing .catch(() => {}) just marks this specific chain as handled; the real error
+    // still surfaces normally to whoever awaited the returned `promise`.
+    promise.finally(() => inFlightGenerations.delete(key)).catch(() => {});
 
     return promise;
 };
