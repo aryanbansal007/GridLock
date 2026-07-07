@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { generateRace, getRaceData, listRaces, getSchedule } from '../controllers/raceController.js';
+import { generateRace, listRaces, getSchedule, listSessionDrivers, getDriverData, getTrackData, getLapsData, getConditionsData } from '../controllers/raceController.js';
 
 const router = Router();
 
@@ -9,8 +9,12 @@ router.post('/generate', generateRace);
 // Endpoint to list all cached races
 router.get('/list', listRaces);
 
-// Endpoint to serve the actual JSON data to the frontend simulator
-router.get('/data/:year/:gp/:session', getRaceData);
+// Per-driver telemetry endpoints
+router.get('/data/:year/:gp/:session/drivers', listSessionDrivers);
+router.get('/data/:year/:gp/:session/drivers/:abbr', getDriverData);
+router.get('/data/:year/:gp/:session/track', getTrackData);
+router.get('/data/:year/:gp/:session/laps', getLapsData);
+router.get('/data/:year/:gp/:session/conditions', getConditionsData);
 
 router.get('/schedule/:year', getSchedule);
 

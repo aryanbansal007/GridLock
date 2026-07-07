@@ -1,1 +1,22 @@
 @import "tailwindcss";
+
+/* Browsers render <button> with the default arrow cursor unless styled — only
+   <a href> gets a pointer cursor automatically. Every clickable div in this
+   codebase already sets cursor-pointer explicitly, but buttons (the dominant
+   interactive pattern here) didn't, so this was inconsistent site-wide. */
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  input[type="checkbox"],
+  input[type="radio"],
+  input[type="color"],
+  select,
+  label[for],
+  summary {
+    cursor: pointer;
+  }
+  button:disabled,
+  [aria-disabled="true"] {
+    cursor: not-allowed;
+  }
+}

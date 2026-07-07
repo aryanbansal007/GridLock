@@ -1,0 +1,16 @@
+# Never bake these into the image — they're either huge (caches), rebuilt at
+# build time (node_modules/dist/venv), or dev-only.
+node_modules
+backend/node_modules
+frontend/node_modules
+backend/dist
+frontend/dist
+data_scripts/venv
+data_scripts/fastf1_cache
+backend/src/cache
+data_scripts/__pycache__
+**/__pycache__
+.git
+.env
+.DS_Store
+frontend

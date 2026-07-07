@@ -1,7 +1,9 @@
 // frontend/src/services/api.ts
+import { API_BASE } from '../lib/f1';
+
 export const fetchChatHistory = async () => {
   const token = localStorage.getItem('token');
-  const response = await fetch('http://localhost:5050/api/history', {
+  const response = await fetch(`${API_BASE}/api/history`, {
     headers: {
       'Authorization': `Bearer ${token}`
     }

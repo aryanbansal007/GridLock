@@ -38,11 +38,21 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-if (!process.env.GEMINI_API_KEY) {
-  throw new Error("Missing GEMINI_API_KEY in environment variables.");
+// Lazy singleton instead of a module-load throw — importing this file (which happens
+// as soon as any route file is loaded, even ones that never call askRaceEngineer)
+// must never crash the whole process just because GEMINI_API_KEY isn't set. The
+// missing-key error now only surfaces when /api/ai/ask is actually invoked, where
+// the route already wraps this in a try/catch and returns a clean 500.
+let ai: GoogleGenAI | null = null;
+function getAI(): GoogleGenAI {
+  if (!process.env.GEMINI_API_KEY) {
+    throw new Error("Missing GEMINI_API_KEY in environment variables.");
+  }
+  if (!ai) {
+    ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+  }
+  return ai;
 }
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 // 1. Added the optional raceContext parameter here
 export async function askRaceEngineer(
@@ -99,7 +109,7 @@ User Query: ${userPrompt}
   }
 
   try {
-    const response = await ai.models.generateContent({
+    const response = await getAI().models.generateContent({
       model: "gemini-2.5-flash",
       contents: fullPrompt, // 3. Pass the newly combined fullPrompt here
       config: {
