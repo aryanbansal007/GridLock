@@ -78,13 +78,13 @@ def _first_lap_with_pos_data(laps):
 def build_track_outline(session, n_points=4000):
     quick = session.laps.pick_quicklaps() if not session.laps.empty else session.laps
     ordered = quick.sort_values("LapTime") if not quick.empty else quick
-    _, pos = _first_lap_with_pos_data(ordered)
+    ref_lap, pos = _first_lap_with_pos_data(ordered)
 
     if pos is None:
         # No quick lap had usable position data (seen on Monaco — data gaps around
         # the fastest lap) — widen the search to every lap in the session, fastest first.
         ordered_all = session.laps.sort_values("LapTime")
-        _, pos = _first_lap_with_pos_data(ordered_all)
+        ref_lap, pos = _first_lap_with_pos_data(ordered_all)
 
     if pos is None:
         raise RuntimeError(
@@ -105,7 +105,28 @@ def build_track_outline(session, n_points=4000):
 
     outline = [{"x": float(x), "y": float(y)} for x, y in zip(xs_dense, ys_dense)]
     bounds = (float(xs.min()), float(xs.max()), float(ys.min()), float(ys.max()))
-    return outline, bounds, total_length
+
+    # `total_length` above is a geometric point-to-point sum over Position data
+    # (X/Y from get_pos_data()) — confirmed by direct comparison that this data
+    # source is on a ~10x different scale than the car telemetry's own Distance
+    # channel (e.g. real ~5837m Silverstone lap measured as ~57981m this way).
+    # It's still fine for spacing outline points evenly (self-consistent within
+    # its own coordinate space), but as a real-world "meters per lap" figure —
+    # which cumulative_distance and now the driving-state strip's corner
+    # positions depend on — it must come from the telemetry Distance channel
+    # instead, which is already confirmed correctly scaled (matches real
+    # circuit lengths) and is what corner distances from get_circuit_info()
+    # are measured against too.
+    avg_lap_length = total_length
+    try:
+        ref_tel = ref_lap.get_telemetry()
+        if ref_tel is not None and not ref_tel.empty and "Distance" in ref_tel.columns:
+            avg_lap_length = float(ref_tel["Distance"].max())
+    except Exception as e:
+        print(f"WARNING: could not derive avg_lap_length from telemetry Distance "
+              f"({e}) — falling back to the (likely mis-scaled) position-geometry value.")
+
+    return outline, bounds, avg_lap_length
 
 
 def build_track_status_timeline(session):
@@ -280,7 +301,25 @@ def write_laps_file(lap_tables, driver_names, team_colors, quali_segments, out_d
         json.dump(payload, f)
 
 
-def write_track_file(track_outline, bounds, avg_lap_length, total_laps, session_name, out_dir):
+def build_corners(session):
+    """Real corner numbers + their distance along FastF1's own reference lap
+    (session.get_circuit_info()) — used by the frontend's driving-state strip
+    to place corner-number markers at approximately the right spot along any
+    selected driver's own in-lap distance axis. Best-effort: not every
+    session/track has circuit info available, so this degrades to an empty
+    list rather than failing the whole generation."""
+    try:
+        corners = session.get_circuit_info().corners
+        return [
+            {"number": int(row.Number), "distance": round(float(row.Distance), 1)}
+            for row in corners.itertuples()
+        ]
+    except Exception as e:
+        print(f"WARNING: could not load circuit corner info ({e}) — corners will be empty.")
+        return []
+
+
+def write_track_file(track_outline, bounds, avg_lap_length, total_laps, session_name, corners, out_dir):
     """Small session-level file (~4000 outline points) so per-driver Analysis
     features can render the track without loading per-driver telemetry.
     `bounds` is the (x_min, x_max, y_min, y_max) tuple from build_track_outline."""
@@ -293,6 +332,7 @@ def write_track_file(track_outline, bounds, avg_lap_length, total_laps, session_
         },
         "avg_lap_length": round(float(avg_lap_length), 1),
         "total_laps": total_laps,
+        "corners": corners,
     }
     with open(os.path.join(out_dir, "track.json"), "w") as f:
         json.dump(payload, f)
@@ -390,7 +430,7 @@ def build_driver_frame_series(session, master_timeline):
         all_t, all_x, all_y, all_lap, all_dist = [], [], [], [], []
         all_compound, all_tyre_life, all_in_pit = [], [], []
         # 🛠️ COCKPIT TELEMETRY DATA LISTS
-        all_speed, all_gear, all_throttle, all_brake = [], [], [], []
+        all_speed, all_gear, all_throttle, all_brake, all_rpm, all_drs = [], [], [], [], [], []
 
         for _, lap in laps.iterrows():
             try:
@@ -429,6 +469,8 @@ def build_driver_frame_series(session, master_timeline):
             all_gear.append(tel.get("nGear", pd.Series(np.zeros(n))).to_numpy(dtype=float))
             all_throttle.append(tel.get("Throttle", pd.Series(np.zeros(n))).to_numpy(dtype=float))
             all_brake.append(tel.get("Brake", pd.Series(np.zeros(n))).to_numpy(dtype=float))
+            all_rpm.append(tel.get("RPM", pd.Series(np.zeros(n))).to_numpy(dtype=float))
+            all_drs.append(tel.get("DRS", pd.Series(np.zeros(n))).to_numpy(dtype=float))
 
         if not all_t:
             continue
@@ -447,22 +489,24 @@ def build_driver_frame_series(session, master_timeline):
         gear_concat = np.concatenate(all_gear)
         thr_concat = np.concatenate(all_throttle)
         brk_concat = np.concatenate(all_brake)
+        rpm_concat = np.concatenate(all_rpm)
+        drs_concat = np.concatenate(all_drs)
 
         order = np.argsort(t_concat)
         arrays = [t_concat, x_concat, y_concat, dist_concat, lap_concat,
                   compound_concat, tyre_life_concat, in_pit_concat,
-                  spd_concat, gear_concat, thr_concat, brk_concat]
-        
+                  spd_concat, gear_concat, thr_concat, brk_concat, rpm_concat, drs_concat]
+
         t_concat, x_concat, y_concat, dist_concat, lap_concat, \
             compound_concat, tyre_life_concat, in_pit_concat, \
-            spd_concat, gear_concat, thr_concat, brk_concat = [a[order] for a in arrays]
+            spd_concat, gear_concat, thr_concat, brk_concat, rpm_concat, drs_concat = [a[order] for a in arrays]
 
         _, unique_idx = np.unique(t_concat, return_index=True)
         unique_idx = np.sort(unique_idx)
-        
+
         t_concat, x_concat, y_concat, dist_concat, lap_concat, \
             compound_concat, tyre_life_concat, in_pit_concat, \
-            spd_concat, gear_concat, thr_concat, brk_concat = [
+            spd_concat, gear_concat, thr_concat, brk_concat, rpm_concat, drs_concat = [
                 a[unique_idx] for a in arrays
             ]
 
@@ -480,6 +524,8 @@ def build_driver_frame_series(session, master_timeline):
         gear_out = np.full(n_frames, 0.0)
         thr_out = np.full(n_frames, 0.0)
         brk_out = np.full(n_frames, 0.0)
+        rpm_out = np.full(n_frames, 0.0)
+        drs_out = np.full(n_frames, 0.0)
 
         j = 0
         for i, t in enumerate(master_timeline):
@@ -502,15 +548,19 @@ def build_driver_frame_series(session, master_timeline):
                 thr_out[i] = thr_concat[j] + frac * (thr_concat[j + 1] - thr_concat[j])
                 gear_out[i] = gear_concat[j] # Hold current gear (no partial gears)
                 brk_out[i] = brk_concat[j]   # Hold current brake status
+                rpm_out[i] = rpm_concat[j] + frac * (rpm_concat[j + 1] - rpm_concat[j])
+                drs_out[i] = drs_concat[j]   # Hold current DRS status (discrete state)
             else:
                 x_out[i] = x_concat[j]
                 y_out[i] = y_concat[j]
                 dist_out[i] = dist_concat[j]
-                
+
                 spd_out[i] = spd_concat[j]
                 thr_out[i] = thr_concat[j]
                 gear_out[i] = gear_concat[j]
                 brk_out[i] = brk_concat[j]
+                rpm_out[i] = rpm_concat[j]
+                drs_out[i] = drs_concat[j]
 
             lap_out[i] = lap_concat[j]
             compound_out[i] = compound_concat[j]
@@ -520,7 +570,7 @@ def build_driver_frame_series(session, master_timeline):
         driver_series[abbr] = {
             "x": x_out, "y": y_out, "lap": lap_out, "dist": dist_out,
             "compound": compound_out, "tyre_life": tyre_life_out, "in_pit": in_pit_out,
-            "speed": spd_out, "gear": gear_out, "throttle": thr_out, "brake": brk_out # 🛠️ PACKAGED
+            "speed": spd_out, "gear": gear_out, "throttle": thr_out, "brake": brk_out, "rpm": rpm_out, "drs": drs_out # 🛠️ PACKAGED
         }
 
     return driver_series, team_colors, driver_names
@@ -582,6 +632,10 @@ def write_driver_files(driver_series, team_colors, driver_names, results_map,
             "gear": [int(v) for v in series["gear"][start:end]],
             "throttle": [int(v) for v in series["throttle"][start:end]],
             "brake": [bool(v > 0) for v in series["brake"][start:end]],
+            "rpm": [int(v) for v in series["rpm"][start:end]],
+            # FastF1's DRS channel uses 0/1/2/3/8 for various "off/detected" states and
+            # 10/12/14 for genuinely open — >=10 is the standard "DRS actually open" cutoff.
+            "drs": [bool(v >= 10) for v in series["drs"][start:end]],
         }
 
         with open(os.path.join(drivers_dir, f"{abbr}.json"), "w") as f:
@@ -645,52 +699,23 @@ def main():
     print("Interpolating driver positions onto shared timeline...")
     driver_series, team_colors, driver_names = build_driver_frame_series(session, master_timeline)
 
-    print("Assembling frames...")
+    # Only t/flag/weather ever get read back out of `frames` (by write_conditions_file
+    # below) — per-driver positions/telemetry are written separately and far more
+    # efficiently by write_driver_files, which only serializes each driver's own valid
+    # range instead of a dense frame x driver grid. This used to also build a
+    # `frame_cars` dict per frame (looping every driver for every one of potentially
+    # 15,000+ frames) for the old merged data.json — that file was dropped, but this
+    # loop kept running and its result just got discarded, wasting real CPU/memory
+    # for nothing on every single generation.
+    print("Assembling session-wide flag/weather timeline...")
     frames = []
     status_cursor = [0]
-    weather_cursor = [0] 
-    
-    for i, t in enumerate(master_timeline):
-        frame_cars = {}
-        for abbr, series in driver_series.items():
-            x, y, lap, dist = series["x"][i], series["y"][i], series["lap"][i], series["dist"][i]
-            
-            # 🛠️ PULL: Extract Cockpit Telemetry
-            spd = series["speed"][i]
-            gear = series["gear"][i]
-            thr = series["throttle"][i]
-            brk = series["brake"][i]
+    weather_cursor = [0]
 
-            if np.isnan(x):
-                continue
-
-            total_distance = (lap - 1) * avg_lap_length + dist if not np.isnan(lap) else dist
-
-            frame_cars[abbr] = {
-                "x": round(float(x), 2),
-                "y": round(float(y), 2),
-                "lap": int(lap) if not np.isnan(lap) else None,
-                "distance": round(float(total_distance), 1),
-                "compound": str(series["compound"][i]),
-                "tyre_life": round(float(series["tyre_life"][i]), 1),
-                "in_pit": bool(series["in_pit"][i]),
-                
-                # 🛠️ ATTACH TO JSON: Ensuring types are safe and serialized nicely
-                "speed": int(spd) if not np.isnan(spd) else 0,
-                "gear": int(gear) if not np.isnan(gear) else 0,
-                "throttle": int(thr) if not np.isnan(thr) else 0,
-                "brake": bool(brk > 0) if not np.isnan(brk) else False,
-            }
-
+    for t in master_timeline:
         flag = status_at_time(status_events, t, status_cursor)
         w_snap = weather_at_time(weather_events, t, weather_cursor)
-        
-        frames.append({
-            "t": round(float(t), 2), 
-            "cars": frame_cars, 
-            "flag": flag,
-            "weather": w_snap 
-        })
+        frames.append({"t": round(float(t), 2), "flag": flag, "weather": w_snap})
 
     safe_gp = args.gp.lower().replace(" ", "_")
     out_dir = os.path.join(args.output_dir, str(args.year), safe_gp, args.session)
@@ -713,7 +738,8 @@ def main():
     print(f"Done. Wrote {n} per-driver files to {os.path.join(out_dir, 'drivers')}")
 
     print("Writing track file...")
-    write_track_file(track_outline, bounds, avg_lap_length, total_laps, args.session, out_dir)
+    corners = build_corners(session)
+    write_track_file(track_outline, bounds, avg_lap_length, total_laps, args.session, corners, out_dir)
     print(f"Done. Wrote track.json to {out_dir}")
 
     print("Writing session-wide laps file (all drivers, no telemetry)...")

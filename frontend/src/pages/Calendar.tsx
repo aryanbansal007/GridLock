@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   API_BASE, SEASON_YEAR, flagFor, fmtWeekendRange, shortName,
   type CalendarResponse, type RaceEntry,
@@ -9,7 +9,13 @@ import { SeasonSelector } from '../components/SeasonSelector';
 
 export default function Calendar() {
   const navigate = useNavigate();
-  const [currentYear, setCurrentYear] = useState<number>(SEASON_YEAR);
+  // Year lives in the URL (not plain useState) so it survives navigating away to a
+  // race and back — otherwise every remount reset to SEASON_YEAR regardless of what
+  // the user was actually browsing.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const yearParam = Number(searchParams.get('year'));
+  const currentYear = yearParam || SEASON_YEAR;
+  const setCurrentYear = (y: number) => setSearchParams(y === SEASON_YEAR ? {} : { year: String(y) });
   const [data, setData] = useState<CalendarResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);

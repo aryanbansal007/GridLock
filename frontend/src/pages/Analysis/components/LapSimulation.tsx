@@ -161,7 +161,12 @@ export default function LapSimulation({ year, gp, session, segment, drivers: cod
   const lapOptions = useLapOptions(list, segment ?? null);
 
   const slices = useMemo(() => buildSlices(list, sel), [list, sel]);
-  const maxDur = Math.max(0, ...slices.map(s => s.duration));
+  // Raw telemetry span (`duration`) always falls a little short of the driver's real
+  // lap time — FastF1's sampling doesn't extend exactly to the timing-loop crossing —
+  // so the sim's clock/scrubber must run out to each driver's actual official lap
+  // time instead, or it stops before the slowest driver really finished (a car whose
+  // own telemetry ends early just holds its final position until the clock catches up).
+  const maxDur = Math.max(0, ...slices.map(s => s.officialTime ?? s.duration));
   const colors = useMemo(() => driverColors(list.map(d => ({ driver: d.driver, team_color: d.team_color })), colorOverrides), [list, colorOverrides]);
   const simFrames = useMemo(() => (slices.length ? buildSimFrames(slices, maxDur) : []), [slices, maxDur]);
   const visibleFrames = useMemo(() => simFrames.filter(f => f.t <= tau + 1e-6), [simFrames, tau]);

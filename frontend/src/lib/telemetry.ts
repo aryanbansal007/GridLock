@@ -78,16 +78,20 @@ export interface DriverTelemetry {
   gear: number[];
   throttle: number[];
   brake: boolean[];
+  rpm: number[];
+  drs: boolean[];
 }
 
 export interface TrackPoint { x: number; y: number }
 export interface Bounds { x_min: number; x_max: number; y_min: number; y_max: number }
+export interface TrackCorner { number: number; distance: number }
 export interface TrackData {
   session: string;
   track_outline: TrackPoint[];
   bounds: Bounds;
   avg_lap_length: number;
   total_laps: number | null;
+  corners: TrackCorner[];
 }
 
 // ── endpoints ────────────────────────────────────────────────────────────────
@@ -259,14 +263,15 @@ function interp(xs: number[], ys: number[], x: number): number {
 }
 
 /** A driver's fastest-lap channel series as {dist, value} (dist reset to start at 0). */
-function lapChannel(d: DriverTelemetry, range: { start: number; end: number }, channel: 'speed' | 'throttle' | 'brake') {
+function lapChannel(d: DriverTelemetry, range: { start: number; end: number }, channel: 'speed' | 'throttle' | 'brake' | 'gear' | 'rpm' | 'drs') {
   const dist0 = d.dist[range.start];
   const xs: number[] = [];
   const ys: number[] = [];
+  const isBoolChannel = channel === 'brake' || channel === 'drs';
   for (let i = range.start; i < range.end; i++) {
     xs.push(d.dist[i] - dist0);
     const raw = d[channel][i];
-    ys.push(channel === 'brake' ? (raw ? 100 : 0) : (raw as number));
+    ys.push(isBoolChannel ? (raw ? 100 : 0) : (raw as number));
   }
   return { xs, ys, maxDist: xs[xs.length - 1] ?? 0 };
 }
@@ -310,7 +315,7 @@ export function buildComparisonGrid(a: DriverTelemetry, b: DriverTelemetry, sel:
 
 export interface MultiSeriesPoint {
   distance: number;
-  [key: string]: number; // `${driverCode}_speed` / `_throttle` / `_brake`
+  [key: string]: number; // `${driverCode}_speed` / `_throttle` / `_brake` / `_gear` / `_rpm`
 }
 
 /** Resample N drivers' fastest laps onto a shared in-lap distance grid, one row
@@ -326,6 +331,9 @@ export function buildMultiSeriesGrid(drivers: DriverTelemetry[], sel: LapSelecti
         speed: lapChannel(d, r, 'speed'),
         throttle: lapChannel(d, r, 'throttle'),
         brake: lapChannel(d, r, 'brake'),
+        gear: lapChannel(d, r, 'gear'),
+        rpm: lapChannel(d, r, 'rpm'),
+        drs: lapChannel(d, r, 'drs'),
       };
     })
     .filter((c): c is NonNullable<typeof c> => c !== null);
@@ -340,6 +348,11 @@ export function buildMultiSeriesGrid(drivers: DriverTelemetry[], sel: LapSelecti
       point[`${c.code}_speed`] = Math.round(interp(c.speed.xs, c.speed.ys, dcur));
       point[`${c.code}_throttle`] = Math.round(interp(c.throttle.xs, c.throttle.ys, dcur));
       point[`${c.code}_brake`] = Math.round(interp(c.brake.xs, c.brake.ys, dcur));
+      // Gear is a stepped/held value (no partial gears) — round to the nearest
+      // whole gear instead of smoothing across the interpolation step.
+      point[`${c.code}_gear`] = Math.round(interp(c.gear.xs, c.gear.ys, dcur));
+      point[`${c.code}_rpm`] = Math.round(interp(c.rpm.xs, c.rpm.ys, dcur));
+      point[`${c.code}_drs`] = Math.round(interp(c.drs.xs, c.drs.ys, dcur));
     }
     points.push(point);
   }
@@ -419,6 +432,137 @@ export function xyAtLapDistance(d: DriverTelemetry, range: { start: number; end:
     yv.push(d.y[i]);
   }
   return { x: interp(xs, xv, lapDist), y: interp(xs, yv, lapDist) };
+}
+
+// ── driving-state strip (Full Throttle / Clipping / Lift & Coast / Brake / Cornering) ──
+
+export type DrivingState = 'full_throttle' | 'clipping' | 'lift_coast' | 'brake' | 'cornering';
+
+export interface DrivingStateSegment {
+  state: DrivingState;
+  startDist: number; // in-lap distance, meters, 0 = lap start
+  endDist: number;
+}
+
+const FULL_THROTTLE_MIN_PCT = 99;  // >=99% throttle counts as wide-open
+const OFF_THROTTLE_MAX_PCT = 5;    // <=5% throttle counts as fully lifted
+// A brief partial-throttle blip shorter than this is a quick "clipping" lift at a
+// fast kink/chicane apex; anything longer is sustained cornering. There's no
+// steering-angle channel available to detect corners directly, so run-length on
+// the throttle trace is the proxy — matches how these tools visually read anyway
+// (a clip is a flick, cornering is a sustained partial-throttle phase).
+const CLIPPING_MAX_RUN_M = 40;
+// Telemetry samples every ~300ms, and the raw signal occasionally flickers for
+// exactly one sample right at a threshold boundary (e.g. throttle reads 98% for
+// a single 300ms tick between two long 100% runs) — confirmed on real data.
+// Left alone, each of those becomes its own visible "tick" in the strip that a
+// human wouldn't call a real driving-state change. Any run shorter than this
+// gets absorbed into whichever state was already in progress rather than
+// treated as a genuine transition.
+const NOISE_FLOOR_M = 8;
+// How far from a *known* corner (real FastF1 circuit-info position, not
+// inferred) a partial-throttle run can be while still counting as
+// corner-related at all. FastF1 doesn't expose a steering-angle channel, so
+// there's no direct way to detect "the car is turning" — but real corner
+// positions are known, so a partial-throttle lift can at least be checked
+// against "is this near an actual corner" before deciding clip vs. cornering,
+// instead of purely guessing off throttle-run duration. A lift found well
+// away from any corner is far more likely a gearshift blip or a genuine
+// lift-and-coast on a straight than real cornering.
+const CORNER_PROXIMITY_M = 150;
+
+function isNearCorner(distance: number, corners: TrackCorner[], avgLapLength: number): boolean {
+  if (corners.length === 0 || avgLapLength <= 0) return true; // no corner data — don't over-filter, fall back to duration-only
+  for (const c of corners) {
+    const direct = Math.abs(c.distance - distance);
+    if (Math.min(direct, avgLapLength - direct) <= CORNER_PROXIMITY_M) return true;
+  }
+  return false;
+}
+
+/** Classifies every sample of a driver's selected lap into a driving state, then
+ * run-length-encodes into distance segments for a track-state strip chart (brake
+ * always wins as the least ambiguous signal; among throttle states, a
+ * partial-throttle run only counts as clipping/cornering if it's actually near
+ * a real corner — otherwise it's treated as a lift-and-coast — and among
+ * corner-adjacent runs, a short one is "clipping", a longer one "cornering"). */
+export function buildDrivingStateStrip(
+  d: DriverTelemetry, sel: LapSelection = 'fastest',
+  corners: TrackCorner[] = [], avgLapLength = 0,
+): DrivingStateSegment[] {
+  const r = resolveLapRange(d, sel);
+  if (!r) return [];
+
+  type RawState = 'full' | 'partial' | 'off' | 'brake';
+  const dist0 = d.dist[r.start];
+  const raw: { state: RawState; dist: number }[] = [];
+  for (let i = r.start; i < r.end; i++) {
+    const dist = d.dist[i] - dist0;
+    let state: RawState;
+    if (d.brake[i]) state = 'brake';
+    else if (d.throttle[i] >= FULL_THROTTLE_MIN_PCT) state = 'full';
+    else if (d.throttle[i] <= OFF_THROTTLE_MAX_PCT) state = 'off';
+    else state = 'partial';
+    raw.push({ state, dist });
+  }
+  if (raw.length === 0) return [];
+
+  interface Run { state: RawState; startDist: number; endDist: number }
+  const rawRuns: Run[] = [];
+  for (const p of raw) {
+    const last = rawRuns[rawRuns.length - 1];
+    if (last && last.state === p.state) last.endDist = p.dist;
+    else rawRuns.push({ state: p.state, startDist: p.dist, endDist: p.dist });
+  }
+
+  // Noise floor: fold any run shorter than NOISE_FLOOR_M into whichever state
+  // was already running — a single noisy sample doesn't get to start (or end)
+  // a "real" segment. Building a fresh array (rather than mutating rawRuns
+  // in place) keeps the merge logic a straightforward single pass.
+  const runs: Run[] = [];
+  for (const run of rawRuns) {
+    const prev = runs[runs.length - 1];
+    if (prev && run.endDist - run.startDist < NOISE_FLOOR_M) {
+      prev.endDist = run.endDist;
+      continue;
+    }
+    runs.push({ ...run });
+  }
+
+  const segments = runs.map((run): DrivingStateSegment => {
+    let state: DrivingState;
+    if (run.state === 'brake') state = 'brake';
+    else if (run.state === 'full') state = 'full_throttle';
+    else if (run.state === 'off') state = 'lift_coast';
+    else {
+      const midDist = (run.startDist + run.endDist) / 2;
+      if (!isNearCorner(midDist, corners, avgLapLength)) {
+        // A partial-throttle lift nowhere near a real corner isn't cornering —
+        // most likely a gearshift blip or a genuine lift-and-coast on a straight.
+        state = 'lift_coast';
+      } else {
+        // Classified on the run's own measured span, before the gap-closing pass
+        // below stretches endDist for rendering — otherwise a genuinely brief
+        // clip right at a state boundary could get miscounted as longer than
+        // it was.
+        state = (run.endDist - run.startDist) <= CLIPPING_MAX_RUN_M ? 'clipping' : 'cornering';
+      }
+    }
+    return { state, startDist: run.startDist, endDist: run.endDist };
+  });
+
+  // Telemetry is sampled at discrete points (~every 15-25m at race speed), so a
+  // run's own last sample always falls a bit short of where the state actually
+  // changed — left as-is, every segment renders with a visible gap before the
+  // next one starts. Stretch each segment's end to the next one's start so the
+  // strip tiles with no gaps (the real transition point is somewhere in that
+  // span; splitting it evenly would be more "correct" but visually identical
+  // at this resolution, so this simpler rule is enough).
+  for (let i = 0; i < segments.length - 1; i++) {
+    segments[i].endDist = segments[i + 1].startDist;
+  }
+
+  return segments;
 }
 
 // ── stint / tyre helpers ─────────────────────────────────────────────────────
