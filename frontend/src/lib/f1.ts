@@ -83,16 +83,16 @@ export const flagFor = (country: string) => FLAGS[country] ?? '🏁';
 // source assets and recolored to solid white. Keyed by the exact TeamName string
 // FastF1 returns (varies by year/rebrand — RB/Racing Bulls, Kick Sauber, etc).
 const TEAM_LOGOS: Record<string, string> = {
-  Ferrari: '/team-logos/ferrari-white.png',
+  Ferrari: '/team-logos/ferrari.png',
   Mercedes: '/team-logos/mercedes-white.png',
   McLaren: '/team-logos/mclaren-white.png',
   'Red Bull Racing': '/team-logos/red-bull-racing-white.png',
-  Williams: '/team-logos/williams-white.png',
-  'Aston Martin': '/team-logos/aston-martin-white.png',
-  Alpine: '/team-logos/alpine-white.png',
-  'Haas F1 Team': '/team-logos/haas-white.png',
+  Williams: '/team-logos/williams.png',
+  'Aston Martin': '/team-logos/aston-martin.png',
+  Alpine: '/team-logos/alpine.png',
+  'Haas F1 Team': '/team-logos/haas.png',
   'Racing Bulls': '/team-logos/racing-bulls-white.png',
-  RB: '/team-logos/racing-bulls-white.png',
+  RB: '/team-logos/racing-bulls.png',
   AlphaTauri: 'https://upload.wikimedia.org/wikipedia/en/thumb/0/09/Scuderia_Alpha-Tauri.svg/500px-Scuderia_Alpha-Tauri.svg.png',
   Audi: '/team-logos/audi-white.png',
   'Kick Sauber': 'https://upload.wikimedia.org/wikipedia/commons/9/94/Logo_sauber_2023.jpg',
