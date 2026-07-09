@@ -573,6 +573,20 @@ def build_driver_frame_series(session, master_timeline):
             "speed": spd_out, "gear": gear_out, "throttle": thr_out, "brake": brk_out, "rpm": rpm_out, "drs": drs_out # 🛠️ PACKAGED
         }
 
+        # This driver's laps are fully consumed above (every value we need is
+        # already copied into driver_series[abbr]) — drop FastF1's own raw
+        # per-driver telemetry now instead of holding it for the rest of the
+        # run. Measured directly: session.load() keeps car_data + pos_data for
+        # ALL drivers in memory simultaneously (~198MB combined for a full
+        # 22-driver race) even though each driver is only ever touched once,
+        # sequentially, in this loop — that dwarfs everything else this script
+        # allocates and was the actual cause of the container running out of
+        # memory (512MB limit) partway through a full Race session on Render's
+        # free tier. Freeing per-driver keeps only ~1 driver's raw telemetry
+        # (~9MB) resident at a time instead of all 22.
+        session.car_data.pop(drv, None)
+        session.pos_data.pop(drv, None)
+
     return driver_series, team_colors, driver_names
 
 
