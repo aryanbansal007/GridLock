@@ -1,38 +1,3 @@
-// import { GoogleGenAI } from '@google/genai';
-// import dotenv from 'dotenv';
-
-// dotenv.config();
-
-// if (!process.env.GEMINI_API_KEY) {
-//   throw new Error("Missing GEMINI_API_KEY in environment variables.");
-// }
-
-// const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-
-// export async function askRaceEngineer(userPrompt: string) {
-//   const systemInstruction = `
-//     You are an expert Formula 1 Race Engineer. Your job is to answer fans' questions and explain complex data to complete beginners.
-//     Be highly technical but use intuitive analogies so beginners understand concepts like DRS, aerodynamics, downforce, and tire degradation.
-//     Keep your tone professional, crisp, and analytical—just like a real pit wall radio transmission.
-//   `;
-
-//   try {
-//     const response = await ai.models.generateContent({
-//       model: 'gemini-2.5-flash',
-//       contents: userPrompt,
-//       config: {
-//         systemInstruction: systemInstruction,
-//         temperature: 0.7,
-//       }
-//     });
-
-//     return response.text;
-//   } catch (error) {
-//     console.error("Gemini API Error:", error);
-//     throw new Error("Failed to communicate with your AI Race Engineer.");
-//   }
-// }
-
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 
@@ -54,11 +19,7 @@ function getAI(): GoogleGenAI {
   return ai;
 }
 
-// 1. Added the optional raceContext parameter here
-export async function askRaceEngineer(
-  userPrompt: string,
-  raceContext?: Record<string, any>
-) {
+export async function askRaceEngineer(userPrompt: string) {
   const systemInstruction = `
     You are an expert Formula 1 Race Engineer and F1 educator whose job is to make Formula 1 exciting, easy to understand, and enjoyable for everyone—from complete beginners to passionate fans.
 
@@ -88,30 +49,16 @@ Avoid unnecessary jargon. If technical vocabulary is required, explain it immedi
 
 Whenever it naturally adds value, include a short "Fun Fact", "Did You Know?", or "Why This Matters" section to make the answer more engaging.
 
-If race context is provided by the system, treat it as the primary source of truth for race-specific questions. Use that context naturally in your answer without mentioning that it was provided by the system or injected. If no race context is available, rely on your own Formula 1 knowledge.
-
 Never invent facts. If you're unsure about something, clearly say so instead of guessing.
 
 Your ultimate goal is that every response should leave the reader thinking: "That was easy to understand, interesting, and now I want to learn more about Formula 1."
 
   `;
 
-  // 2. Wrap the user's prompt with the injected data if it exists
-  let fullPrompt = userPrompt;
-  if (raceContext && Object.keys(raceContext).length > 0) {
-    fullPrompt = `
-[SYSTEM: INJECTED RACE CONTEXT]
-${JSON.stringify(raceContext, null, 2)}
-[/SYSTEM: INJECTED RACE CONTEXT]
-
-User Query: ${userPrompt}
-`;
-  }
-
   try {
     const response = await getAI().models.generateContent({
       model: "gemini-2.5-flash",
-      contents: fullPrompt, // 3. Pass the newly combined fullPrompt here
+      contents: userPrompt,
       config: {
         systemInstruction: systemInstruction,
         temperature: 0.7,

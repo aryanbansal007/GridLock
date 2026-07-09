@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { TopNav } from './components/TopNav';
+import { Footer } from './components/Footer';
 import { ToastProvider } from './components/Toast';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import AuthPage from './pages/AuthPage';
@@ -45,6 +46,7 @@ const MainLayout = () => {
           <Outlet />
         </ErrorBoundary>
       </main>
+      <Footer />
     </div>
   );
 };
