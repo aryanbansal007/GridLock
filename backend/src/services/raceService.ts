@@ -112,7 +112,19 @@ export const runPythonGenerator = (year: string, gp: string, session: string): P
         // network — before any of our own processing even starts — was measured
         // taking most of 10 minutes on Render's free tier; the old timeout was
         // killing a legitimately-still-running fetch, not a hung one.
-        exec(command, { cwd: SCRIPT_DIR, maxBuffer: 1024 * 1024 * 50, timeout: 25 * 60_000 }, (error, stdout, stderr) => {
+        // PYTHONUNBUFFERED forces Python's stdout/stderr to be unbuffered rather than
+        // block-buffered (its default when not attached to a terminal, i.e. exactly
+        // this exec() pipe). Without it, print() progress lines sit in Python's own
+        // internal buffer and never reach us at all if the process is later killed
+        // (e.g. by the timeout below) instead of exiting cleanly — we'd only ever see
+        // whatever FastF1's own logging module happened to flush, with no way to tell
+        // how much further our own script had actually gotten.
+        const child = exec(command, {
+            cwd: SCRIPT_DIR,
+            maxBuffer: 1024 * 1024 * 50,
+            timeout: 25 * 60_000,
+            env: { ...process.env, PYTHONUNBUFFERED: '1' },
+        }, (error, stdout, stderr) => {
             if (error) {
                 // signal/code distinguish "Python raised an exception" (code set, no signal)
                 // from "the process was killed from outside" (signal set, e.g. SIGKILL from an
@@ -127,6 +139,14 @@ export const runPythonGenerator = (year: string, gp: string, session: string): P
             pushFastF1CacheToRemote(`Raw data for telemetry: ${year} ${gp} ${session}`);
             resolve(stdout);
         });
+
+        // Stream progress live as it happens, tagged with the race key — the exec()
+        // callback above only fires once at the very end, so without this there's no
+        // way to see how far a long-running generation has actually gotten while it's
+        // still in flight (which is exactly the visibility gap that made an earlier
+        // 25-minute run look like it never got past "Finished loading data").
+        child.stdout?.on('data', (chunk) => console.log(`[gen:${key}] ${String(chunk).trimEnd()}`));
+        child.stderr?.on('data', (chunk) => console.log(`[gen:${key}] ${String(chunk).trimEnd()}`));
     });
 
     inFlightGenerations.set(key, promise);
