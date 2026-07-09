@@ -2,7 +2,7 @@ import { exec } from 'child_process';
 import path from 'path';
 import fs from 'fs';
 import { CACHE_DIR, FASTF1_CACHE_DIR, SCRIPT_DIR, PYTHON_BIN } from '../config/paths.js';
-import { pushCacheToRemote } from './dataRepoSync.js';
+import { pushCacheToRemote, pushFastF1CacheToRemote } from './dataRepoSync.js';
 
 const SCRIPT_PATH = path.join(SCRIPT_DIR, 'full_race_generator.py');
 export { CACHE_DIR };
@@ -104,10 +104,15 @@ export const runPythonGenerator = (year: string, gp: string, session: string): P
 
         console.log(`⏳ Executing: ${command}`);
 
-        // Full telemetry generation is minutes-long — 10 minutes gives real races
-        // margin without letting a hung/stalled FastF1 fetch run indefinitely
-        // (there was previously no timeout at all here).
-        exec(command, { cwd: SCRIPT_DIR, maxBuffer: 1024 * 1024 * 50, timeout: 10 * 60_000 }, (error, stdout, stderr) => {
+        // Full telemetry generation is minutes-long — this gives real races margin
+        // without letting a hung/stalled FastF1 fetch run indefinitely (there was
+        // previously no timeout at all here). 25 minutes (not the original 10) because
+        // on a cold container (FastF1's own raw-data cache wiped by a restart), just
+        // fetching a full race's raw timing data from FastF1's servers over the
+        // network — before any of our own processing even starts — was measured
+        // taking most of 10 minutes on Render's free tier; the old timeout was
+        // killing a legitimately-still-running fetch, not a hung one.
+        exec(command, { cwd: SCRIPT_DIR, maxBuffer: 1024 * 1024 * 50, timeout: 25 * 60_000 }, (error, stdout, stderr) => {
             if (error) {
                 // signal/code distinguish "Python raised an exception" (code set, no signal)
                 // from "the process was killed from outside" (signal set, e.g. SIGKILL from an
@@ -119,6 +124,7 @@ export const runPythonGenerator = (year: string, gp: string, session: string): P
             }
             console.log(`Python Output: ${stdout}`);
             pushCacheToRemote(`Add telemetry: ${year} ${gp} ${session}`);
+            pushFastF1CacheToRemote(`Raw data for telemetry: ${year} ${gp} ${session}`);
             resolve(stdout);
         });
     });

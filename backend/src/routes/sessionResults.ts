@@ -3,7 +3,7 @@ import { exec } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { CACHE_DIR as BASE_CACHE_DIR, FASTF1_CACHE_DIR, SCRIPT_DIR, PYTHON_BIN } from '../config/paths.js';
-import { pushCacheToRemote } from '../services/dataRepoSync.js';
+import { pushCacheToRemote, pushFastF1CacheToRemote } from '../services/dataRepoSync.js';
 
 const SCRIPT_PATH = path.join(SCRIPT_DIR, 'session_results.py');
 const CACHE_DIR = path.join(BASE_CACHE_DIR, 'session_results');
@@ -72,6 +72,7 @@ router.get('/:year/:round/:session', (req: Request, res: Response) => {
       fs.mkdirSync(path.dirname(target), { recursive: true });
       fs.writeFileSync(target, JSON.stringify(json));
       pushCacheToRemote(`Add session results: ${year} round ${round} ${session}`);
+      pushFastF1CacheToRemote(`Raw data for session results: ${year} round ${round} ${session}`);
       res.setHeader('Cache-Control', 'public, max-age=300');
       res.json(json);
     } catch {
