@@ -20,13 +20,19 @@ const STARTER_PROMPTS = [
 export default function AskEngineer() {
   const navigate = useNavigate();
   const [input, setInput] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
+  // isBusy spans the whole request (disables the input); streamingId is only
+  // set once the AI's reply bubble actually exists, so the bouncing-dots
+  // "typing" indicator shows just for the gap between hitting send and the
+  // first chunk arriving, and the growing bubble takes over after that.
+  const [isBusy, setIsBusy] = useState(false);
+  const [streamingId, setStreamingId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const hasLoadedHistory = useRef(false);
 
   const messages = useRaceStore((state) => state.messages);
   const addMessage = useRaceStore((state) => state.addMessage);
   const setMessages = useRaceStore((state) => state.setMessages);
+  const appendToMessage = useRaceStore((state) => state.appendToMessage);
 
   // A 401/403 means the stored token is missing/expired — bounce back to login
   // instead of leaving the user stuck looking at a cryptic inline error with no
@@ -64,7 +70,7 @@ export default function AskEngineer() {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isTyping]);
+  }, [messages, isBusy]);
 
   const send = async (prompt: string) => {
     if (!prompt.trim()) return;
@@ -72,7 +78,7 @@ export default function AskEngineer() {
     const userMessage: Message = { id: Date.now().toString(), role: 'user', text: prompt };
     addMessage(userMessage);
     setInput('');
-    setIsTyping(true);
+    setIsBusy(true);
 
     try {
       const response = await fetch(`${API_BASE}/api/ai/ask`, {
@@ -86,18 +92,35 @@ export default function AskEngineer() {
 
       if (response.status === 401 || response.status === 403) return handleAuthFailure();
 
-      const data = await response.json();
-      if (response.ok && data.answer) {
-        addMessage({ id: Date.now().toString(), role: 'ai', text: data.answer });
-      } else {
-        // Show the real reason (Gemini failure, missing key, etc.) instead of a
-        // generic message that hides what actually went wrong.
-        addMessage({ id: Date.now().toString(), role: 'ai', text: `⚠️ ${data.error || 'No answer received.'}` });
+      if (!response.ok || !response.body) {
+        const data = await response.json().catch(() => null);
+        addMessage({ id: Date.now().toString(), role: 'ai', text: `⚠️ ${data?.error || 'No answer received.'}` });
+        return;
+      }
+
+      // The backend streams the answer as plain text chunks as Gemini generates
+      // them (real streaming, not a simulated typewriter effect) — read the
+      // response body progressively and grow one AI bubble in place, the same
+      // way ChatGPT-style interfaces render an in-flight reply. isBusy stays
+      // true (keeping the input locked) for the whole read; streamingId just
+      // swaps the bouncing-dots indicator for the growing bubble once the
+      // first chunk has actually arrived.
+      const aiMessageId = (Date.now() + 1).toString();
+      addMessage({ id: aiMessageId, role: 'ai', text: '' });
+      setStreamingId(aiMessageId);
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        appendToMessage(aiMessageId, decoder.decode(value, { stream: true }));
       }
     } catch (error) {
       addMessage({ id: Date.now().toString(), role: 'ai', text: '⚠️ Comm failure. Check the pit wall connection.' });
     } finally {
-      setIsTyping(false);
+      setIsBusy(false);
+      setStreamingId(null);
     }
   };
 
@@ -151,7 +174,7 @@ export default function AskEngineer() {
           </div>
         ))}
 
-        {isTyping && (
+        {isBusy && !streamingId && (
           <div className="flex items-start gap-3 justify-start">
             <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#e10600]/10 border border-[#e10600]/20">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#e10600" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -167,7 +190,7 @@ export default function AskEngineer() {
         )}
 
         {/* Starter prompts — only shown before the conversation really begins */}
-        {isFreshConversation && !isTyping && (
+        {isFreshConversation && !isBusy && (
           <div className="pl-10 flex flex-wrap gap-2 pt-1">
             {STARTER_PROMPTS.map((p) => (
               <button
@@ -192,11 +215,11 @@ export default function AskEngineer() {
             onChange={(e) => setInput(e.target.value)}
             placeholder="Message the pit wall..."
             className="flex-1 bg-[#050505] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-[#e10600]/60 transition-colors"
-            disabled={isTyping}
+            disabled={isBusy}
           />
           <button
             type="submit"
-            disabled={isTyping || !input.trim()}
+            disabled={isBusy || !input.trim()}
             className="flex items-center justify-center w-12 rounded-xl bg-[#e10600] hover:bg-[#c20500] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             aria-label="Send"
           >

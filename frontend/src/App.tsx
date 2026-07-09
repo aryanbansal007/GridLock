@@ -36,6 +36,10 @@ const RootIndex = () => {
 const MainLayout = () => {
   const location = useLocation();
   const isFullscreenSimulation = location.pathname.startsWith('/simulator/');
+  // A chat interface needs a fixed-height viewport (message list scrolls
+  // internally, input stays pinned to the bottom) rather than the normal
+  // page-scrolls-and-Footer-sits-at-the-end layout every other page uses.
+  const isChatPage = location.pathname.startsWith('/race-engineer');
 
   if (isFullscreenSimulation) {
     return (
@@ -47,10 +51,23 @@ const MainLayout = () => {
     );
   }
 
+  if (isChatPage) {
+    return (
+      <div className="h-screen w-screen bg-[#080808] text-white flex flex-col overflow-hidden">
+        <TopNav />
+        <main className="pt-15 flex-1 min-h-0">
+          <ErrorBoundary key={location.pathname}>
+            <Outlet />
+          </ErrorBoundary>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen w-screen bg-[#080808] text-white flex flex-col overflow-x-hidden">
       <TopNav />
-      <main className="flex-1 w-full pt-[60px]">
+      <main className="flex-1 w-full pt-15">
         <ErrorBoundary key={location.pathname}>
           <Outlet />
         </ErrorBoundary>

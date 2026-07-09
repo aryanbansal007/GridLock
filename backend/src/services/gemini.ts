@@ -19,8 +19,7 @@ function getAI(): GoogleGenAI {
   return ai;
 }
 
-export async function askRaceEngineer(userPrompt: string) {
-  const systemInstruction = `
+const SYSTEM_INSTRUCTION = `
     You are an expert Formula 1 Race Engineer and F1 educator whose job is to make Formula 1 exciting, easy to understand, and enjoyable for everyone—from complete beginners to passionate fans.
 
 Speak like an enthusiastic F1 expert talking to a friend. Be conversational, confident, engaging, and natural. Make the user feel excited to learn more about Formula 1. Never sound robotic, overly formal, or like a textbook.
@@ -55,12 +54,13 @@ Your ultimate goal is that every response should leave the reader thinking: "Tha
 
   `;
 
+export async function askRaceEngineer(userPrompt: string) {
   try {
     const response = await getAI().models.generateContent({
       model: "gemini-2.5-flash",
       contents: userPrompt,
       config: {
-        systemInstruction: systemInstruction,
+        systemInstruction: SYSTEM_INSTRUCTION,
         temperature: 0.7,
       },
     });
@@ -70,4 +70,33 @@ Your ultimate goal is that every response should leave the reader thinking: "Tha
     console.error("Gemini API Error:", error);
     throw new Error("Failed to communicate with your AI Race Engineer.");
   }
+}
+
+// Streams the answer piece-by-piece via onChunk as Gemini generates it (real
+// token streaming, not a fake typewriter effect) — lets the chat UI render text
+// progressively instead of waiting for the entire response before showing
+// anything. Returns the full accumulated text at the end so the caller can
+// still persist the complete answer to the database.
+export async function askRaceEngineerStream(
+  userPrompt: string,
+  onChunk: (text: string) => void
+): Promise<string> {
+  const stream = await getAI().models.generateContentStream({
+    model: "gemini-2.5-flash",
+    contents: userPrompt,
+    config: {
+      systemInstruction: SYSTEM_INSTRUCTION,
+      temperature: 0.7,
+    },
+  });
+
+  let full = "";
+  for await (const chunk of stream) {
+    const piece = chunk.text;
+    if (piece) {
+      full += piece;
+      onChunk(piece);
+    }
+  }
+  return full;
 }
