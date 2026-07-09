@@ -5,6 +5,7 @@ import { Footer } from './components/Footer';
 import { ToastProvider } from './components/Toast';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import AuthPage from './pages/AuthPage';
+import LandingPage from './pages/LandingPage';
 import SimulatorSetup from './pages/Simulator/SimulatorSetup';
 import LiveSimulator from './pages/Simulator/LiveSimulator';
 
@@ -20,6 +21,14 @@ import AnalysisPage from './pages/Analysis/AnalysisPage';
 // Auth Protection Wrapper
 const ProtectedRoute = ({ children }: { children: ReactElement }) => {
   return localStorage.getItem('token') ? children : <Navigate to="/auth" replace />;
+};
+
+// The bare "/" URL is the only route that behaves differently depending on auth
+// state: logged-out visitors see the public marketing Landing Page, logged-in
+// visitors go straight to their dashboard. Every other route stays gated by
+// ProtectedRoute (a deep link should prompt login, not show marketing content).
+const RootIndex = () => {
+  return localStorage.getItem('token') ? <Navigate to="/dashboard" replace /> : <LandingPage />;
 };
 
 // Global layout containing the Top Navigation Bar — hidden while a simulation is
@@ -56,31 +65,31 @@ export default function App() {
     <ToastProvider>
     <BrowserRouter>
       <Routes>
-        {/* Authentication view stack */}
+        {/* Public routes */}
         <Route path="/auth" element={<AuthPage />} />
+        <Route path="/" element={<RootIndex />} />
 
-        {/* Unified TopNav Screen Space */}
-        <Route path="/" element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
-          {/* Root redirect maps to your analytics dashboard view */}
-          <Route index element={<Navigate to="/dashboard" replace />} />
-
+        {/* Unified TopNav screen space — a pathless layout route, since each
+            child below now owns its own absolute path (avoids two routes both
+            claiming "/", which RootIndex already owns on its own). */}
+        <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
           {/* Core Analytics Views */}
-          <Route path="dashboard" element={<Dashboard />} />
-          <Route path="drivers" element={<Drivers />} />
-          <Route path="teams" element={<Teams />} />
-          <Route path="race-engineer" element={<RaceEngineer />} />
-          <Route path="profile" element={<Profile />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/drivers" element={<Drivers />} />
+          <Route path="/teams" element={<Teams />} />
+          <Route path="/race-engineer" element={<RaceEngineer />} />
+          <Route path="/profile" element={<Profile />} />
 
           {/* Full season calendar */}
-          <Route path="events" element={<Calendar />} />
+          <Route path="/events" element={<Calendar />} />
 
           {/* Race Analytics detail pages */}
-          <Route path="races/:raceId" element={<RaceDetail />} />
-          <Route path="analysis/:raceId" element={<AnalysisPage />} />
+          <Route path="/races/:raceId" element={<RaceDetail />} />
+          <Route path="/analysis/:raceId" element={<AnalysisPage />} />
 
           {/* Maintained for legacy compatibility during integration transition */}
-          <Route path="simulator-setup" element={<SimulatorSetup />} />
-          <Route path="simulator/:raceId" element={<LiveSimulator />} />
+          <Route path="/simulator-setup" element={<SimulatorSetup />} />
+          <Route path="/simulator/:raceId" element={<LiveSimulator />} />
         </Route>
 
         {/* Catch-all fallback navigation rules */}
