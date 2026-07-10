@@ -138,7 +138,9 @@ export const TopNav: React.FC = () => {
     const hoursSince = (Date.now() - new Date(r.race_time).getTime()) / 3_600_000;
     return hoursSince < 10;
   }) ?? null, [races]);
-  const target = nextRace ? new Date(`${nextRace.date}T13:00:00Z`) : null;
+  // Count down to the race's actual start (race_time is a full UTC timestamp from
+  // FastF1); fall back to 13:00 UTC on the date only when it's missing.
+  const target = nextRace ? new Date(nextRace.race_time ?? `${nextRace.date}T13:00:00Z`) : null;
   const { d, h, m, s } = useCountdown(target);
 
   const results = useMemo<SearchResult[]>(() => {

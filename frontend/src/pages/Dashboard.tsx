@@ -68,7 +68,10 @@ export default function Dashboard() {
   const recentRaces = useMemo(() => races.filter(r => r.status === 'completed').slice(-4).reverse(), [races]);
   const upcoming = useMemo(() => races.filter(r => r.status === 'upcoming').slice(0, 4), [races]);
 
-  const target = nextRace ? new Date(`${nextRace.date}T13:00:00Z`) : null;
+  // Count down to the race's actual start (race_time is a full UTC timestamp from
+  // FastF1); fall back to 13:00 UTC on the date only when it's missing (e.g. a
+  // manually-added cancelled round that never got a real session time).
+  const target = nextRace ? new Date(nextRace.race_time ?? `${nextRace.date}T13:00:00Z`) : null;
   const { d, h, m, s } = useCountdown(target);
 
   const drivers = useMemo(() => standings?.drivers ?? [], [standings]);
