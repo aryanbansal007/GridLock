@@ -37,7 +37,11 @@ export default function Calendar() {
   }, []);
 
   const races = useMemo(() => data?.races ?? [], [data]);
-  const completed = races.filter(r => r.status === 'completed').length;
+  // Cancelled races were never actually rounds of the season, so they're excluded
+  // from both sides of the "X / Y Rounds Complete" count (matches how the official
+  // calendar itself dropped them rather than counting them as scheduled rounds).
+  const scheduledRaces = races.filter(r => r.status !== 'cancelled');
+  const completed = scheduledRaces.filter(r => r.status === 'completed').length;
 
   if (error) {
     return (
@@ -60,7 +64,7 @@ export default function Calendar() {
           </div>
           <div className="flex items-center gap-3">
             <div className="px-4 py-2 rounded-xl bg-[#0d0e12] border border-white/10 text-xs font-mono font-bold text-gray-300">
-              {completed} / {races.length} Rounds Complete
+              {completed} / {scheduledRaces.length} Rounds Complete
             </div>
             <SeasonSelector currentYear={currentYear} onChange={setCurrentYear} />
           </div>
@@ -136,9 +140,13 @@ function RaceCard({ race, index, mounted, onOpen }: { race: RaceEntry; index: nu
               Sprint
             </div>
           )}
-          <div className="px-2.5 py-1 rounded-md bg-black/50 backdrop-blur-sm border border-white/10 text-[10px] font-bold tracking-widest text-white uppercase">
-            Round {race.round}
-          </div>
+          {/* Cancelled races never got a real RoundNumber from FastF1 — the
+              round field here is just a fractional sort key, not a round to show. */}
+          {race.status !== 'cancelled' && (
+            <div className="px-2.5 py-1 rounded-md bg-black/50 backdrop-blur-sm border border-white/10 text-[10px] font-bold tracking-widest text-white uppercase">
+              Round {race.round}
+            </div>
+          )}
         </div>
         {/* Flag + name */}
         <div className="absolute bottom-3 left-4 right-4">

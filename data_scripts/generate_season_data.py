@@ -294,6 +294,20 @@ def load_point_awarding_sessions(year, gp_round, cache_dir):
 
 # ─── Calendar Builder ─────────────────────────────────────────────────────────
 
+# FastF1's schedule (get_event_schedule) silently drops a round entirely once
+# it's officially cancelled — there is no "cancelled" marker in the data
+# itself, so a race that's pulled from the calendar just vanishes rather than
+# showing up with some flag. That means cancellations have to be tracked here
+# by hand. Listed in chronological order per year — used to slot each card
+# right after the last real round that precedes its original date.
+MANUALLY_CANCELLED_RACES = {
+    2026: [
+        {"name": "Bahrain Grand Prix", "circuit": "Sakhir", "country": "Bahrain", "date": "2026-04-12"},
+        {"name": "Saudi Arabian Grand Prix", "circuit": "Jeddah", "country": "Saudi Arabia", "date": "2026-04-19"},
+    ],
+}
+
+
 def build_calendar(year, schedule, completed_sessions, cache_dir):
     today = datetime.now(timezone.utc)
     races = []
@@ -369,6 +383,29 @@ def build_calendar(year, schedule, completed_sessions, cache_dir):
             "has_sprint":   has_sprint,
             "weekend_start": weekend_start_str,
             "race_time":    race_time_str,
+        })
+
+    # Splice in any manually-tracked cancellations for this year (see
+    # MANUALLY_CANCELLED_RACES above) — positioned right after the last real
+    # round whose date precedes the cancelled race's original date, so the
+    # card lands in its correct chronological slot without needing a real
+    # RoundNumber (which FastF1 never assigned it in the first place).
+    for i, c in enumerate(MANUALLY_CANCELLED_RACES.get(year, [])):
+        prior_round = max((r["round"] for r in races if r["date"] < c["date"]), default=0)
+        races.append({
+            "round":        prior_round + 0.1 * (i + 1),
+            "name":         c["name"],
+            "circuit":      c["circuit"],
+            "country":      c["country"],
+            "date":         c["date"],
+            "status":       "cancelled",
+            "winner":       None,
+            "winner_team":  None,
+            "image_url":    get_circuit_image(c["name"]),
+            "race_id":      f"{year}_{safe_gp_key(c['name'])}",
+            "has_sprint":   False,
+            "weekend_start": c["date"],
+            "race_time":    None,
         })
 
     races.sort(key=lambda r: r["round"])

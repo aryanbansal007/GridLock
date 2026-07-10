@@ -3,7 +3,10 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { User } from '../models/User.js';
 import { registerUser } from '../controllers/authController.js';
+import { authenticateToken } from '../middleware/authMiddleware.js';
 const router = Router();
+
+const USERNAME_PATTERN = /^[a-zA-Z0-9_]{3,20}$/;
 
 // Registration
 router.post('/register', async (req, res) => {
@@ -63,6 +66,38 @@ router.post('/login', async (req, res) => {
     res.json({ token, username: user.username });
   } catch (error) {
     res.status(500).json({ error: "Login failed" });
+  }
+});
+
+// Change display name — re-signs the JWT with the new username so the frontend
+// can swap its stored token in place without forcing a full re-login.
+router.patch('/username', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) return res.status(401).json({ error: 'Not authenticated' });
+
+    const username = String(req.body.username ?? '').trim();
+    if (!USERNAME_PATTERN.test(username)) {
+      return res.status(400).json({ error: '3-20 characters: letters, numbers, and underscores only.' });
+    }
+
+    const taken = await User.findOne({ username, _id: { $ne: userId } });
+    if (taken) {
+      return res.status(409).json({ error: 'That username is already taken.' });
+    }
+
+    const user = await User.findByIdAndUpdate(userId, { username }, { new: true });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const token = jwt.sign(
+      { userId: user._id, username: user.username },
+      process.env.JWT_SECRET as string,
+      { expiresIn: '24h' },
+    );
+
+    res.json({ username: user.username, token });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update username' });
   }
 });
 

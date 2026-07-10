@@ -1,12 +1,16 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  API_BASE, SEASON_YEAR, flagFor, pad, shortName, fmtDateShort, lighten,
+  API_BASE, SEASON_YEAR, flagFor, pad, shortName, fmtDateShort, logoFor,
   type StandingsResponse, type CalendarResponse, type DriverStanding,
   type ConstructorStanding, type RaceEntry,
 } from '../lib/f1';
 import { DriverAvatar } from '../components/media/DriverAvatar';
+import { TeamLogo } from '../components/media/TeamLogo';
 import { CircuitImage } from '../components/media/CircuitImage';
+
+const FAV_TEAM_KEY = 'gridlock_favorite_team';
+const FAV_DRIVER_KEY = 'gridlock_favorite_driver';
 
 function useCountdown(target: Date | null) {
   const [now, setNow] = useState(() => Date.now());
@@ -69,10 +73,6 @@ export default function Dashboard() {
 
   const drivers = useMemo(() => standings?.drivers ?? [], [standings]);
   const constructors = useMemo(() => standings?.constructors ?? [], [standings]);
-  const [p1, p2] = drivers;
-  const top2Total = (p1?.points ?? 0) + (p2?.points ?? 0);
-  const p1Share = p1 && top2Total ? Math.round((p1.points / top2Total) * 100) : 50;
-  const rounds = standings?.meta.rounds_counted ?? 1;
 
   if (loading) return <LoadingState />;
   if (error || !standings || !calendar) return <ErrorState message={error} />;
@@ -89,17 +89,24 @@ export default function Dashboard() {
           onRaceDetails={() => nextRace && navigate(`/races/${nextRace.race_id}`)}
         />
 
-        {p1 && p2 && (
-          <Section delay={100}>
-            <ChampionshipBattle p1={p1} p2={p2} p1Share={p1Share} rounds={rounds} />
-          </Section>
-        )}
-
-        <Section delay={200}>
+        <Section delay={100}>
           <div className="grid grid-cols-1 lg:grid-cols-[1.55fr_1fr] gap-6">
             <DriversChampionship drivers={drivers} onOpen={() => navigate('/drivers')} />
             <ConstructorsChampionship constructors={constructors} onOpen={() => navigate('/teams')} />
           </div>
+        </Section>
+
+        <Section delay={200}>
+          <FollowingCard drivers={drivers} constructors={constructors} onOpenProfile={() => navigate('/profile')} />
+        </Section>
+
+        <Section delay={250}>
+          <QuickLaunch
+            latestRaceId={recentRaces[0]?.race_id ?? null}
+            onRaceEngineer={() => navigate('/race-engineer')}
+            onSimulator={() => navigate('/simulator-setup')}
+            onAnalysis={(id) => navigate(`/analysis/${id}`)}
+          />
         </Section>
 
         <Section delay={300}>
@@ -199,9 +206,13 @@ function HeroSection({
                 <button onClick={onRaceDetails} className="bg-[#e10600] hover:bg-[#c90500] text-white px-6 py-2.5 rounded text-sm font-bold transition-all duration-200 hover:shadow-[0_0_20px_rgba(225,6,0,0.4)] active:scale-95">
                   Race Details
                 </button>
-                <button onClick={onOpenSimulator} className="bg-transparent border border-white/20 hover:bg-white/5 hover:border-white/40 text-white px-6 py-2.5 rounded text-sm font-bold transition-all duration-200 active:scale-95">
-                  Open Simulator
-                </button>
+                {/* Simulator replays a completed session's real telemetry — nothing to
+                    replay for a race that hasn't happened yet. */}
+                {featured.status !== 'upcoming' && (
+                  <button onClick={onOpenSimulator} className="bg-transparent border border-white/20 hover:bg-white/5 hover:border-white/40 text-white px-6 py-2.5 rounded text-sm font-bold transition-all duration-200 active:scale-95">
+                    Open Simulator
+                  </button>
+                )}
               </div>
             </>
           ) : (
@@ -224,72 +235,17 @@ function HeroSection({
 
 // ─── Championship Battle (top 2) ────────────────────────────────────────────
 
-function ChampionshipBattle({ p1, p2, p1Share, rounds }: { p1: DriverStanding; p2: DriverStanding; p1Share: number; rounds: number }) {
-  const [animatedShare, setAnimatedShare] = useState(50);
-  useEffect(() => {
-    const id = requestAnimationFrame(() => setAnimatedShare(p1Share));
-    return () => cancelAnimationFrame(id);
-  }, [p1Share]);
-  const gap = p1.points - p2.points;
-  const sameTeam = p1.team_color === p2.team_color;
-  const p1Color = `#${p1.team_color}`;
-  const p2Color = sameTeam ? lighten(p2.team_color, 0.45) : `#${p2.team_color}`;
-  const leaderColor = gap >= 0 ? p1Color : p2Color;
-
-  return (
-    <div className="relative w-full rounded-2xl bg-[#0d0e12] border border-white/5 p-6 md:p-8 overflow-hidden">
-      <SectionHeader label={`Championship Battle · ${rounds} Rounds In`} />
-      <div className="flex items-center justify-between gap-4 mb-6">
-        <DriverBattleCard driver={p1} align="left" color={p1Color} />
-        <div className="flex flex-col items-center px-2 shrink-0"><span className="font-mono italic font-black text-lg text-gray-600">VS</span></div>
-        <DriverBattleCard driver={p2} align="right" color={p2Color} />
-      </div>
-      <div className="flex items-center justify-between text-[10px] font-bold tracking-widest text-gray-500 uppercase mb-2">
-        <span style={{ color: p1Color }}>{animatedShare}%</span>
-        <span>Win Probability</span>
-        <span style={{ color: p2Color }}>{100 - animatedShare}%</span>
-      </div>
-      <div className="flex w-full h-2.5 rounded-full overflow-hidden bg-white/5">
-        <div className="h-full rounded-l-full transition-all duration-1000 ease-out" style={{ width: `${animatedShare}%`, backgroundColor: p1Color, marginRight: 2 }} />
-        <div className="h-full rounded-r-full transition-all duration-1000 ease-out" style={{ width: `${100 - animatedShare}%`, backgroundColor: p2Color }} />
-      </div>
-      <div className="mt-4 text-center text-[11px] font-mono text-gray-500">
-        {gap === 0 ? 'Dead level on points' : (
-          <><span className="font-bold" style={{ color: leaderColor }}>{(gap > 0 ? p1 : p2).name}</span> leads by <span className="text-white font-bold">{Math.abs(gap)}</span> pts</>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function DriverBattleCard({ driver, align, color }: { driver: DriverStanding; align: 'left' | 'right'; color: string }) {
-  const isRight = align === 'right';
-  return (
-    <div className={`flex items-center gap-4 flex-1 min-w-0 ${isRight ? 'flex-row-reverse text-right' : 'text-left'}`}>
-      <DriverAvatar src={driver.image_url} name={driver.name} teamColor={driver.team_color} size={64} rounded="lg" className="border border-white/10" />
-      <div className={`min-w-0 ${isRight ? 'items-end' : 'items-start'} flex flex-col`}>
-        <div className="w-8 h-1 rounded-full mb-2" style={{ backgroundColor: color, boxShadow: `0 0 10px ${color}80` }} />
-        <div className="font-bold text-lg md:text-xl tracking-tight truncate max-w-full">{driver.name}</div>
-        <div className="text-xs text-gray-500 font-medium truncate">{driver.team}</div>
-        <div className="font-mono text-2xl md:text-3xl font-black tabular-nums mt-1">{driver.points}<span className="text-xs text-gray-500 ml-1">PTS</span></div>
-        <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">{driver.wins} Wins · {driver.podiums} Podiums</div>
-      </div>
-    </div>
-  );
-}
-
 // ─── Drivers' Championship (replaces the 4 tiles) ───────────────────────────
 
 function DriversChampionship({ drivers, onOpen }: { drivers: DriverStanding[]; onOpen: () => void }) {
-  const top = drivers.slice(0, 10);
-  const leaderPts = top[0]?.points ?? 1;
+  const top = drivers.slice(0, 5);
   return (
     <div className="rounded-2xl bg-[#0d0e12] border border-white/5 p-6">
       <SectionHeader label="Drivers' Championship" action="Full Table" onAction={onOpen} />
       <div className="flex flex-col">
         {top.map((drv, i) => {
           const color = `#${drv.team_color}`;
-          const gap = leaderPts - drv.points;
+          const gained = drv.points_last_race ?? 0;
           return (
             <div key={drv.abbreviation} className="group flex items-center gap-3 py-2.5 border-b border-white/[0.04] last:border-0">
               <div className="w-5 text-center font-mono text-sm font-bold shrink-0" style={{ color: i === 0 ? '#e10600' : 'rgba(255,255,255,0.4)' }}>{drv.position}</div>
@@ -301,7 +257,9 @@ function DriversChampionship({ drivers, onOpen }: { drivers: DriverStanding[]; o
               </div>
               <div className="text-right shrink-0">
                 <div className="font-mono text-sm font-black tabular-nums text-white">{drv.points}</div>
-                <div className="text-[10px] text-gray-600 font-mono">{i === 0 ? 'LEADER' : `-${gap}`}</div>
+                <div className="text-[10px] font-mono" style={{ color: gained > 0 ? '#22c55e' : 'rgba(255,255,255,0.3)' }}>
+                  {gained > 0 ? `+${gained} last race` : '—'}
+                </div>
               </div>
             </div>
           );
@@ -314,29 +272,142 @@ function DriversChampionship({ drivers, onOpen }: { drivers: DriverStanding[]; o
 // ─── Constructors' Championship ─────────────────────────────────────────────
 
 function ConstructorsChampionship({ constructors, onOpen }: { constructors: ConstructorStanding[]; onOpen: () => void }) {
-  const maxPts = constructors[0]?.points ?? 1;
+  const top = constructors.slice(0, 3);
   return (
     <div className="rounded-2xl bg-[#0d0e12] border border-white/5 p-6">
       <SectionHeader label="Constructors' Championship" action="Full Table" onAction={onOpen} />
-      <div className="flex flex-col gap-3">
-        {constructors.slice(0, 10).map((team, i) => {
+      <div className="flex flex-col">
+        {top.map((team, i) => {
           const color = `#${team.color}`;
-          const pct = Math.max(4, Math.round((team.points / maxPts) * 100));
+          const gained = team.points_last_race ?? 0;
           return (
-            <div key={team.name} className="flex items-center gap-3">
-              <div className="w-4 text-center font-mono text-xs font-bold shrink-0" style={{ color: i === 0 ? '#e10600' : 'rgba(255,255,255,0.35)' }}>{team.position}</div>
+            <div key={team.name} className="group flex items-center gap-3 py-2.5 border-b border-white/[0.04] last:border-0">
+              <div className="w-5 text-center font-mono text-sm font-bold shrink-0" style={{ color: i === 0 ? '#e10600' : 'rgba(255,255,255,0.4)' }}>{team.position}</div>
+              <TeamLogo src={logoFor(team.name)} name={team.name} color={team.color} size={38} />
+              <div className="w-1 h-8 rounded-full shrink-0" style={{ background: color }} />
               <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-bold text-white truncate">{team.name}</span>
-                  <span className="font-mono text-xs font-black tabular-nums text-white ml-2">{team.points}</span>
-                </div>
-                <div className="h-1.5 w-full rounded-full bg-white/5 overflow-hidden">
-                  <div className="h-full rounded-full transition-all duration-700 ease-out" style={{ width: `${pct}%`, background: color }} />
+                <div className="text-sm font-bold text-white truncate">{team.name}</div>
+                <div className="text-[11px] text-gray-500 truncate">{team.wins} Wins · {team.podiums} Podiums</div>
+              </div>
+              <div className="text-right shrink-0">
+                <div className="font-mono text-sm font-black tabular-nums text-white">{team.points}</div>
+                <div className="text-[10px] font-mono" style={{ color: gained > 0 ? '#22c55e' : 'rgba(255,255,255,0.3)' }}>
+                  {gained > 0 ? `+${gained} last race` : '—'}
                 </div>
               </div>
             </div>
           );
         })}
+      </div>
+    </div>
+  );
+}
+
+// ─── Following (personalized favorite driver/team) ─────────────────────────
+
+function FollowingCard({
+  drivers, constructors, onOpenProfile,
+}: { drivers: DriverStanding[]; constructors: ConstructorStanding[]; onOpenProfile: () => void }) {
+  const [favTeamName] = useState(() => localStorage.getItem(FAV_TEAM_KEY) ?? '');
+  const [favDriverAbbr] = useState(() => localStorage.getItem(FAV_DRIVER_KEY) ?? '');
+
+  const favDriver = drivers.find(d => d.abbreviation === favDriverAbbr);
+  const favTeam = constructors.find(t => t.name === favTeamName);
+
+  if (!favDriver && !favTeam) {
+    return (
+      <div className="rounded-2xl bg-[#0d0e12] border border-white/5 p-6 flex items-center justify-between gap-4 flex-wrap">
+        <div>
+          <span className="text-[10px] font-bold tracking-widest uppercase text-gray-500 block mb-1">Following</span>
+          <p className="text-sm text-gray-400">Pick a favorite driver and team in your profile to follow them here.</p>
+        </div>
+        <button
+          onClick={onOpenProfile}
+          className="text-[11px] font-bold uppercase tracking-widest text-[#e10600] hover:text-[#ff2a1f] transition-colors shrink-0 cursor-pointer"
+        >
+          Set Favorites →
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-2xl bg-[#0d0e12] border border-white/5 p-6">
+      <SectionHeader label="Following" action="Edit" onAction={onOpenProfile} />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {favDriver && (
+          <div className="flex items-center gap-3 rounded-xl bg-white/[0.02] border border-white/5 p-4">
+            <DriverAvatar src={favDriver.image_url} name={favDriver.name} teamColor={favDriver.team_color} size={48} rounded="lg" />
+            <div className="min-w-0 flex-1">
+              <div className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-0.5">Your Driver</div>
+              <div className="text-sm font-bold text-white truncate">{favDriver.name}</div>
+              <div className="text-[11px] text-gray-500 truncate">P{favDriver.position} · {favDriver.points} pts</div>
+            </div>
+            {(favDriver.points_last_race ?? 0) > 0 && (
+              <div className="text-xs font-mono font-bold text-green-400 shrink-0">+{favDriver.points_last_race}</div>
+            )}
+          </div>
+        )}
+        {favTeam && (
+          <div className="flex items-center gap-3 rounded-xl bg-white/[0.02] border border-white/5 p-4">
+            <TeamLogo src={logoFor(favTeam.name)} name={favTeam.name} color={favTeam.color} size={48} />
+            <div className="min-w-0 flex-1">
+              <div className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-0.5">Your Team</div>
+              <div className="text-sm font-bold text-white truncate">{favTeam.name}</div>
+              <div className="text-[11px] text-gray-500 truncate">P{favTeam.position} · {favTeam.points} pts</div>
+            </div>
+            {(favTeam.points_last_race ?? 0) > 0 && (
+              <div className="text-xs font-mono font-bold text-green-400 shrink-0">+{favTeam.points_last_race}</div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Quick Launch (one-click into the app's deepest features) ──────────────
+
+function QuickLaunch({
+  latestRaceId, onRaceEngineer, onSimulator, onAnalysis,
+}: { latestRaceId: string | null; onRaceEngineer: () => void; onSimulator: () => void; onAnalysis: (raceId: string) => void }) {
+  const tiles = [
+    {
+      label: 'Race Engineer AI', sub: 'Ask about strategy, rules, or any driver/team',
+      onClick: onRaceEngineer,
+      icon: <path d="M12 2a4 4 0 0 1 4 4v3a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4Z M6 11v1a6 6 0 0 0 12 0v-1 M12 18v3 M9 21h6" />,
+    },
+    {
+      label: 'Live Race Simulator', sub: 'Replay any race lap-by-lap on track',
+      onClick: onSimulator,
+      icon: <path d="M3 13h18l-2-6H5l-2 6Z M5 13v6 M19 13v6 M9 7V4h6v3" />,
+    },
+    ...(latestRaceId ? [{
+      label: 'Latest Race Analysis', sub: 'Telemetry, tyre strategy & track dominance',
+      onClick: () => onAnalysis(latestRaceId),
+      icon: <path d="M3 3v18h18 M7 15l4-6 4 3 4-8" />,
+    }] : []),
+  ];
+
+  return (
+    <div className="rounded-2xl bg-[#0d0e12] border border-white/5 p-6">
+      <SectionHeader label="Quick Launch" />
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {tiles.map(t => (
+          <button
+            key={t.label}
+            onClick={t.onClick}
+            className="group text-left rounded-xl bg-black/30 border border-white/5 hover:border-[#e10600]/40 p-4 transition-all duration-300 hover:-translate-y-0.5 flex items-start gap-3"
+          >
+            <div className="w-9 h-9 rounded-lg bg-[#e10600]/10 border border-[#e10600]/20 flex items-center justify-center shrink-0 group-hover:bg-[#e10600]/20 transition-colors">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#e10600" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{t.icon}</svg>
+            </div>
+            <div className="min-w-0">
+              <div className="text-sm font-bold text-white group-hover:text-[#e10600] transition-colors">{t.label}</div>
+              <div className="text-[11px] text-gray-500 mt-0.5">{t.sub}</div>
+            </div>
+          </button>
+        ))}
       </div>
     </div>
   );

@@ -1,424 +1,179 @@
-// // frontend/src/SimulatorSetup.tsx
-// import { useState } from "react";
-// import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from '../../components/Toast';
+import { SeasonSelector } from '../../components/SeasonSelector';
+import { CircuitImage } from '../../components/media/CircuitImage';
+import { API_BASE, SEASON_YEAR, flagFor, type CalendarResponse } from '../../lib/f1';
 
-// const SimulatorSetup = () => {
-//   const navigate = useNavigate();
-//   const [year, setYear] = useState("2024");
-//   const [gp, setGp] = useState("Silverstone");
-//   const [session, setSession] = useState("R");
-//   const [isGenerating, setIsGenerating] = useState(false);
-//   const [error, setError] = useState<string | null>(null);
+interface CachedRace { year: string; gp: string; session: string }
 
-//   const handleGenerate = async (e: React.FormEvent) => {
-//     e.preventDefault();
-//     setIsGenerating(true);
-//     setError(null);
+const SESSION_LABELS: Record<string, string> = { Q: 'Qualifying', SQ: 'Sprint Shootout', S: 'Sprint', R: 'Race' };
+const SESSION_ORDER = ['Q', 'SQ', 'S', 'R'];
 
-//     try {
-//       // Send the choices to your Node.js backend
-//       const response = await fetch("http://localhost:5050/api/generate-race", {
-//         method: "POST",
-//         headers: { "Content-Type": "application/json" },
-//         body: JSON.stringify({ year, gp, session }),
-//       });
+interface RaceGroup {
+  race_id: string;
+  round: number;
+  name: string;
+  circuit: string;
+  country: string;
+  image_url: string;
+  sessions: string[];
+}
 
-//       const data = await response.json();
-
-//       if (!response.ok) {
-//         throw new Error(data.error || "Failed to generate telemetry");
-//       }
-
-//       // If successful, the backend sends back the generated raceId!
-//       // Navigate directly to the simulator viewer
-//       navigate(`/simulator/${data.raceId}`);
-//     } catch (err: any) {
-//       setError(err.message);
-//       setIsGenerating(false);
-//     }
-//   };
-
-//   if (isGenerating) {
-//     return (
-//       <div className="flex flex-col h-screen items-center justify-center bg-black text-white">
-//         <div className="w-16 h-16 border-4 border-red-600 border-t-transparent rounded-full animate-spin mb-6"></div>
-//         <h2 className="text-2xl font-black tracking-widest uppercase text-red-500 mb-2">
-//           Generating Telemetry
-//         </h2>
-//         <p className="text-neutral-400 font-bold">
-//           Pulling {year} {gp} FastF1 Data. This will take a few minutes...
-//         </p>
-//       </div>
-//     );
-//   }
-
-//   return (
-//     <div className="flex h-screen items-center justify-center bg-black">
-//       <div className="w-full max-w-md bg-neutral-900 border border-neutral-800 p-8 rounded-2xl">
-//         <h2 className="text-2xl font-black text-white tracking-tighter mb-6">
-//           RACE <span className="text-red-500">SETUP</span>
-//         </h2>
-
-//         {error && (
-//           <div className="bg-red-950/50 border border-red-900 text-red-500 p-3 rounded-lg mb-6 text-sm font-bold">
-//             {error}
-//           </div>
-//         )}
-
-//         <form onSubmit={handleGenerate} className="flex flex-col gap-6">
-//           <div className="flex flex-col gap-2">
-//             <label className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Year</label>
-//             <select 
-//               value={year} 
-//               onChange={(e) => setYear(e.target.value)}
-//               className="bg-neutral-950 border border-neutral-800 text-white p-3 rounded-lg font-bold focus:border-red-500 outline-none"
-//             >
-//               <option value="2024">2024</option>
-//               <option value="2023">2023</option>
-//               <option value="2022">2022</option>
-//             </select>
-//           </div>
-
-//           <div className="flex flex-col gap-2">
-//             <label className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Grand Prix</label>
-//             <input 
-//               type="text" 
-//               value={gp} 
-//               onChange={(e) => setGp(e.target.value)}
-//               placeholder="e.g. Abu Dhabi"
-//               className="bg-neutral-950 border border-neutral-800 text-white p-3 rounded-lg font-bold focus:border-red-500 outline-none"
-//               required
-//             />
-//           </div>
-
-//           <div className="flex flex-col gap-2">
-//             <label className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Session</label>
-//             <select 
-//               value={session} 
-//               onChange={(e) => setSession(e.target.value)}
-//               className="bg-neutral-950 border border-neutral-800 text-white p-3 rounded-lg font-bold focus:border-red-500 outline-none"
-//             >
-//               <option value="R">Race</option>
-//               <option value="Q">Qualifying</option>
-//               <option value="SQ">Sprint Shootout</option>
-//               <option value="S">Sprint</option>
-//             </select>
-//           </div>
-
-//           <button 
-//             type="submit"
-//             className="mt-4 bg-red-600 hover:bg-red-700 text-white font-black py-4 rounded-xl tracking-widest uppercase transition-colors"
-//           >
-//             Launch Simulator
-//           </button>
-//         </form>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default SimulatorSetup;
-
-// import { useState } from "react";
-// import { useNavigate } from "react-router-dom";
-
-// // Master list of valid FastF1 Grand Prix identifiers
-// const VALID_GPS = [
-//   "Bahrain", "Saudi Arabia", "Australia", "Japan", "China", 
-//   "Miami", "Emilia Romagna", "Monaco", "Canada", "Spain", 
-//   "Austria", "Great Britain", "Hungary", "Belgium", "Netherlands", 
-//   "Italy", "Azerbaijan", "Singapore", "United States", "Mexico", 
-//   "Brazil", "Las Vegas", "Qatar", "Abu Dhabi", "Silverstone", "Monza"
-// ].sort();
-
-// const SimulatorSetup = () => {
-//   const navigate = useNavigate();
-//   const [year, setYear] = useState("2024");
-//   const [gp, setGp] = useState("Silverstone");
-//   const [session, setSession] = useState("R");
-//   const [isGenerating, setIsGenerating] = useState(false);
-//   const [error, setError] = useState<string | null>(null);
-
-//   const handleGenerate = async (e: React.FormEvent) => {
-//     e.preventDefault();
-//     setIsGenerating(true);
-//     setError(null);
-
-//     try {
-//       // Hitting the newly structured Node.js backend route
-//       const response = await fetch(`${API_BASE}/api/races/generate`, {
-//         method: "POST",
-//         headers: { "Content-Type": "application/json" },
-//         body: JSON.stringify({ year, gp, session }),
-//       });
-
-//       const data = await response.json();
-
-//       if (!response.ok) {
-//         throw new Error(data.error || "Failed to generate telemetry");
-//       }
-
-//       // Navigate directly to the simulator viewer with the cached raceId
-//       navigate(`/simulator/${data.raceId}`);
-//     } catch (err: any) {
-//       setError(err.message);
-//       setIsGenerating(false);
-//     }
-//   };
-
-//   if (isGenerating) {
-//     return (
-//       <div className="flex flex-col h-screen items-center justify-center bg-black text-white font-sans">
-//         <div className="w-16 h-16 border-4 border-red-600 border-t-transparent rounded-full animate-spin mb-6"></div>
-//         <h2 className="text-2xl font-black tracking-widest uppercase text-red-500 mb-2">
-//           Generating Telemetry
-//         </h2>
-//         <p className="text-neutral-400 font-bold">
-//           Pulling {year} {gp} FastF1 Data. This will take a few minutes...
-//         </p>
-//       </div>
-//     );
-//   }
-
-//   return (
-//     <div className="flex h-screen items-center justify-center bg-black font-sans">
-//       <div className="w-full max-w-md bg-neutral-900 border border-neutral-800 p-8 rounded-2xl drop-shadow-2xl">
-//         <h2 className="text-2xl font-black text-white tracking-tighter mb-6">
-//           RACE <span className="text-red-500">SETUP</span>
-//         </h2>
-
-//         {error && (
-//           <div className="bg-red-950/50 border border-red-900 text-red-500 p-3 rounded-lg mb-6 text-sm font-bold">
-//             {error}
-//           </div>
-//         )}
-
-//         <form onSubmit={handleGenerate} className="flex flex-col gap-6">
-          
-//           {/* Year Dropdown */}
-//           <div className="flex flex-col gap-2">
-//             <label className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Year</label>
-//             <select 
-//               value={year} 
-//               onChange={(e) => setYear(e.target.value)}
-//               className="bg-neutral-950 border border-neutral-800 text-white p-3 rounded-lg font-bold focus:border-red-500 outline-none hover:bg-neutral-900 transition-colors cursor-pointer"
-//             >
-//               <option value="2024">2024</option>
-//               <option value="2023">2023</option>
-//               <option value="2022">2022</option>
-//               <option value="2021">2021</option>
-//               <option value="2020">2020</option>
-//             </select>
-//           </div>
-
-//           {/* Grand Prix Dropdown */}
-//           <div className="flex flex-col gap-2">
-//             <label className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Grand Prix</label>
-//             <select 
-//               value={gp} 
-//               onChange={(e) => setGp(e.target.value)}
-//               className="bg-neutral-950 border border-neutral-800 text-white p-3 rounded-lg font-bold focus:border-red-500 outline-none hover:bg-neutral-900 transition-colors cursor-pointer"
-//             >
-//               {VALID_GPS.map(track => (
-//                 <option key={track} value={track}>{track}</option>
-//               ))}
-//             </select>
-//           </div>
-
-//           {/* Session Dropdown */}
-//           <div className="flex flex-col gap-2">
-//             <label className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Session</label>
-//             <select 
-//               value={session} 
-//               onChange={(e) => setSession(e.target.value)}
-//               className="bg-neutral-950 border border-neutral-800 text-white p-3 rounded-lg font-bold focus:border-red-500 outline-none hover:bg-neutral-900 transition-colors cursor-pointer"
-//             >
-//               <option value="R">Race</option>
-//               <option value="Q">Qualifying</option>
-//               <option value="SQ">Sprint Shootout</option>
-//               <option value="S">Sprint</option>
-//             </select>
-//           </div>
-
-//           <button 
-//             type="submit"
-//             className="mt-4 bg-red-600 hover:bg-red-500 text-white font-black py-4 rounded-xl tracking-widest uppercase transition-colors shadow-[0_0_15px_rgba(220,38,38,0.4)] hover:shadow-[0_0_25px_rgba(220,38,38,0.6)]"
-//           >
-//             Launch Simulator
-//           </button>
-//         </form>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default SimulatorSetup;
-
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useToast } from "../../components/Toast";
-import { API_BASE } from "../../lib/f1";
-
-const SimulatorSetup = () => {
+export default function SimulatorSetup() {
   const navigate = useNavigate();
-  const { showError } = useToast();
-  const [year, setYear] = useState("2024");
-  const [gp, setGp] = useState("");
-  const [session, setSession] = useState("R");
-  
-  // New States for Dynamic Schedule
-  const [availableGPs, setAvailableGPs] = useState<string[]>([]);
-  const [isLoadingSchedule, setIsLoadingSchedule] = useState(false);
-  
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { showToast } = useToast();
 
-  // FETCH SCHEDULE WHENEVER YEAR CHANGES
+  const [year, setYear] = useState(SEASON_YEAR);
+  const [cached, setCached] = useState<CachedRace[]>([]);
+  const [calendar, setCalendar] = useState<CalendarResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [launching, setLaunching] = useState<string | null>(null); // `${race_id}::${session}`
+
   useEffect(() => {
-    const fetchSchedule = async () => {
-      setIsLoadingSchedule(true);
-      setError(null);
+    let cancelled = false;
+    setLoading(true);
+    (async () => {
       try {
-        const response = await fetch(`${API_BASE}/api/races/schedule/${year}`);
-        const data = await response.json();
-        
-        if (data.success) {
-          setAvailableGPs(data.schedule);
-          // Auto-select the first race of the new year
-          if (data.schedule.length > 0) {
-            setGp(data.schedule[0]);
-          }
-        } else {
-          throw new Error(data.error || "Failed to load schedule");
-        }
-      } catch (err: any) {
-        setError(err.message);
-        setAvailableGPs([]);
+        const [listRes, calRes] = await Promise.all([
+          fetch(`${API_BASE}/api/races/list`),
+          fetch(`${API_BASE}/api/season/${year}/calendar`),
+        ]);
+        const listData = listRes.ok ? await listRes.json() : { races: [] };
+        const calData: CalendarResponse | null = calRes.ok ? await calRes.json() : null;
+        if (!cancelled) { setCached(listData.races ?? []); setCalendar(calData); }
+      } catch {
+        if (!cancelled) { setCached([]); setCalendar(null); }
       } finally {
-        setIsLoadingSchedule(false);
+        if (!cancelled) setLoading(false);
       }
-    };
-
-    fetchSchedule();
+    })();
+    return () => { cancelled = true; };
   }, [year]);
 
-  const handleGenerate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsGenerating(true);
-    setError(null);
-
-    try {
-      const response = await fetch(`${API_BASE}/api/races/generate`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ year, gp, session }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to generate telemetry");
+  // Only ever show race/session combos that are ALREADY generated and pushed to the
+  // data repo — this is a deliberate constraint, not a limitation: on-demand generation
+  // for an uncached session is unreliable on our hosting, so the picker only ever
+  // offers choices that are guaranteed to load instantly.
+  const groups = useMemo<RaceGroup[]>(() => {
+    if (!calendar) return [];
+    const byRaceId = new Map<string, RaceGroup>();
+    for (const c of cached) {
+      if (c.year !== String(year)) continue;
+      const race_id = `${c.year}_${c.gp}`;
+      const meta = calendar.races.find(r => r.race_id === race_id);
+      if (!meta) continue;
+      if (!byRaceId.has(race_id)) {
+        byRaceId.set(race_id, {
+          race_id, round: meta.round, name: meta.name, circuit: meta.circuit,
+          country: meta.country, image_url: meta.image_url, sessions: [],
+        });
       }
+      byRaceId.get(race_id)!.sessions.push(c.session);
+    }
+    return Array.from(byRaceId.values())
+      .map(g => ({ ...g, sessions: g.sessions.sort((a, b) => SESSION_ORDER.indexOf(a) - SESSION_ORDER.indexOf(b)) }))
+      .sort((a, b) => a.round - b.round);
+  }, [cached, calendar, year]);
 
+  const launch = async (raceId: string, gpSlug: string, session: string) => {
+    const key = `${raceId}::${session}`;
+    setLaunching(key);
+    try {
+      const res = await fetch(`${API_BASE}/api/races/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ year: String(year), gp: gpSlug, session }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        if (data.notAvailable) { showToast("This session hasn't been analyzed yet — check back soon.", 'info'); return; }
+        throw new Error(data.error || 'Failed to load telemetry');
+      }
       navigate(`/simulator/${data.raceId}`);
-    } catch (err: any) {
-      setError(err.message);
-      showError(err.message || 'Failed to generate telemetry');
-      setIsGenerating(false);
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Failed to load telemetry');
+    } finally {
+      setLaunching(null);
     }
   };
 
-  if (isGenerating) {
-    return (
-      <div className="flex flex-col h-screen items-center justify-center bg-black text-white font-sans">
-        <div className="w-16 h-16 border-4 border-red-600 border-t-transparent rounded-full animate-spin mb-6"></div>
-        <h2 className="text-2xl font-black tracking-widest uppercase text-red-500 mb-2">
-          Generating Telemetry
-        </h2>
-        <p className="text-neutral-400 font-bold text-center">
-          Pulling {year} {gp} FastF1 Data.<br/>This will take a few minutes...
-        </p>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex h-screen items-center justify-center bg-black font-sans">
-      <div className="w-full max-w-md bg-neutral-900 border border-neutral-800 p-8 rounded-2xl drop-shadow-2xl">
-        <h2 className="text-2xl font-black text-white tracking-tighter mb-6">
-          RACE <span className="text-red-500">SETUP</span>
-        </h2>
+    <div className="min-h-screen bg-[#050505] text-white pt-10 pb-20 font-sans">
+      <div className="max-w-[1200px] mx-auto px-6 lg:px-8">
 
-        {error && (
-          <div className="bg-red-950/50 border border-red-900 text-red-500 p-3 rounded-lg mb-6 text-sm font-bold">
-            {error}
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+          <div>
+            <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-gray-500 mb-2">Live Race Simulator</p>
+            <h1 className="text-3xl md:text-4xl font-black italic tracking-tight uppercase">Pick A Session To Replay</h1>
+            <p className="text-sm text-gray-500 mt-2 max-w-lg">
+              Every session below is already analyzed and ready to load instantly — lap-by-lap
+              telemetry, live positions, and track conditions on the real circuit layout.
+            </p>
+          </div>
+          <SeasonSelector currentYear={year} onChange={setYear} />
+        </div>
+
+        {/* Grid */}
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="h-[240px] rounded-2xl bg-[#0d0e12] border border-white/5 animate-pulse" />
+            ))}
+          </div>
+        ) : groups.length === 0 ? (
+          <div className="rounded-2xl bg-[#0d0e12] border border-white/5 p-10 flex flex-col items-center justify-center text-center gap-3">
+            <div className="text-sm text-gray-400">No simulator-ready sessions cached for {year} yet.</div>
+            <button
+              onClick={() => navigate('/events')}
+              className="text-[11px] font-bold uppercase tracking-widest text-[#e10600] hover:text-[#ff2a1f] transition-colors cursor-pointer"
+            >
+              Browse Race Calendar →
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+            {groups.map(g => (
+              <div key={g.race_id} className="group relative rounded-2xl overflow-hidden bg-[#0d0e12] border border-white/5 hover:border-white/15 transition-all duration-300">
+                <div className="relative h-[120px] overflow-hidden">
+                  <CircuitImage src={g.image_url} alt={g.circuit} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" style={{ opacity: 0.75 }} />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0d0e12] via-[#0d0e12]/30 to-transparent" />
+                  <div className="absolute top-3 right-3 px-2.5 py-1 rounded-md bg-black/50 backdrop-blur-sm border border-white/10 text-[10px] font-bold tracking-widest text-white uppercase">
+                    Round {g.round}
+                  </div>
+                  <div className="absolute bottom-3 left-4 right-4">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="text-lg leading-none">{flagFor(g.country)}</span>
+                      <h3 className="text-base font-bold tracking-tight truncate">{g.name}</h3>
+                    </div>
+                    <p className="text-[11px] text-gray-400 font-medium truncate pl-7">{g.circuit}</p>
+                  </div>
+                </div>
+                <div className="p-4 flex flex-wrap gap-2">
+                  {g.sessions.map(s => {
+                    const key = `${g.race_id}::${s}`;
+                    const isLaunching = launching === key;
+                    return (
+                      <button
+                        key={s}
+                        onClick={() => launch(g.race_id, g.race_id.slice(g.race_id.indexOf('_') + 1), s)}
+                        disabled={launching !== null}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 hover:border-[#e10600]/50 hover:bg-[#e10600]/10 disabled:opacity-50 disabled:cursor-not-allowed text-xs font-bold text-gray-200 hover:text-white transition-colors cursor-pointer"
+                      >
+                        {isLaunching && (
+                          <span className="w-3 h-3 rounded-full border-2 border-white/30 border-t-white animate-spin shrink-0" />
+                        )}
+                        {SESSION_LABELS[s] ?? s}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </div>
         )}
-
-        <form onSubmit={handleGenerate} className="flex flex-col gap-6">
-          
-          {/* Year Dropdown */}
-          <div className="flex flex-col gap-2">
-            <label className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Year</label>
-            <select 
-              value={year} 
-              onChange={(e) => setYear(e.target.value)}
-              className="bg-neutral-950 border border-neutral-800 text-white p-3 rounded-lg font-bold focus:border-red-500 outline-none hover:bg-neutral-900 transition-colors cursor-pointer"
-            >
-              <option value="2026">2026</option>
-              <option value="2025">2025</option>
-              <option value="2024">2024</option>
-              <option value="2023">2023</option>
-              <option value="2022">2022</option>
-              <option value="2021">2021</option>
-              <option value="2020">2020</option>
-            </select>
-          </div>
-
-          {/* DYNAMIC Grand Prix Dropdown */}
-          <div className="flex flex-col gap-2">
-            <label className="text-xs font-bold text-neutral-400 uppercase tracking-widest flex justify-between">
-              <span>Grand Prix</span>
-              {isLoadingSchedule && <span className="text-red-500 animate-pulse">Loading API...</span>}
-            </label>
-            <select 
-              value={gp} 
-              onChange={(e) => setGp(e.target.value)}
-              disabled={isLoadingSchedule || availableGPs.length === 0}
-              className="bg-neutral-950 border border-neutral-800 text-white p-3 rounded-lg font-bold focus:border-red-500 outline-none hover:bg-neutral-900 transition-colors cursor-pointer disabled:opacity-50"
-            >
-              {availableGPs.map(track => (
-                <option key={track} value={track}>{track}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Session Dropdown */}
-          <div className="flex flex-col gap-2">
-            <label className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Session</label>
-            <select 
-              value={session} 
-              onChange={(e) => setSession(e.target.value)}
-              className="bg-neutral-950 border border-neutral-800 text-white p-3 rounded-lg font-bold focus:border-red-500 outline-none hover:bg-neutral-900 transition-colors cursor-pointer"
-            >
-              <option value="R">Race</option>
-              <option value="Q">Qualifying</option>
-              <option value="SQ">Sprint Shootout</option>
-              <option value="S">Sprint</option>
-            </select>
-          </div>
-
-          <button 
-            type="submit"
-            disabled={isLoadingSchedule || availableGPs.length === 0}
-            className="mt-4 bg-red-600 hover:bg-red-500 disabled:bg-neutral-700 disabled:shadow-none text-white font-black py-4 rounded-xl tracking-widest uppercase transition-colors shadow-[0_0_15px_rgba(220,38,38,0.4)] hover:shadow-[0_0_25px_rgba(220,38,38,0.6)]"
-          >
-            Launch Simulator
-          </button>
-        </form>
       </div>
     </div>
   );
-};
-
-export default SimulatorSetup;
+}
