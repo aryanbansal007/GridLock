@@ -44,7 +44,7 @@ const MODES: { key: Mode; label: string; sub: string; needsDrivers: boolean }[] 
   { key: 'tyre', label: 'Tyre Strategy', sub: 'Stints · Degradation', needsDrivers: true },
 ];
 
-type ManifestState = DriverManifest | 'loading' | 'missing' | 'error';
+type ManifestState = DriverManifest | 'loading' | 'missing' | 'unavailable' | 'error';
 
 export default function AnalysisPage() {
   const { raceId = '' } = useParams<{ raceId: string }>();
@@ -184,7 +184,13 @@ export default function AnalysisPage() {
         body: JSON.stringify({ year, gp: resolvedRace.name, session: apiSession }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to generate analysis data');
+      if (!res.ok) {
+        // The backend explicitly refuses to generate (resource-constrained deploy,
+        // race not pre-cached) — show a calm "not ready yet" state instead of an
+        // error, and don't offer a retry that would just fail the same way again.
+        if (data.notAvailable) { setManifest('unavailable'); return; }
+        throw new Error(data.error || 'Failed to generate analysis data');
+      }
       loadManifest(resolvedRace, apiSession);
     } catch (e) {
       showError(e instanceof Error ? e.message : 'Failed to generate analysis data');
@@ -257,6 +263,10 @@ export default function AnalysisPage() {
 
         {manifest === 'error' && (
           <EmptyPanel title="Couldn't load analysis data" sub="The backend may be unreachable, or this session failed to generate." />
+        )}
+
+        {manifest === 'unavailable' && (
+          <EmptyPanel title="No data yet for this session" sub="This race hasn't been analyzed yet — check back soon." />
         )}
 
         {/* Waiting on the quali segment-availability check before deciding what to show. */}

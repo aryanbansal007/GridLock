@@ -236,7 +236,7 @@ function SessionSelector({ current, onChange, raceStatus, hasSprint }: { current
 
 function SimulatorButton({ race, year, session }: { race: RaceEntry; year: string; session: SessionCode }) {
   const navigate = useNavigate();
-  const { showError } = useToast();
+  const { showError, showToast } = useToast();
   const [loading, setLoading] = useState(false);
   const disabled = race.status === 'upcoming';
 
@@ -250,10 +250,16 @@ function SimulatorButton({ race, year, session }: { race: RaceEntry; year: strin
         body: JSON.stringify({ year, gp: race.name, session }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to generate telemetry');
+      if (!res.ok) {
+        // The backend explicitly refuses to generate (resource-constrained deploy,
+        // race not pre-cached) — a calm, non-alarming notice, not an error.
+        if (data.notAvailable) { showToast("This session hasn't been analyzed yet — check back soon.", 'info'); return; }
+        throw new Error(data.error || 'Failed to generate telemetry');
+      }
       navigate(`/simulator/${data.raceId}`);
     } catch (e) {
       showError(e instanceof Error ? e.message : 'Failed to launch simulator');
+    } finally {
       setLoading(false);
     }
   };

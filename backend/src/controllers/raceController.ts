@@ -32,6 +32,21 @@ export const generateRace = async (req: Request, res: Response) => {
             return res.json({ success: true, raceId, cached: true });
         }
 
+        // On a host with genuinely limited resources (Render's free tier — 512MB
+        // RAM), on-demand generation for a race that isn't already cached is not
+        // reliable: measured taking up to the full 25-minute timeout, and prone to
+        // failing outright. Rather than let a user trigger a request that's likely
+        // to hang or fail, refuse cleanly with a clear "not ready yet" message —
+        // set DISABLE_LIVE_GENERATION=true only on the constrained deploy; local
+        // dev (which has no such constraint) is unaffected since it's unset there.
+        if (process.env.DISABLE_LIVE_GENERATION === 'true') {
+            console.log(`🚫 Cache Miss, live generation disabled: ${raceId}`);
+            return res.status(503).json({
+                error: "This session hasn't been analyzed yet — check back soon.",
+                notAvailable: true,
+            });
+        }
+
         console.log(`⏳ Cache Miss${hasManifest ? ' (analysis files incomplete)' : ''}: Generating ${raceId}...`);
         await runPythonGenerator(year, gp, session);
 
