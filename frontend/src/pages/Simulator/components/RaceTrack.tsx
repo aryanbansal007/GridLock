@@ -9043,7 +9043,12 @@ const RaceTrack = ({
   const startLine  = finishLine || (trackOutline?.length > 0 ? trackOutline[0] : null);
 
   const smoothTransform = `cx ${transitionMs}ms linear, cy ${transitionMs}ms linear`;
-  const textTransform   = `x ${transitionMs}ms linear, y ${transitionMs}ms linear`;
+  // Labels animate via `transform` on a wrapping <g>, not via x/y like the circles
+  // above. cx/cy/r are SVG2 geometry *properties* so CSS can transition them, but a
+  // <text> element's x/y stay plain XML attributes — `transition: x ...` matches
+  // nothing, so labels snapped to each new position while the cars interpolated.
+  // Same duration and easing as smoothTransform, so the two stay in lockstep.
+  const labelTransform  = `transform ${transitionMs}ms linear`;
   const sizeTransition  = `r 200ms ease-in-out`;
 
   // Build confirmed pit states for all drivers this render
@@ -9146,19 +9151,25 @@ const RaceTrack = ({
 
               {/* ── driver label ── */}
               {showNames && (
-                <text
-                  x={x + r + 5} y={y + 4}
-                  fontSize="11" fontWeight="900"
-                  fill={isPitting ? "#888" : "#ffffff"}
-                  stroke="#000000" strokeWidth="3" paintOrder="stroke"
+                <g
                   style={{
-                    transition: textTransform,
+                    transform: `translate(${x}px, ${y}px)`,
+                    transition: labelTransform,
                     userSelect: "none",
                     pointerEvents: "none",
                   }}
                 >
-                  {d.code}
-                </text>
+                  {/* Offsets are relative to the group, which carries the car's
+                      position — same +r+5 / +4 placement as before. */}
+                  <text
+                    x={r + 5} y={4}
+                    fontSize="11" fontWeight="900"
+                    fill={isPitting ? "#888" : "#ffffff"}
+                    stroke="#000000" strokeWidth="3" paintOrder="stroke"
+                  >
+                    {d.code}
+                  </text>
+                </g>
               )}
             </g>
           );

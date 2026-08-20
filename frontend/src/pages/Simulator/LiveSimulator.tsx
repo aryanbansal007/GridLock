@@ -3278,6 +3278,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import RaceTrack from "./components/RaceTrack";
 import Leaderboard from "./components/Leaderboard";
+import { DataSourceNote } from "../../components/DataSourceNote";
 import { API_BASE } from "../../lib/f1";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
@@ -3721,6 +3722,8 @@ const LiveSimulator = () => {
                 </span>
               </div>
             </div>
+
+            <DataSourceNote variant="panel" className="border-t border-neutral-800 pt-2" />
           </div>
 
           {/* {selectedDriver && currentFrame.cars[selectedDriver] && (

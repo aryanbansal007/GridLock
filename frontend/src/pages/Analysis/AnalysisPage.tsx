@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { API_BASE, flagFor, type RaceEntry, type CalendarResponse } from '../../lib/f1';
 import { useToast } from '../../components/Toast';
+import { DataSourceNote } from '../../components/DataSourceNote';
 import { driversManifestUrl, lapsUrl, type DriverManifest, type SessionLaps } from '../../lib/telemetry';
 import TelemetryComparison from './components/TelemetryComparison';
 import TrackDominance from './components/TrackDominance';
@@ -330,6 +331,8 @@ export default function AnalysisPage() {
             </div>
           </>
         )}
+
+        <DataSourceNote className="mt-8 max-w-[640px]" />
       </div>
     </div>
   );
