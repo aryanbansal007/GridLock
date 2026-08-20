@@ -53,10 +53,29 @@ function redact(cfg: RepoConfig, message: string): string {
   return cfg.token ? message.split(cfg.token).join('***') : message;
 }
 
+// Whether each cache dir already held data at PROCESS START, captured here at module
+// load — which happens before the server begins listening. It must not be measured
+// later: hydration now runs concurrently with request handling, and several routes
+// (getSchedule, session-results) write into CACHE_DIR themselves. Sampling "is this
+// dir empty?" after requests could arrive made the very first request look like a
+// pre-populated local dev cache, which permanently skipped the clone and left the
+// server serving an empty cache forever.
+const populatedAtBoot = new Map<string, boolean>(
+  [CACHE_DIR, FASTF1_CACHE_DIR].map(dir => [
+    dir,
+    fs.existsSync(dir) && fs.readdirSync(dir).filter(f => f !== '.DS_Store').length > 0,
+  ]),
+);
+
 // Async (not execSync) so hydration never blocks the event loop. This runs after
 // the server is already listening, so a multi-minute clone of a large data repo
 // keeps the process responsive instead of stalling every request behind it.
 async function syncFromRemote(cfg: RepoConfig): Promise<void> {
+  // Always ensure the directory exists, even when no remote is configured: the
+  // Python scripts are handed this path as --cache-dir and FastF1 raises
+  // NotADirectoryError rather than creating it.
+  fs.mkdirSync(cfg.dir, { recursive: true });
+
   const url = remoteUrl(cfg);
   if (!url) {
     console.log(`[data-repo-sync] ${cfg.label}: token/repo not set — skipping remote sync.`);
@@ -72,18 +91,27 @@ async function syncFromRemote(cfg: RepoConfig): Promise<void> {
       return;
     }
 
-    const hasContent = fs.existsSync(cfg.dir) && fs.readdirSync(cfg.dir).length > 0;
-    if (hasContent) {
-      console.log(`[data-repo-sync] ${cfg.label}: dir already has content and is not a git clone — skipping (local dev cache).`);
+    if (populatedAtBoot.get(cfg.dir)) {
+      console.log(`[data-repo-sync] ${cfg.label}: dir already had content at boot and is not a git clone — skipping (local dev cache).`);
       return;
     }
 
+    // Clone into a sibling temp dir and swap it in, rather than cloning directly
+    // into cfg.dir. git clone refuses a non-empty target, and cfg.dir can gain
+    // files mid-clone now that requests are served during hydration. Anything
+    // written there in the meantime is a regenerable cache entry, so discarding
+    // it on swap is safe.
+    const tmpDir = `${cfg.dir}.hydrating`;
     console.log(`[data-repo-sync] ${cfg.label}: cloning from remote (cold start)...`);
-    fs.mkdirSync(cfg.dir, { recursive: true });
-    await execAsync(`git clone --quiet "${url}" .`, { cwd: cfg.dir, maxBuffer: 1024 * 1024 * 10 });
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+    fs.mkdirSync(tmpDir, { recursive: true });
+    await execAsync(`git clone --quiet "${url}" .`, { cwd: tmpDir, maxBuffer: 1024 * 1024 * 10 });
+    fs.rmSync(cfg.dir, { recursive: true, force: true });
+    fs.renameSync(tmpDir, cfg.dir);
     console.log(`[data-repo-sync] ${cfg.label}: cloned successfully.`);
   } catch (err: any) {
     console.error(`[data-repo-sync] ${cfg.label}: sync failed, continuing with empty/partial cache: ${redact(cfg, err.message)}`);
+    fs.mkdirSync(cfg.dir, { recursive: true });
   }
 }
 
