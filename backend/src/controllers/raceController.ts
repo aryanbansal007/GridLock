@@ -71,6 +71,32 @@ function friendlyGeneratorError(rawMessage?: string): string {
     return cleaned;
 }
 
+// Streams a cached JSON file with validators attached.
+//
+// These used to be createReadStream(...).pipe(res), which sent no Cache-Control,
+// ETag or Last-Modified at all. With no validator a browser cannot revalidate, so
+// it caches heuristically and has no way to notice the file changed — a race that
+// was regenerated (a corrected track outline, backfilled quali segments) kept
+// rendering from the stale copy until a manual hard refresh.
+//
+// res.sendFile still streams the file, so the constant-memory behaviour is
+// unchanged, but it also sets ETag and Last-Modified and answers conditional
+// requests. max-age=0 + must-revalidate means the browser always checks, and gets
+// a bodiless 304 when the file is untouched — so unchanged multi-megabyte
+// telemetry still isn't re-downloaded. Same approach getSchedule already uses.
+function sendCachedJson(res: Response, filePath: string, errorMessage: string) {
+    res.sendFile(filePath, {
+        headers: {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'public, max-age=0, must-revalidate',
+        },
+    }, (err) => {
+        // Once the response has started there is nothing useful left to say — the
+        // status line and headers are already committed.
+        if (err && !res.headersSent) res.status(500).json({ error: errorMessage });
+    });
+}
+
 export const listRaces = (req: Request, res: Response) => {
     const races = getAvailableRaces();
     res.json({ success: true, count: races.length, races });
@@ -104,10 +130,7 @@ export const getDriverData = (req: Request, res: Response) => {
         return res.status(404).json({ error: `No telemetry found for driver ${abbr} in this session.` });
     }
 
-    res.setHeader('Content-Type', 'application/json');
-    const stream = fs.createReadStream(driverPath);
-    stream.on('error', () => res.status(500).json({ error: "Failed to read driver telemetry." }));
-    stream.pipe(res);
+    sendCachedJson(res, driverPath, "Failed to read driver telemetry.");
 };
 
 // GET /api/races/data/:year/:gp/:session/track
@@ -123,10 +146,7 @@ export const getTrackData = (req: Request, res: Response) => {
         return res.status(404).json({ error: "No track file found for this session." });
     }
 
-    res.setHeader('Content-Type', 'application/json');
-    const stream = fs.createReadStream(trackPath);
-    stream.on('error', () => res.status(500).json({ error: "Failed to read track data." }));
-    stream.pipe(res);
+    sendCachedJson(res, trackPath, "Failed to read track data.");
 };
 
 // GET /api/races/data/:year/:gp/:session/conditions
@@ -142,10 +162,7 @@ export const getConditionsData = (req: Request, res: Response) => {
         return res.status(404).json({ error: "No conditions file found for this session." });
     }
 
-    res.setHeader('Content-Type', 'application/json');
-    const stream = fs.createReadStream(conditionsPath);
-    stream.on('error', () => res.status(500).json({ error: "Failed to read conditions data." }));
-    stream.pipe(res);
+    sendCachedJson(res, conditionsPath, "Failed to read conditions data.");
 };
 
 // GET /api/races/data/:year/:gp/:session/laps
@@ -161,10 +178,7 @@ export const getLapsData = (req: Request, res: Response) => {
         return res.status(404).json({ error: "No lap data found for this session." });
     }
 
-    res.setHeader('Content-Type', 'application/json');
-    const stream = fs.createReadStream(lapsPath);
-    stream.on('error', () => res.status(500).json({ error: "Failed to read lap data." }));
-    stream.pipe(res);
+    sendCachedJson(res, lapsPath, "Failed to read lap data.");
 };
 
 // Event schedules don't change intra-season — this was previously the only
