@@ -60,31 +60,63 @@ def load_session(year, gp, session_type, cache_dir):
     return session
 
 
-def _first_lap_with_pos_data(laps):
-    """Try laps in the given order, return (lap, pos_df) for the first one whose
-    position data actually has usable X/Y columns. Some laps (data dropouts,
-    in/out laps, laps right at a session boundary) come back with empty or
-    column-less position data — that shouldn't crash the whole generation."""
+# A lap needs at least this many DISTINCT X/Y samples before its position data is
+# considered a good enough source for the track outline.
+MIN_OUTLINE_POINTS = 200
+
+
+def _best_lap_with_pos_data(laps):
+    """Return (lap, pos_df) for the lap whose position data carries the most
+    DISTINCT X/Y samples, short-circuiting on the first lap that clears
+    MIN_OUTLINE_POINTS.
+
+    Checking only that X/Y columns exist is not enough. Some sessions return
+    position data where the same coordinate repeats many times: 2026 Hungary's
+    fastest laps have ~315 rows but only ~26 distinct points, and 2026 Monaco
+    produced a lap with a single distinct point. Feeding those into the
+    arc-length resample below collapses the 4000-point outline into a coarse
+    polygon (Hungary rendered as a ~26-sided blob) or a single dot (Monaco).
+    Row count doesn't reveal this — only distinct positions do.
+
+    Both of those sessions do contain good laps (319 and 289 distinct points
+    among quick laps), so the source is chosen on data quality rather than on
+    lap time. Laps that error out or have no usable columns are skipped, as
+    before, so a dropout still can't fail the whole generation.
+    """
+    best_lap = best_pos = None
+    best_count = 0
     for _, lap in laps.iterlaps():
         try:
             pos = lap.get_pos_data()
         except Exception:
             continue
-        if pos is not None and not pos.empty and "X" in pos.columns and "Y" in pos.columns:
-            return lap, pos
-    return None, None
+        if pos is None or pos.empty or "X" not in pos.columns or "Y" not in pos.columns:
+            continue
+        distinct = len({(round(x, 1), round(y, 1)) for x, y in zip(pos["X"], pos["Y"])})
+        if distinct > best_count:
+            best_lap, best_pos, best_count = lap, pos, distinct
+        if best_count >= MIN_OUTLINE_POINTS:
+            break
+    return best_lap, best_pos
 
 
 def build_track_outline(session, n_points=4000):
     quick = session.laps.pick_quicklaps() if not session.laps.empty else session.laps
     ordered = quick.sort_values("LapTime") if not quick.empty else quick
-    ref_lap, pos = _first_lap_with_pos_data(ordered)
+    ref_lap, pos = _best_lap_with_pos_data(ordered)
 
-    if pos is None:
-        # No quick lap had usable position data (seen on Monaco — data gaps around
-        # the fastest lap) — widen the search to every lap in the session, fastest first.
-        ordered_all = session.laps.sort_values("LapTime")
-        ref_lap, pos = _first_lap_with_pos_data(ordered_all)
+    # Quick laps are preferred because in/out laps include the pit lane, which would
+    # distort the outline. But if none of them carry enough distinct position samples
+    # (data dropouts around the fastest laps, seen on Monaco), widen the search to
+    # every lap and keep whichever source has the better resolution.
+    if pos is None or len({(round(x, 1), round(y, 1)) for x, y in zip(pos["X"], pos["Y"])}) < MIN_OUTLINE_POINTS:
+        alt_lap, alt_pos = _best_lap_with_pos_data(session.laps.sort_values("LapTime"))
+        if alt_pos is not None and (
+            pos is None
+            or len({(round(x, 1), round(y, 1)) for x, y in zip(alt_pos["X"], alt_pos["Y"])})
+            > len({(round(x, 1), round(y, 1)) for x, y in zip(pos["X"], pos["Y"])})
+        ):
+            ref_lap, pos = alt_lap, alt_pos
 
     if pos is None:
         raise RuntimeError(
