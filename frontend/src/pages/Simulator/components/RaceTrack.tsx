@@ -9151,18 +9151,27 @@ const RaceTrack = ({
 
               {/* ── driver label ── */}
               {showNames && (
+                // The translate carries the exact same coordinates the <text> used to
+                // hold in its x/y (x + r + 5, y + 4), so placement relative to the car
+                // is unchanged — it is only *delivered* as a transform, which is
+                // animatable, unlike a <text> element's x/y attributes.
+                //
+                // Deliberately the SVG transform attribute rather than a CSS
+                // `transform: translate(..px, ..px)`: the svg is sized with
+                // `w-full h-full` over a fixed viewBox, so user units are scaled to
+                // the container and CSS pixel offsets do not line up with the
+                // coordinates project() returns — labels drifted further from their
+                // car the further they sat from the origin. Attribute transforms are
+                // always in user units, so they track the circles exactly.
                 <g
+                  transform={`translate(${x + r + 5} ${y + 4})`}
                   style={{
-                    transform: `translate(${x}px, ${y}px)`,
                     transition: labelTransform,
                     userSelect: "none",
                     pointerEvents: "none",
                   }}
                 >
-                  {/* Offsets are relative to the group, which carries the car's
-                      position — same +r+5 / +4 placement as before. */}
                   <text
-                    x={r + 5} y={4}
                     fontSize="11" fontWeight="900"
                     fill={isPitting ? "#888" : "#ffffff"}
                     stroke="#000000" strokeWidth="3" paintOrder="stroke"
