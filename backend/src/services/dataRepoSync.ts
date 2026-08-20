@@ -1,6 +1,9 @@
-import { execSync } from 'child_process';
+import { execSync, exec } from 'child_process';
+import { promisify } from 'util';
 import fs from 'fs';
 import path from 'path';
+
+const execAsync = promisify(exec);
 import { CACHE_DIR, FASTF1_CACHE_DIR } from '../config/paths.js';
 
 // Generic git-backed sync for a directory, so a host with no persistent disk (e.g.
@@ -50,7 +53,10 @@ function redact(cfg: RepoConfig, message: string): string {
   return cfg.token ? message.split(cfg.token).join('***') : message;
 }
 
-function syncFromRemote(cfg: RepoConfig): void {
+// Async (not execSync) so hydration never blocks the event loop. This runs after
+// the server is already listening, so a multi-minute clone of a large data repo
+// keeps the process responsive instead of stalling every request behind it.
+async function syncFromRemote(cfg: RepoConfig): Promise<void> {
   const url = remoteUrl(cfg);
   if (!url) {
     console.log(`[data-repo-sync] ${cfg.label}: token/repo not set — skipping remote sync.`);
@@ -61,7 +67,7 @@ function syncFromRemote(cfg: RepoConfig): void {
   try {
     if (fs.existsSync(gitDir)) {
       console.log(`[data-repo-sync] ${cfg.label}: pulling latest from remote...`);
-      execSync('git pull --quiet', { cwd: cfg.dir, stdio: 'pipe' });
+      await execAsync('git pull --quiet', { cwd: cfg.dir });
       console.log(`[data-repo-sync] ${cfg.label}: pull complete.`);
       return;
     }
@@ -74,7 +80,7 @@ function syncFromRemote(cfg: RepoConfig): void {
 
     console.log(`[data-repo-sync] ${cfg.label}: cloning from remote (cold start)...`);
     fs.mkdirSync(cfg.dir, { recursive: true });
-    execSync(`git clone --quiet "${url}" .`, { cwd: cfg.dir, stdio: 'pipe' });
+    await execAsync(`git clone --quiet "${url}" .`, { cwd: cfg.dir, maxBuffer: 1024 * 1024 * 10 });
     console.log(`[data-repo-sync] ${cfg.label}: cloned successfully.`);
   } catch (err: any) {
     console.error(`[data-repo-sync] ${cfg.label}: sync failed, continuing with empty/partial cache: ${redact(cfg, err.message)}`);
@@ -102,9 +108,9 @@ function pushToRemote(cfg: RepoConfig, message: string): void {
 
 // Syncs both the output cache and FastF1's raw cache — same call site as before
 // (app.ts's boot sequence), now covering both directories.
-export function syncCacheFromRemote(): void {
-  syncFromRemote(CACHE_REPO);
-  syncFromRemote(FASTF1_REPO);
+export async function syncCacheFromRemote(): Promise<void> {
+  await syncFromRemote(CACHE_REPO);
+  await syncFromRemote(FASTF1_REPO);
 }
 
 export function pushCacheToRemote(message: string): void {

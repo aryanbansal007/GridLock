@@ -46,11 +46,21 @@ app.get('/health', (req, res) => {
 // Start Server. connectDB() logs and resolves (doesn't throw/exit) on failure —
 // Mongo only backs auth + Race Engineer chat history, so a Mongo outage shouldn't
 // take down standings/calendar/analysis, which have zero Mongo dependency.
-const startServer = async () => {
-  syncCacheFromRemote();
-  await connectDB();
-  app.listen(PORT, () => {
+// The port is bound FIRST, before any slow startup work. Hosts like Render kill a
+// container that hasn't opened a port within their scan window, and the cache clone
+// below outgrew that window as the data repo grew (~670MB) — producing a restart
+// loop where every attempt re-cloned from scratch and timed out again. Binding first
+// means the platform sees a live service immediately; the cache then hydrates in the
+// background, and a race that hasn't synced yet returns the normal "not available"
+// response until it lands, instead of the whole service being dead.
+const startServer = () => {
+  app.listen(PORT, async () => {
     console.log(`🏎️  GridLock Backend roaring at http://localhost:${PORT}`);
+    connectDB();
+    // Awaited before the scheduler starts: the scheduler writes into CACHE_DIR, and
+    // syncFromRemote deliberately skips cloning into a directory that already has
+    // content — so letting it run first would permanently prevent the clone.
+    await syncCacheFromRemote();
     startSeasonDataScheduler();
   });
 };
