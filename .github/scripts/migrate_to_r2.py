@@ -16,6 +16,7 @@ Env (supplied by the workflow from repo secrets):
     DRY_RUN     — "true" to list what would upload without writing anything
 """
 
+import gzip
 import json
 import os
 import sys
@@ -24,6 +25,16 @@ from pathlib import Path
 # Matches the freshness strategy already used for these files on the backend: short
 # enough that a regenerated race appears quickly, long enough to be worth caching.
 CACHE_CONTROL = "public, max-age=300"
+
+# Stored compressed, with Content-Encoding set, so the bytes on the wire are already
+# small — R2 does not compress on the fly, and these files are text full of repeated
+# digits and field names. Measured on a real driver file: 1,762,766 -> 336,376 bytes,
+# a 5.2x reduction, which takes a full race in the simulator from ~35MB to ~7MB.
+# Browsers decompress transparently, so nothing in the app changes.
+#
+# Level 9 rather than the default 6: it is only ~2% smaller but the cost is paid once
+# per upload, while the saving applies to every download afterwards.
+GZIP_LEVEL = 9
 
 # A session is only advertised as available once all four exist. This is the same
 # completeness rule the backend's cache-hit check uses, so R2 and the API agree on what
@@ -127,11 +138,19 @@ def main():
     client = r2_client()
     uploaded = failed = 0
 
+    raw_bytes = sent_bytes = 0
+
     for i, (path, key) in enumerate(files, 1):
         try:
-            client.upload_file(
-                str(path), bucket, key,
-                ExtraArgs={"ContentType": "application/json", "CacheControl": CACHE_CONTROL},
+            raw = path.read_bytes()
+            body = gzip.compress(raw, compresslevel=GZIP_LEVEL)
+            raw_bytes += len(raw)
+            sent_bytes += len(body)
+            client.put_object(
+                Bucket=bucket, Key=key, Body=body,
+                ContentType="application/json",
+                ContentEncoding="gzip",
+                CacheControl=CACHE_CONTROL,
             )
             uploaded += 1
         except Exception as e:
@@ -152,11 +171,16 @@ def main():
         index = {"success": True, "count": len(races), "races": races}
         client.put_object(
             Bucket=bucket, Key="races-index.json",
-            Body=json.dumps(index).encode(),
-            ContentType="application/json", CacheControl=CACHE_CONTROL,
+            Body=gzip.compress(json.dumps(index).encode(), compresslevel=GZIP_LEVEL),
+            ContentType="application/json",
+            ContentEncoding="gzip",
+            CacheControl=CACHE_CONTROL,
         )
         print(f"\nWrote races-index.json ({len(races)} sessions).")
 
+    if raw_bytes:
+        print(f"\nCompressed {raw_bytes / 1e6:.1f}MB -> {sent_bytes / 1e6:.1f}MB "
+              f"({raw_bytes / sent_bytes:.1f}x smaller over the wire).")
     print(f"\nDone: {uploaded} uploaded, {failed} failed.")
     sys.exit(1 if failed else 0)
 
