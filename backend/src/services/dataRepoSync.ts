@@ -17,6 +17,9 @@ interface RepoConfig {
   dir: string;
   token: string | undefined;
   repo: string | undefined; // "owner/repo"
+  // Top-level paths to check out, when only part of the repo is needed. Omitted
+  // means the whole thing.
+  sparsePaths?: string[];
 }
 
 const CACHE_REPO: RepoConfig = {
@@ -24,6 +27,17 @@ const CACHE_REPO: RepoConfig = {
   dir: CACHE_DIR,
   token: process.env.GITHUB_DATA_TOKEN,
   repo: process.env.GITHUB_DATA_REPO,
+  // Only the season aggregates, not the per-race telemetry. The browser now fetches
+  // telemetry straight from object storage, so nothing on this server opens those
+  // files any more — but a full clone was still dragging down ~678MB on every boot,
+  // of which ~415MB was telemetry it never read. That download is what made deploys
+  // take about ten minutes to serve data, and what a restart loop kept repeating.
+  //
+  // These three directories are ~356KB combined and are still genuinely used: the
+  // hourly scheduler regenerates season/<year>/{calendar,standings}.json here and
+  // pushes them back, and the session-results route caches into session_results/.
+  // Keeping the checkout a real git clone is what lets that push keep working.
+  sparsePaths: ['season', 'session_results', 'schedule'],
 };
 
 // FastF1's own raw HTTP response cache — a separate repo/token (falls back to the
@@ -102,10 +116,31 @@ async function syncFromRemote(cfg: RepoConfig): Promise<void> {
     // written there in the meantime is a regenerable cache entry, so discarding
     // it on swap is safe.
     const tmpDir = `${cfg.dir}.hydrating`;
-    console.log(`[data-repo-sync] ${cfg.label}: cloning from remote (cold start)...`);
+    const sparse = cfg.sparsePaths?.length ? cfg.sparsePaths : null;
+    console.log(
+      `[data-repo-sync] ${cfg.label}: cloning from remote (cold start)`
+      + `${sparse ? ` — only ${sparse.join(', ')}` : ''}...`,
+    );
     fs.rmSync(tmpDir, { recursive: true, force: true });
     fs.mkdirSync(tmpDir, { recursive: true });
-    await execAsync(`git clone --quiet "${url}" .`, { cwd: tmpDir, maxBuffer: 1024 * 1024 * 10 });
+
+    if (sparse) {
+      // --filter=blob:none defers file contents, and --no-checkout leaves the tree
+      // empty, so nothing is transferred until sparse-checkout narrows it to the
+      // paths below. Without both, git fetches every blob first and the point is
+      // lost. Push still works: this is an ordinary clone whose working tree just
+      // covers fewer paths, and the scheduler only writes inside them.
+      await execAsync(
+        `git clone --quiet --filter=blob:none --no-checkout "${url}" .`,
+        { cwd: tmpDir, maxBuffer: 1024 * 1024 * 10 },
+      );
+      await execAsync('git sparse-checkout init --cone', { cwd: tmpDir });
+      await execAsync(`git sparse-checkout set ${sparse.join(' ')}`, { cwd: tmpDir });
+      await execAsync('git checkout --quiet', { cwd: tmpDir, maxBuffer: 1024 * 1024 * 10 });
+    } else {
+      await execAsync(`git clone --quiet "${url}" .`, { cwd: tmpDir, maxBuffer: 1024 * 1024 * 10 });
+    }
+
     fs.rmSync(cfg.dir, { recursive: true, force: true });
     fs.renameSync(tmpDir, cfg.dir);
     console.log(`[data-repo-sync] ${cfg.label}: cloned successfully.`);
