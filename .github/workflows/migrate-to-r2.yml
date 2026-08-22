@@ -9,18 +9,11 @@
 # everything, and `dry_run` to preview without writing.
 name: Migrate gridlock-data to R2
 
-# The Run button only appears for workflows on the default branch, and putting this on
-# main purely to click it would trigger a Render redeploy and another ~10 minute cache
-# hydration on the live site. So while this branch is in progress it also runs on a push
-# that touches this file — editing PUSH_ONLY below and pushing is the trigger. Once the
-# branch merges, the push trigger can go and workflow_dispatch takes over.
+# Manual only. This is how a newly generated race reaches the site: generate locally
+# (F1 blocks data-centre IPs, so it cannot run here), push to gridlock-data, then run
+# this. Re-running is safe — it overwrites the same keys and rewrites the index, and a
+# few hundred writes is nothing against R2's monthly allowance.
 on:
-  push:
-    branches:
-      - feat/r2-migration
-    paths:
-      - '.github/workflows/migrate-to-r2.yml'
-      - '.github/scripts/migrate_to_r2.py'
   workflow_dispatch:
     inputs:
       only:
@@ -32,13 +25,6 @@ on:
         type: boolean
         required: false
         default: false
-
-env:
-  # Only consulted on push runs, where `inputs` is unavailable. Was pinned to a single
-  # session to prove the pipe end to end (uploaded, publicly fetchable, right
-  # Content-Type/Cache-Control, CORS header present) before moving everything. Now blank
-  # for the full migration, which also lets races-index.json be written.
-  PUSH_ONLY: ''
 
 # One migration at a time — concurrent runs would race on the same keys.
 concurrency:
@@ -75,7 +61,6 @@ jobs:
           R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
           R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
           SOURCE_DIR: gridlock-data
-          # inputs.* are empty on a push run, so fall back to the env default above.
-          ONLY: ${{ inputs.only || env.PUSH_ONLY }}
+          ONLY: ${{ inputs.only }}
           DRY_RUN: ${{ inputs.dry_run }}
         run: python .github/scripts/migrate_to_r2.py
