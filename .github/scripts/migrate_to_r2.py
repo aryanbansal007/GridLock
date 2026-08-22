@@ -9,8 +9,10 @@ R2 speaks the S3 API, so this is plain boto3 pointed at an R2 endpoint.
 Env (supplied by the workflow from repo secrets):
     R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME
     SOURCE_DIR  — checkout of gridlock-data
-    ONLY        — optional key prefix, e.g. "2026/belgian_grand_prix/R", to upload one
-                  session while testing instead of all ~414 files
+    ONLY        — optional comma-separated key prefixes, e.g.
+                  "2026/belgian_grand_prix/R" for one session, or
+                  "season,session_results" for the small aggregates the hourly sync
+                  refreshes. Blank uploads everything.
     DRY_RUN     — "true" to list what would upload without writing anything
 """
 
@@ -51,7 +53,7 @@ def r2_client():
     )
 
 
-def collect_files(source: Path, only: str | None):
+def collect_files(source: Path, only: list[str] | None):
     """Every file to upload, as (local_path, r2_key) pairs."""
     out = []
     for path in sorted(source.rglob("*")):
@@ -62,7 +64,7 @@ def collect_files(source: Path, only: str | None):
         if path.name in SKIP_NAMES:
             continue
         key = path.relative_to(source).as_posix()
-        if only and not key.startswith(only):
+        if only and not any(key.startswith(p) for p in only):
             continue
         out.append((path, key))
     return out
@@ -96,7 +98,7 @@ def find_complete_sessions(source: Path):
 
 def main():
     source = Path(os.environ.get("SOURCE_DIR", "gridlock-data")).resolve()
-    only = os.environ.get("ONLY", "").strip() or None
+    only = [p.strip() for p in os.environ.get("ONLY", "").split(",") if p.strip()] or None
     dry_run = os.environ.get("DRY_RUN", "").lower() == "true"
     bucket = os.environ["R2_BUCKET_NAME"]
 
@@ -108,7 +110,7 @@ def main():
 
     print(f"Source:  {source}")
     print(f"Bucket:  {bucket}")
-    print(f"Filter:  {only or '(everything)'}")
+    print(f"Filter:  {', '.join(only) if only else '(everything)'}")
     print(f"Files:   {len(files)}")
     print(f"Complete sessions found: {len(races)}")
     if dry_run:

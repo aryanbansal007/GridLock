@@ -14,10 +14,19 @@ name: Migrate gridlock-data to R2
 # this. Re-running is safe — it overwrites the same keys and rewrites the index, and a
 # few hundred writes is nothing against R2's monthly allowance.
 on:
+  # Hourly, because the backend regenerates season/<year>/{calendar,standings}.json on
+  # its own hourly schedule and pushes them to gridlock-data — but nothing carried them
+  # onward to R2, which is what the browser actually reads. Without this the calendar
+  # drifts: a finished race keeps showing as upcoming, with a countdown to a date that
+  # has passed, until someone runs this by hand.
+  #
+  # :20 rather than :00 so the backend's own refresh and push have finished first.
+  schedule:
+    - cron: '20 * * * *'
   workflow_dispatch:
     inputs:
       only:
-        description: 'Key prefix to limit the upload, e.g. 2026/belgian_grand_prix/R (blank = everything)'
+        description: 'Comma-separated key prefixes, e.g. 2026/belgian_grand_prix/R (blank = everything)'
         required: false
         default: ''
       dry_run:
@@ -25,6 +34,13 @@ on:
         type: boolean
         required: false
         default: false
+
+env:
+  # Scheduled runs sync only the small aggregates the backend rewrites — a few dozen
+  # files rather than all 400+. Telemetry is immutable once generated, so re-uploading
+  # it every hour would burn through the monthly write allowance to change nothing; a
+  # new race is published by running this manually with a blank filter.
+  SCHEDULED_PATHS: 'season,session_results,schedule'
 
 # One migration at a time — concurrent runs would race on the same keys.
 concurrency:
@@ -61,6 +77,7 @@ jobs:
           R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
           R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
           SOURCE_DIR: gridlock-data
-          ONLY: ${{ inputs.only }}
+          # `inputs` is unavailable on a scheduled run, so fall back to the narrow set.
+          ONLY: ${{ github.event_name == 'schedule' && env.SCHEDULED_PATHS || inputs.only }}
           DRY_RUN: ${{ inputs.dry_run }}
         run: python .github/scripts/migrate_to_r2.py
