@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   API_BASE, SEASON_YEAR, logoFor,
-  type StandingsResponse, type ConstructorStanding, type DriverStanding,
-} from '../lib/f1';
+  type StandingsResponse, type ConstructorStanding, type DriverStanding, seasonUrl } from '../lib/f1';
 import { TeamLogo } from '../components/media/TeamLogo';
 import { SeasonSelector } from '../components/SeasonSelector';
 
@@ -20,7 +19,7 @@ export default function Teams() {
     (async () => {
       setLoading(true); setError(null);
       try {
-        const res = await fetch(`${API_BASE}/api/season/${currentYear}/standings`);
+        const res = await fetch(seasonUrl(currentYear, 'standings'));
         if (!res.ok) throw new Error(`No data for the ${currentYear} season yet`);
         const json = await res.json();
         if (!cancelled) setData(json);

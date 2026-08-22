@@ -3279,7 +3279,9 @@ import { useParams, useNavigate } from "react-router-dom";
 import RaceTrack from "./components/RaceTrack";
 import Leaderboard from "./components/Leaderboard";
 import { DataSourceNote } from "../../components/DataSourceNote";
-import { API_BASE } from "../../lib/f1";
+import {
+  driversManifestUrl, driverDataUrl, trackUrl, conditionsUrl, unwrapManifest,
+} from "../../lib/telemetry";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -3394,27 +3396,25 @@ const LiveSimulator = () => {
     setLoading(true);
     setError(null);
 
-    const base = `${API_BASE}/api/races/data/${year}/${gp}/${session}`;
-
     (async () => {
       try {
         const [manifestRes, trackRes, conditionsRes] = await Promise.all([
-          fetch(`${base}/drivers`),
-          fetch(`${base}/track`),
-          fetch(`${base}/conditions`),
+          fetch(driversManifestUrl(year, gp, session)),
+          fetch(trackUrl(year, gp, session)),
+          fetch(conditionsUrl(year, gp, session)),
         ]);
         if (!manifestRes.ok) throw new Error(`HTTP ${manifestRes.status} loading driver manifest`);
         if (!trackRes.ok) throw new Error(`HTTP ${trackRes.status} loading track data`);
         if (!conditionsRes.ok) throw new Error(`HTTP ${conditionsRes.status} loading conditions data`);
 
-        const { drivers: manifest } = await manifestRes.json() as { drivers: Record<string, { team_color: string }> };
+        const manifest = unwrapManifest(await manifestRes.json()) as unknown as Record<string, { team_color: string }>;
         const track = await trackRes.json();
         const conditionsPayload = await conditionsRes.json();
 
         const codes = Object.keys(manifest);
         const driverFiles = await Promise.all(
           codes.map((abbr) =>
-            fetch(`${base}/drivers/${abbr}`).then((r) => {
+            fetch(driverDataUrl(year, gp, session, abbr)).then((r) => {
               if (!r.ok) throw new Error(`HTTP ${r.status} loading telemetry for ${abbr}`);
               return r.json();
             })

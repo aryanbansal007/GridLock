@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { API_BASE, flagFor, type RaceEntry, type CalendarResponse } from '../../lib/f1';
+import { API_BASE, flagFor, type RaceEntry, type CalendarResponse, seasonUrl } from '../../lib/f1';
 import { useToast } from '../../components/Toast';
 import { DataSourceNote } from '../../components/DataSourceNote';
-import { driversManifestUrl, lapsUrl, type DriverManifest, type SessionLaps } from '../../lib/telemetry';
+import { driversManifestUrl, lapsUrl, unwrapManifest, type DriverManifest, type SessionLaps } from '../../lib/telemetry';
 import TelemetryComparison from './components/TelemetryComparison';
 import TrackDominance from './components/TrackDominance';
 import LapSimulation from './components/LapSimulation';
@@ -75,7 +75,7 @@ export default function AnalysisPage() {
   // Resolve raceId -> race meta from the season calendar (same pattern as RaceDetail).
   useEffect(() => {
     let cancelled = false;
-    fetch(`${API_BASE}/api/season/${year}/calendar`)
+    fetch(seasonUrl(year, 'calendar'))
       .then(r => r.ok ? r.json() : Promise.reject(new Error('Season calendar unavailable')))
       .then((cal: CalendarResponse) => {
         if (cancelled) return;
@@ -114,7 +114,7 @@ export default function AnalysisPage() {
       })
       .then(data => {
         if (data === 'missing' || data === 'error') { setManifest(data); return; }
-        setManifest(data.drivers as DriverManifest);
+        setManifest(unwrapManifest(data));
       })
       .catch(() => setManifest('error'));
   }, [year]);

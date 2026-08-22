@@ -4,6 +4,41 @@
 // Env-driven so a deployed build points at the real backend instead of localhost —
 // set VITE_API_BASE in the frontend's deploy environment (e.g. Vercel project settings).
 export const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5050';
+
+// Where generated race data is read from, separately from the API that serves auth and
+// chat. Set VITE_DATA_BASE to an object-storage origin (a Cloudflare R2 bucket) and the
+// browser fetches telemetry, calendars and standings straight from it, so the backend
+// never has to hold a copy of the data at all — no boot-time clone, no hydration window
+// before a fresh instance can answer, and a regenerated race is live the moment it is
+// uploaded rather than after a restart.
+//
+// Unset, this falls back to API_BASE and every request behaves exactly as before, which
+// is what keeps this safe to ship before the storage is switched over: rolling back is
+// removing an environment variable, not reverting code.
+export const DATA_BASE = import.meta.env.VITE_DATA_BASE || API_BASE;
+
+// R2 holds the generator's output verbatim, at the same paths it writes locally, while
+// the API wraps the same files behind /api/... routes. These two helpers absorb that
+// difference so callers can just say "give me the season calendar".
+const usingObjectStorage = () => DATA_BASE !== API_BASE;
+
+/** Season calendar/standings: season/<year>/<file>.json */
+export const seasonUrl = (year: string | number, file: 'calendar' | 'standings') =>
+  usingObjectStorage()
+    ? `${DATA_BASE}/season/${year}/${file}.json`
+    : `${API_BASE}/api/season/${year}/${file}`;
+
+/** Classified results for one session: session_results/<year>/<round>/<session>.json */
+export const sessionResultsUrl = (year: string | number, round: string | number, session: string) =>
+  usingObjectStorage()
+    ? `${DATA_BASE}/session_results/${year}/${round}/${session}.json`
+    : `${API_BASE}/api/session-results/${year}/${round}/${session}`;
+
+/** Which sessions have a full analysis set. A bucket can't be listed from a browser, so
+ *  the migration publishes this as a file mirroring /api/races/list's response shape. */
+export const racesIndexUrl = () =>
+  usingObjectStorage() ? `${DATA_BASE}/races-index.json` : `${API_BASE}/api/races/list`;
+
 export const SEASON_YEAR = 2026;
 
 // Seasons the backend can serve (generated on demand via generate_season_data.py --year <y>,

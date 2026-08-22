@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '../../components/Toast';
 import { SeasonSelector } from '../../components/SeasonSelector';
 import { CircuitImage } from '../../components/media/CircuitImage';
-import { API_BASE, SEASON_YEAR, flagFor, type CalendarResponse } from '../../lib/f1';
+import { API_BASE, SEASON_YEAR, flagFor, type CalendarResponse, seasonUrl, racesIndexUrl } from '../../lib/f1';
 
 interface CachedRace { year: string; gp: string; session: string }
 
@@ -36,8 +36,8 @@ export default function SimulatorSetup() {
     (async () => {
       try {
         const [listRes, calRes] = await Promise.all([
-          fetch(`${API_BASE}/api/races/list`),
-          fetch(`${API_BASE}/api/season/${year}/calendar`),
+          fetch(racesIndexUrl()),
+          fetch(seasonUrl(year, 'calendar')),
         ]);
         const listData = listRes.ok ? await listRes.json() : { races: [] };
         const calData: CalendarResponse | null = calRes.ok ? await calRes.json() : null;

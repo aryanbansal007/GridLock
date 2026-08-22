@@ -2,7 +2,7 @@
 // (drivers/{ABBR}.json), the manifest (drivers/index.json), and the session track
 // file (track.json) produced by data_scripts/full_race_generator.py.
 
-import { API_BASE } from './f1';
+import { API_BASE, DATA_BASE } from './f1';
 
 // Standard F1 compound colors (match the convention in Simulator/components/Leaderboard.tsx).
 export const TYRE_COLORS: Record<string, string> = {
@@ -95,13 +95,50 @@ export interface TrackData {
 }
 
 // ── endpoints ────────────────────────────────────────────────────────────────
-const base = (year: string, gp: string, session: string) =>
+// Two shapes for the same files. The API exposes them under /api/races/data/... with the
+// grand prix as written ("Belgian Grand Prix", url-encoded) and no .json suffix, because
+// the backend normalises the name itself before touching disk. Object storage holds the
+// generator's output verbatim, so the key is the on-disk path: lowercased, spaces as
+// underscores, session uppercased, real filenames. Callers shouldn't care which is in
+// play, so the difference is absorbed here.
+const safeGp = (gp: string) => gp.toLowerCase().replace(/ /g, '_');
+
+const objectBase = (year: string, gp: string, session: string) =>
+  `${DATA_BASE}/${year}/${safeGp(gp)}/${session.toUpperCase()}`;
+
+const apiBase = (year: string, gp: string, session: string) =>
   `${API_BASE}/api/races/data/${year}/${encodeURIComponent(gp)}/${session}`;
 
-export const driversManifestUrl = (y: string, g: string, s: string) => `${base(y, g, s)}/drivers`;
-export const driverDataUrl = (y: string, g: string, s: string, abbr: string) => `${base(y, g, s)}/drivers/${abbr}`;
-export const trackUrl = (y: string, g: string, s: string) => `${base(y, g, s)}/track`;
-export const lapsUrl = (y: string, g: string, s: string) => `${base(y, g, s)}/laps`;
+const usingObjectStorage = () => DATA_BASE !== API_BASE;
+
+export const driversManifestUrl = (y: string, g: string, s: string) =>
+  usingObjectStorage() ? `${objectBase(y, g, s)}/drivers/index.json` : `${apiBase(y, g, s)}/drivers`;
+
+export const driverDataUrl = (y: string, g: string, s: string, abbr: string) =>
+  usingObjectStorage()
+    ? `${objectBase(y, g, s)}/drivers/${abbr.toUpperCase()}.json`
+    : `${apiBase(y, g, s)}/drivers/${abbr}`;
+
+export const trackUrl = (y: string, g: string, s: string) =>
+  usingObjectStorage() ? `${objectBase(y, g, s)}/track.json` : `${apiBase(y, g, s)}/track`;
+
+export const lapsUrl = (y: string, g: string, s: string) =>
+  usingObjectStorage() ? `${objectBase(y, g, s)}/laps.json` : `${apiBase(y, g, s)}/laps`;
+
+export const conditionsUrl = (y: string, g: string, s: string) =>
+  usingObjectStorage() ? `${objectBase(y, g, s)}/conditions.json` : `${apiBase(y, g, s)}/conditions`;
+
+/** The driver manifest is the one payload whose shape differs between sources: the API
+ *  wraps it as `{ success, drivers }`, while object storage serves the generator's
+ *  drivers/index.json unchanged, which is the bare `{ VER: {...}, HAM: {...} }` map.
+ *  Everything else — calendar, standings, session results, laps, track, conditions — is
+ *  the file's own contents either way, so this is the only place that needs bridging. */
+export function unwrapManifest(payload: unknown): DriverManifest {
+  if (payload && typeof payload === 'object' && 'drivers' in payload) {
+    return (payload as { drivers: DriverManifest }).drivers;
+  }
+  return payload as DriverManifest;
+}
 
 // ── formatting ───────────────────────────────────────────────────────────────
 

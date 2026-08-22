@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { API_BASE, shortName, type DriverStanding, type CalendarResponse } from '../lib/f1';
+import { API_BASE, shortName, type DriverStanding, type CalendarResponse, seasonUrl, sessionResultsUrl } from '../lib/f1';
 import { DriverAvatar } from './media/DriverAvatar';
 
 interface RaceResultRow {
@@ -33,14 +33,14 @@ export function DriverSeasonCard({ driver, year, onClose }: { driver: DriverStan
     setRows('loading');
     (async () => {
       try {
-        const calRes = await fetch(`${API_BASE}/api/season/${year}/calendar`);
+        const calRes = await fetch(seasonUrl(year, 'calendar'));
         if (!calRes.ok) throw new Error('calendar unavailable');
         const cal: CalendarResponse = await calRes.json();
         const rounds = cal.races.filter(r => r.status !== 'upcoming');
 
         const settled = await Promise.all(
           rounds.map(r =>
-            fetch(`${API_BASE}/api/session-results/${year}/${r.round}/R`)
+            fetch(sessionResultsUrl(year, r.round, 'R'))
               .then(res => (res.ok ? res.json() : null))
               .then((data: SessionResultsResponse | null) => ({ race: r, data }))
               .catch(() => ({ race: r, data: null })),
