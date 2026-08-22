@@ -11,17 +11,22 @@
 # Delete this file once the question is answered, or keep it as a manual probe.
 name: FastF1 connectivity test
 
-# Runs on push to this branch, not just workflow_dispatch. The "Run workflow" button
-# only appears for workflows that exist on the DEFAULT branch, and putting this on main
-# would trigger a Render redeploy — and with it another ~10 minute cache-hydration
-# window on the live site — purely to run a throwaway probe. Scoping a push trigger to
-# this branch gets the same answer without touching main at all.
+# RESULT (2026-08-22): BLOCKED. livetiming.formula1.com returns HTTP 403 to GitHub's
+# runners — confirmed by requesting the origin directly, before FastF1 swallows the
+# status. The season schedule (served from a different host) succeeds, so it is the
+# runner's IP range being refused, not a broken library or a bad session choice.
+#
+# This applies to any data-centre IP, so Cloud Run Jobs, AWS Batch/Fargate and plain
+# cloud VMs would fail identically — the constraint is network origin, not compute.
+# Generation therefore runs from a residential connection: a laptop, or a self-hosted
+# runner on a home network. The R2 half of the migration is unaffected, since it only
+# concerns where finished artifacts are stored and served from.
+#
+# Kept as documentation of why generation is local, and to re-check if F1's policy
+# changes. Manual trigger only now — it has answered its question and should not run on
+# every push. Note workflow_dispatch only surfaces a Run button once the file is on the
+# default branch.
 on:
-  push:
-    branches:
-      - feat/r2-migration
-    paths:
-      - '.github/workflows/fastf1-connectivity-test.yml'
   workflow_dispatch:
 
 jobs:
