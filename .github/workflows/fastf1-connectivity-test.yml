@@ -11,7 +11,17 @@
 # Delete this file once the question is answered, or keep it as a manual probe.
 name: FastF1 connectivity test
 
+# Runs on push to this branch, not just workflow_dispatch. The "Run workflow" button
+# only appears for workflows that exist on the DEFAULT branch, and putting this on main
+# would trigger a Render redeploy — and with it another ~10 minute cache-hydration
+# window on the live site — purely to run a throwaway probe. Scoping a push trigger to
+# this branch gets the same answer without touching main at all.
 on:
+  push:
+    branches:
+      - feat/r2-migration
+    paths:
+      - '.github/workflows/fastf1-connectivity-test.yml'
   workflow_dispatch:
 
 jobs:
