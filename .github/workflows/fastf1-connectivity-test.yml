@@ -1,0 +1,134 @@
+# Throwaway diagnostic: can a GitHub Actions runner actually download F1 data?
+#
+# Formula 1 restricts some access from data-centre IP ranges, and GitHub's runners are
+# data-centre machines. The reported blocking concerns the *live timing* feed rather than
+# the historical sessions GridLock reads, so this most likely works — but the entire
+# "generate races automatically instead of on a laptop" plan depends on it, so it is worth
+# five minutes to find out before building anything on top.
+#
+# Deliberately manual-only (workflow_dispatch): this never runs on a push or a schedule.
+# It writes nothing, needs no secrets, and touches no part of the running application.
+# Delete this file once the question is answered, or keep it as a manual probe.
+name: FastF1 connectivity test
+
+# RESULT (2026-08-22): BLOCKED. livetiming.formula1.com returns HTTP 403 to GitHub's
+# runners — confirmed by requesting the origin directly, before FastF1 swallows the
+# status. The season schedule (served from a different host) succeeds, so it is the
+# runner's IP range being refused, not a broken library or a bad session choice.
+#
+# This applies to any data-centre IP, so Cloud Run Jobs, AWS Batch/Fargate and plain
+# cloud VMs would fail identically — the constraint is network origin, not compute.
+# Generation therefore runs from a residential connection: a laptop, or a self-hosted
+# runner on a home network. The R2 half of the migration is unaffected, since it only
+# concerns where finished artifacts are stored and served from.
+#
+# Kept as documentation of why generation is local, and to re-check if F1's policy
+# changes. Manual trigger only now — it has answered its question and should not run on
+# every push. Note workflow_dispatch only surfaces a Run button once the file is on the
+# default branch.
+on:
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      # Just the library, not data_scripts/requirements.txt — this probe does not
+      # generate anything, so matplotlib and friends are dead weight here.
+      - name: Install FastF1
+        run: pip install --quiet fastf1
+
+      - name: Probe F1 data access
+        run: |
+          python - <<'PY'
+          import sys, traceback
+          import requests
+          import fastf1
+
+          # FastF1 catches transport errors and only logs "Failed to load X", which hides
+          # the HTTP status. Hit the origin directly first so the status code is visible:
+          # 403 means this runner's IP range is blocked, anything else points elsewhere.
+          print(f"\n{'='*60}\n0/4  Raw HTTP status from livetiming.formula1.com\n{'='*60}", flush=True)
+          for label, url in [
+              ("static root", "https://livetiming.formula1.com/static/"),
+              ("2024 Monaco Race SessionInfo",
+               "https://livetiming.formula1.com/static/2024/2024-05-26_Monaco_Grand_Prix/"
+               "2024-05-26_Race/SessionInfo.json"),
+          ]:
+              try:
+                  r = requests.get(url, timeout=30)
+                  print(f"  {label}: HTTP {r.status_code}  ({len(r.content)} bytes)", flush=True)
+                  if r.status_code == 403:
+                      print("    -> 403 Forbidden: this IP range is blocked by F1.", flush=True)
+              except Exception as e:
+                  print(f"  {label}: request failed — {type(e).__name__}: {e}", flush=True)
+
+          # Surface what FastF1 itself is swallowing.
+          fastf1.set_log_level('DEBUG')
+
+          # A season that is definitively over, so a failure means "blocked or broken",
+          # never "this session hasn't happened yet".
+          YEAR, GP, SESSION = 2024, "Monaco Grand Prix", "R"
+          results = []
+
+          def stage(name, fn):
+              print(f"\n{'='*60}\n{name}\n{'='*60}", flush=True)
+              try:
+                  detail = fn()
+                  print(f"PASS: {detail}", flush=True)
+                  results.append((name, True, detail))
+              except Exception as e:
+                  print(f"FAIL: {type(e).__name__}: {e}", flush=True)
+                  traceback.print_exc()
+                  results.append((name, False, f"{type(e).__name__}: {e}"))
+
+          # 1. Cheapest possible call. If even this fails, nothing else will.
+          def schedule():
+              s = fastf1.get_event_schedule(YEAR)
+              return f"{len(s)} events in {YEAR}"
+
+          # 2. The real test. Loading laps hits the timing endpoints that return
+          #    403 Forbidden for blocked clients (with the mirror then 404ing).
+          session = {}
+          def load_laps():
+              s = fastf1.get_session(YEAR, GP, SESSION)
+              s.load(telemetry=False, laps=True, weather=False)
+              session["s"] = s
+              return f"{len(s.laps)} laps, {len(s.drivers)} drivers"
+
+          # 3. Confirms the heavy position/car-data endpoints are reachable too.
+          #    One driver only — enough to prove access without a long run.
+          def load_telemetry():
+              s = session.get("s")
+              if s is None:
+                  raise RuntimeError("skipped — session load failed above")
+              s.load(telemetry=True, laps=True, weather=False)
+              lap = s.laps.pick_drivers(s.drivers[0]).iloc[0]
+              tel = lap.get_telemetry()
+              return f"{len(tel)} telemetry rows for driver {s.drivers[0]}"
+
+          stage("1/3  Season schedule", schedule)
+          stage("2/3  Session load (laps) — the endpoint that 403s when blocked", load_laps)
+          stage("3/3  Telemetry for one driver", load_telemetry)
+
+          print(f"\n{'='*60}\nSUMMARY\n{'='*60}", flush=True)
+          for name, ok, detail in results:
+              print(f"  {'PASS' if ok else 'FAIL'}  {name}  —  {detail}", flush=True)
+
+          if all(ok for _, ok, _ in results):
+              print("\nVERDICT: GitHub Actions CAN reach F1 data. Automated generation is viable.")
+              sys.exit(0)
+
+          print("\nVERDICT: at least one stage failed.")
+          print("If the failures are 403 Forbidden, this runner's IP range is blocked and")
+          print("generation must stay local. Any other error is probably unrelated to blocking.")
+          sys.exit(1)
+          PY

@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
-import { API_BASE } from '../lib/f1';
+import { API_BASE, seasonUrl } from '../lib/f1';
 
 const SEASON_YEAR = 2026;
 
@@ -114,8 +114,8 @@ export const TopNav: React.FC = () => {
     (async () => {
       try {
         const [cRes, sRes] = await Promise.all([
-          fetch(`${API_BASE}/api/season/${SEASON_YEAR}/calendar`),
-          fetch(`${API_BASE}/api/season/${SEASON_YEAR}/standings`),
+          fetch(seasonUrl(SEASON_YEAR, 'calendar')),
+          fetch(seasonUrl(SEASON_YEAR, 'standings')),
         ]);
         if (cancelled) return;
         if (cRes.ok) setCalendar(await cRes.json());

@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
-  API_BASE, SEASON_YEAR, flagFor, fmtWeekendRange, shortName,
-  type CalendarResponse, type RaceEntry,
+  SEASON_YEAR, flagFor, fmtWeekendRange, shortName, type CalendarResponse, type RaceEntry, seasonUrl,
 } from '../lib/f1';
 import { CircuitImage } from '../components/media/CircuitImage';
 import { SeasonSelector } from '../components/SeasonSelector';
@@ -24,7 +23,7 @@ export default function Calendar() {
     let cancelled = false;
     setData(null);
     setError(null);
-    fetch(`${API_BASE}/api/season/${currentYear}/calendar`)
+    fetch(seasonUrl(currentYear, 'calendar'))
       .then(r => r.ok ? r.json() : Promise.reject(new Error(`Failed to load ${currentYear} calendar`)))
       .then(j => { if (!cancelled) setData(j); })
       .catch(e => { if (!cancelled) setError(e.message); });

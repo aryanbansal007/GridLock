@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { API_BASE, flagFor, fmtDateFull, type RaceEntry, type CalendarResponse } from '../lib/f1';
+import { API_BASE, flagFor, fmtDateFull, type RaceEntry, type CalendarResponse, seasonUrl, sessionResultsUrl } from '../lib/f1';
 import { CircuitImage } from '../components/media/CircuitImage';
 import { useToast } from '../components/Toast';
 
@@ -60,7 +60,7 @@ export default function RaceDetail() {
   // the previous race's data.
   useEffect(() => {
     let cancelled = false;
-    fetch(`${API_BASE}/api/season/${year}/calendar`)
+    fetch(seasonUrl(year, 'calendar'))
       .then(r => r.ok ? r.json() : Promise.reject(new Error('Season calendar unavailable')))
       .then((cal: CalendarResponse) => {
         if (cancelled) return;
@@ -87,7 +87,7 @@ export default function RaceDetail() {
     const key = `${raceId}:${session}`; // keyed by race too, so switching races can't show stale cached results
     if (cache[key] !== undefined) return;
     let cancelled = false;
-    fetch(`${API_BASE}/api/session-results/${year}/${resolvedRace.round}/${session}`)
+    fetch(sessionResultsUrl(year, resolvedRace.round, session))
       .then(r => r.ok ? r.json() : Promise.reject())
       .then((data: SessionResultsResponse) => { if (!cancelled) setCache(prev => ({ ...prev, [key]: data })); })
       .catch(() => { if (!cancelled) setCache(prev => ({ ...prev, [key]: 'error' })); });

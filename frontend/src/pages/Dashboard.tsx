@@ -1,9 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  API_BASE, SEASON_YEAR, flagFor, pad, shortName, fmtDateShort, logoFor,
-  type StandingsResponse, type CalendarResponse, type DriverStanding,
-  type ConstructorStanding, type RaceEntry,
+  SEASON_YEAR, flagFor, pad, shortName, fmtDateShort, logoFor, type StandingsResponse, type CalendarResponse, type DriverStanding, type ConstructorStanding, type RaceEntry, seasonUrl,
 } from '../lib/f1';
 import { DriverAvatar } from '../components/media/DriverAvatar';
 import { TeamLogo } from '../components/media/TeamLogo';
@@ -42,8 +40,8 @@ export default function Dashboard() {
       setError(null);
       try {
         const [sRes, cRes] = await Promise.all([
-          fetch(`${API_BASE}/api/season/${SEASON_YEAR}/standings`),
-          fetch(`${API_BASE}/api/season/${SEASON_YEAR}/calendar`),
+          fetch(seasonUrl(SEASON_YEAR, 'standings')),
+          fetch(seasonUrl(SEASON_YEAR, 'calendar')),
         ]);
         if (!sRes.ok || !cRes.ok) throw new Error(`Failed to load ${SEASON_YEAR} season data`);
         const [sJson, cJson] = await Promise.all([sRes.json(), cRes.json()]);

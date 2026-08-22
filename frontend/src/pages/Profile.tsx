@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
-import { API_BASE, logoFor } from '../lib/f1';
+import { API_BASE, logoFor, seasonUrl } from '../lib/f1';
 import { TeamLogo } from '../components/media/TeamLogo';
 import { DriverAvatar } from '../components/media/DriverAvatar';
 
@@ -38,7 +38,7 @@ export default function Profile() {
   const [nameSaving, setNameSaving] = useState(false);
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/season/${SEASON_YEAR}/standings`)
+    fetch(seasonUrl(SEASON_YEAR, 'standings'))
       .then(res => res.ok ? res.json() : Promise.reject())
       .then(data => { setTeams(data.constructors ?? []); setDrivers(data.drivers ?? []); })
       .catch(() => {});

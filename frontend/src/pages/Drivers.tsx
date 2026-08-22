@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
-  API_BASE, SEASON_YEAR, lighten,
-  type StandingsResponse, type DriverStanding,
+  SEASON_YEAR, lighten, type StandingsResponse, type DriverStanding, seasonUrl,
 } from '../lib/f1';
 import { DriverAvatar } from '../components/media/DriverAvatar';
 import { SeasonSelector } from '../components/SeasonSelector';
@@ -22,7 +21,7 @@ export default function Drivers() {
     (async () => {
       setLoading(true); setError(null);
       try {
-        const res = await fetch(`${API_BASE}/api/season/${currentYear}/standings`);
+        const res = await fetch(seasonUrl(currentYear, 'standings'));
         if (!res.ok) throw new Error(`No data for the ${currentYear} season yet`);
         const json = await res.json();
         if (!cancelled) setData(json);
