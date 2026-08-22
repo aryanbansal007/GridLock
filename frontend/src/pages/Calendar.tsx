@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
-  API_BASE, SEASON_YEAR, flagFor, fmtWeekendRange, shortName,
-  type CalendarResponse, type RaceEntry, seasonUrl } from '../lib/f1';
+  SEASON_YEAR, flagFor, fmtWeekendRange, shortName, type CalendarResponse, type RaceEntry, seasonUrl,
+} from '../lib/f1';
 import { CircuitImage } from '../components/media/CircuitImage';
 import { SeasonSelector } from '../components/SeasonSelector';
 

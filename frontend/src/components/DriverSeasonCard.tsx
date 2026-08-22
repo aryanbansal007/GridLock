@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { API_BASE, shortName, type DriverStanding, type CalendarResponse, seasonUrl, sessionResultsUrl } from '../lib/f1';
+import { shortName, type DriverStanding, type CalendarResponse, seasonUrl, sessionResultsUrl } from '../lib/f1';
 import { DriverAvatar } from './media/DriverAvatar';
 
 interface RaceResultRow {

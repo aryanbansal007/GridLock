@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
-  API_BASE, SEASON_YEAR, logoFor,
-  type StandingsResponse, type ConstructorStanding, type DriverStanding, seasonUrl } from '../lib/f1';
+  SEASON_YEAR, logoFor, type StandingsResponse, type ConstructorStanding, type DriverStanding, seasonUrl,
+} from '../lib/f1';
 import { TeamLogo } from '../components/media/TeamLogo';
 import { SeasonSelector } from '../components/SeasonSelector';
 

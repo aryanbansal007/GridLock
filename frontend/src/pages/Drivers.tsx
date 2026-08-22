@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
-  API_BASE, SEASON_YEAR, lighten,
-  type StandingsResponse, type DriverStanding, seasonUrl } from '../lib/f1';
+  SEASON_YEAR, lighten, type StandingsResponse, type DriverStanding, seasonUrl,
+} from '../lib/f1';
 import { DriverAvatar } from '../components/media/DriverAvatar';
 import { SeasonSelector } from '../components/SeasonSelector';
 import { DriverSeasonCard } from '../components/DriverSeasonCard';

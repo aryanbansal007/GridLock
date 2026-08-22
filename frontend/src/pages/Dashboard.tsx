@@ -1,9 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  API_BASE, SEASON_YEAR, flagFor, pad, shortName, fmtDateShort, logoFor,
-  type StandingsResponse, type CalendarResponse, type DriverStanding,
-  type ConstructorStanding, type RaceEntry, seasonUrl } from '../lib/f1';
+  SEASON_YEAR, flagFor, pad, shortName, fmtDateShort, logoFor, type StandingsResponse, type CalendarResponse, type DriverStanding, type ConstructorStanding, type RaceEntry, seasonUrl,
+} from '../lib/f1';
 import { DriverAvatar } from '../components/media/DriverAvatar';
 import { TeamLogo } from '../components/media/TeamLogo';
 import { CircuitImage } from '../components/media/CircuitImage';
