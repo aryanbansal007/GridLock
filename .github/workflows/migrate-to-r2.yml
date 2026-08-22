@@ -34,9 +34,11 @@ on:
         default: false
 
 env:
-  # Only consulted on push runs, where `inputs` is unavailable. Set to one session so an
-  # accidental push can't bulk-upload; blank it deliberately for the full migration.
-  PUSH_ONLY: '2026/belgian_grand_prix/R'
+  # Only consulted on push runs, where `inputs` is unavailable. Was pinned to a single
+  # session to prove the pipe end to end (uploaded, publicly fetchable, right
+  # Content-Type/Cache-Control, CORS header present) before moving everything. Now blank
+  # for the full migration, which also lets races-index.json be written.
+  PUSH_ONLY: ''
 
 # One migration at a time — concurrent runs would race on the same keys.
 concurrency:
