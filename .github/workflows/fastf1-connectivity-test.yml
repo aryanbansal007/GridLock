@@ -45,7 +45,29 @@ jobs:
         run: |
           python - <<'PY'
           import sys, traceback
+          import requests
           import fastf1
+
+          # FastF1 catches transport errors and only logs "Failed to load X", which hides
+          # the HTTP status. Hit the origin directly first so the status code is visible:
+          # 403 means this runner's IP range is blocked, anything else points elsewhere.
+          print(f"\n{'='*60}\n0/4  Raw HTTP status from livetiming.formula1.com\n{'='*60}", flush=True)
+          for label, url in [
+              ("static root", "https://livetiming.formula1.com/static/"),
+              ("2024 Monaco Race SessionInfo",
+               "https://livetiming.formula1.com/static/2024/2024-05-26_Monaco_Grand_Prix/"
+               "2024-05-26_Race/SessionInfo.json"),
+          ]:
+              try:
+                  r = requests.get(url, timeout=30)
+                  print(f"  {label}: HTTP {r.status_code}  ({len(r.content)} bytes)", flush=True)
+                  if r.status_code == 403:
+                      print("    -> 403 Forbidden: this IP range is blocked by F1.", flush=True)
+              except Exception as e:
+                  print(f"  {label}: request failed — {type(e).__name__}: {e}", flush=True)
+
+          # Surface what FastF1 itself is swallowing.
+          fastf1.set_log_level('DEBUG')
 
           # A season that is definitively over, so a failure means "blocked or broken",
           # never "this session hasn't happened yet".
