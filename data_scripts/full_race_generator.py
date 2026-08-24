@@ -524,23 +524,32 @@ def build_driver_frame_series(session, master_timeline):
         rpm_concat = np.concatenate(all_rpm)
         drs_concat = np.concatenate(all_drs)
 
-        order = np.argsort(t_concat)
+        # Sort by time, then drop duplicate timestamps. Both steps must be applied to
+        # the SAME list, reassigning it each time — an earlier version rebuilt the
+        # names from `arrays` twice, but `arrays` still referenced the *unsorted*
+        # originals, so the dedup indexed unsorted data with sorted positions and
+        # scrambled every channel. The resulting t_concat was no longer monotonic,
+        # which silently broke the resampling loop below (it assumes ascending time):
+        # `j` would stall, freezing lap/compound/pit for thousands of frames, and the
+        # `t < t_concat[0] or t > t_concat[-1]` guard would drop most of the race.
+        # Invisible whenever the per-lap telemetry already arrived in time order —
+        # which is the common case, so only sessions with out-of-order laps (safety
+        # cars, red flags) showed it. 2026 Monaco lost every driver's fastest lap.
         arrays = [t_concat, x_concat, y_concat, dist_concat, lap_concat,
                   compound_concat, tyre_life_concat, in_pit_concat,
                   spd_concat, gear_concat, thr_concat, brk_concat, rpm_concat, drs_concat]
 
-        t_concat, x_concat, y_concat, dist_concat, lap_concat, \
-            compound_concat, tyre_life_concat, in_pit_concat, \
-            spd_concat, gear_concat, thr_concat, brk_concat, rpm_concat, drs_concat = [a[order] for a in arrays]
+        # Stable, so samples sharing a timestamp keep their original relative order.
+        order = np.argsort(t_concat, kind="stable")
+        arrays = [a[order] for a in arrays]
 
-        _, unique_idx = np.unique(t_concat, return_index=True)
+        _, unique_idx = np.unique(arrays[0], return_index=True)
         unique_idx = np.sort(unique_idx)
+        arrays = [a[unique_idx] for a in arrays]
 
         t_concat, x_concat, y_concat, dist_concat, lap_concat, \
             compound_concat, tyre_life_concat, in_pit_concat, \
-            spd_concat, gear_concat, thr_concat, brk_concat, rpm_concat, drs_concat = [
-                a[unique_idx] for a in arrays
-            ]
+            spd_concat, gear_concat, thr_concat, brk_concat, rpm_concat, drs_concat = arrays
 
         n_frames = len(master_timeline)
         x_out = np.full(n_frames, np.nan)

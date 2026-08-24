@@ -20,7 +20,7 @@ export const DATA_BASE = import.meta.env.VITE_DATA_BASE || API_BASE;
 // R2 holds the generator's output verbatim, at the same paths it writes locally, while
 // the API wraps the same files behind /api/... routes. These two helpers absorb that
 // difference so callers can just say "give me the season calendar".
-const usingObjectStorage = () => DATA_BASE !== API_BASE;
+export const usingObjectStorage = () => DATA_BASE !== API_BASE;
 
 /** Season calendar/standings: season/<year>/<file>.json */
 export const seasonUrl = (year: string | number, file: 'calendar' | 'standings') =>

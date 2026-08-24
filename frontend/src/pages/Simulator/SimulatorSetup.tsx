@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '../../components/Toast';
 import { SeasonSelector } from '../../components/SeasonSelector';
 import { CircuitImage } from '../../components/media/CircuitImage';
-import { API_BASE, SEASON_YEAR, flagFor, type CalendarResponse, seasonUrl, racesIndexUrl } from '../../lib/f1';
+import { API_BASE, SEASON_YEAR, flagFor, type CalendarResponse, seasonUrl, racesIndexUrl, usingObjectStorage } from '../../lib/f1';
 
 interface CachedRace { year: string; gp: string; session: string }
 
@@ -79,6 +79,19 @@ export default function SimulatorSetup() {
   const launch = async (raceId: string, gpSlug: string, session: string) => {
     const key = `${raceId}::${session}`;
     setLaunching(key);
+
+    // Reading from object storage: the files are already published, and LiveSimulator
+    // fetches them straight from there — so there is nothing for the API to do. Calling
+    // /api/races/generate anyway is worse than pointless: live generation is disabled on
+    // the deployed backend, so it answers 503 and the replay never opens even though
+    // every file it needs is sitting in the bucket. The picker only ever lists sessions
+    // that races-index.json says are complete, so the raceId can be built directly.
+    if (usingObjectStorage()) {
+      navigate(`/simulator/${year}_${gpSlug}_${session.toLowerCase()}`);
+      setLaunching(null);
+      return;
+    }
+
     try {
       const res = await fetch(`${API_BASE}/api/races/generate`, {
         method: 'POST',

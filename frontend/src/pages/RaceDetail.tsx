@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { API_BASE, flagFor, fmtDateFull, type RaceEntry, type CalendarResponse, seasonUrl, sessionResultsUrl } from '../lib/f1';
+import { API_BASE, flagFor, fmtDateFull, type RaceEntry, type CalendarResponse, seasonUrl, sessionResultsUrl, usingObjectStorage } from '../lib/f1';
 import { CircuitImage } from '../components/media/CircuitImage';
 import { useToast } from '../components/Toast';
 
@@ -243,6 +243,16 @@ function SimulatorButton({ race, year, session }: { race: RaceEntry; year: strin
   const launch = async () => {
     if (disabled || loading) return;
     setLoading(true);
+
+    // See SimulatorSetup.launch — with data served from object storage the replay reads
+    // its files straight from the bucket, so asking the API to generate first only adds
+    // a 503 that blocks a session which is already published.
+    if (usingObjectStorage()) {
+      navigate(`/simulator/${race.race_id}_${session.toLowerCase()}`);
+      setLoading(false);
+      return;
+    }
+
     try {
       const res = await fetch(`${API_BASE}/api/races/generate`, {
         method: 'POST',
