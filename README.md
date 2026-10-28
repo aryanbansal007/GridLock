@@ -86,6 +86,12 @@ GridLock is three cooperating pieces:
      driver, plus a track outline, a session-wide lap table, and a flag/weather timeline.
    - `generate_season_data.py` builds the season-wide standings and calendar.
    - `session_results.py` builds the classified results table for a single session.
+   - `openf1_race_generator.py` and `openf1_session_results.py` are drop-in replacements for the
+     two scripts above that read from [OpenF1](https://openf1.org) instead (free, no login) and
+     write the same files. Use them for races from October 2026 on: F1 put its livetiming feed
+     behind an F1TV login, so FastF1 can no longer load new sessions without one. Race and
+     Sprint only. When a meeting name matches more than one event (2026 has two "Bahrain Grand
+     Prix"), pass `--session-key`.
    - `get_schedule.py` fetches a season's race calendar.
 
 2. **The backend** (`backend/`, Node + Express + TypeScript) never talks to FastF1 directly —
