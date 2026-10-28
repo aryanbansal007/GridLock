@@ -4,6 +4,7 @@ import {
   buildComparisonGrid, buildSectorDominance, driverColors, fmtLapTime, trackUrl,
   type DriverManifest, type DriverTelemetry, type TrackData, type Bounds, type LapSelection, type DominanceSector,
 } from '../../../lib/telemetry';
+import { trackRotation, rotatePoint, rotatedBounds } from '../../../lib/trackRotation';
 import { useDriverSet } from '../useDriverSet';
 import { LapSelector, useLapOptions } from './LapSelector';
 
@@ -20,7 +21,8 @@ const NUM_SECTORS = 24;
 
 // Same projection RaceTrack.tsx uses (scale to fit + flip Y). Driver x/y and track
 // bounds share the same FastF1 coordinate space, so this is unit-consistent.
-function makeProjector(bounds: Bounds) {
+function makeProjector(rawBounds: Bounds, rotation: number, outline: { x: number; y: number }[]) {
+  const bounds = rotatedBounds(outline, rotation, rawBounds);
   const dataW = bounds.x_max - bounds.x_min || 1;
   const dataH = bounds.y_max - bounds.y_min || 1;
   const availW = VBOX - PADDING * 2;
@@ -28,10 +30,13 @@ function makeProjector(bounds: Bounds) {
   const scale = Math.min(availW / dataW, availH / dataH);
   const offsetX = PADDING + (availW - dataW * scale) / 2;
   const offsetY = PADDING + (availH - dataH * scale) / 2;
-  return (x: number, y: number) => ({
-    x: offsetX + (x - bounds.x_min) * scale,
-    y: offsetY + (dataH - (y - bounds.y_min)) * scale,
-  });
+  return (rawX: number, rawY: number) => {
+    const { x, y } = rotatePoint(rawX, rawY, rotation);
+    return {
+      x: offsetX + (x - bounds.x_min) * scale,
+      y: offsetY + (dataH - (y - bounds.y_min)) * scale,
+    };
+  };
 }
 
 function pathD(points: { x: number; y: number }[]): string {
@@ -121,7 +126,7 @@ export default function TrackDominance({ year, gp, session, segment, drivers: co
 
   const colorA = colors[pair[0].driver];
   const colorB = colors[pair[1].driver];
-  const project = makeProjector(track.bounds);
+  const project = makeProjector(track.bounds, trackRotation(gp), track.track_outline);
 
   const hoveredSector = hovered != null ? dominance.sectors.find(s => s.index === hovered) ?? null : null;
 

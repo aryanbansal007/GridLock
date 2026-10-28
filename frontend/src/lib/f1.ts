@@ -100,6 +100,15 @@ export interface CalendarResponse {
   races: RaceEntry[];
 }
 
+// race_id is `${year}_${gp slug}`, which is not unique when a season lists a cancelled
+// event and its replacement at the same name (2026: a cancelled Bahrain at Sakhir, then
+// the real one at Sepang). Prefer the event that actually ran; a plain find() returned
+// the cancelled one and the real race page showed up as cancelled, with no replay.
+export const findRaceById = (races: RaceEntry[], raceId: string): RaceEntry | undefined => {
+  const matches = races.filter(r => r.race_id === raceId);
+  return matches.find(r => r.status !== 'cancelled') ?? matches[0];
+};
+
 const FLAGS: Record<string, string> = {
   Australia: '🇦🇺', China: '🇨🇳', Japan: '🇯🇵', 'United States': '🇺🇸', Canada: '🇨🇦',
   Monaco: '🇲🇨', Spain: '🇪🇸', Austria: '🇦🇹', 'United Kingdom': '🇬🇧', Belgium: '🇧🇪',

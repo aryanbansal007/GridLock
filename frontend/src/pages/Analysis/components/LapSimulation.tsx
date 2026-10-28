@@ -5,6 +5,7 @@ import {
   resolveLapRange, lerpAt, trackUrl, driverColors, fmtLapTime,
   type DriverManifest, type DriverTelemetry, type TrackData, type LapSelection,
 } from '../../../lib/telemetry';
+import { trackRotation } from '../../../lib/trackRotation';
 import { useDriverSet } from '../useDriverSet';
 import { LapSelector, useLapOptions } from './LapSelector';
 
@@ -217,7 +218,7 @@ export default function LapSimulation({ year, gp, session, segment, drivers: cod
         <div className="flex flex-col">
           <div className="relative aspect-square w-full max-w-[440px] mx-auto bg-[#080808] rounded-xl">
             {track ? (
-              <RaceTrack drivers={raceTrackDrivers} positions={positions} trackOutline={track.track_outline} bounds={track.bounds} transitionMs={TICK_MS} showNames />
+              <RaceTrack drivers={raceTrackDrivers} positions={positions} trackOutline={track.track_outline} bounds={track.bounds} rotation={trackRotation(gp)} transitionMs={TICK_MS} showNames />
             ) : (
               <div className="absolute inset-0 flex items-center justify-center text-gray-600 text-xs font-mono">Loading track…</div>
             )}

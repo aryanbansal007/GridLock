@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '../../components/Toast';
 import { SeasonSelector } from '../../components/SeasonSelector';
 import { CircuitImage } from '../../components/media/CircuitImage';
-import { API_BASE, SEASON_YEAR, flagFor, type CalendarResponse, seasonUrl, racesIndexUrl, usingObjectStorage } from '../../lib/f1';
+import { API_BASE, SEASON_YEAR, flagFor, findRaceById, type CalendarResponse, seasonUrl, racesIndexUrl, usingObjectStorage } from '../../lib/f1';
 
 interface CachedRace { year: string; gp: string; session: string }
 
@@ -61,7 +61,7 @@ export default function SimulatorSetup() {
     for (const c of cached) {
       if (c.year !== String(year)) continue;
       const race_id = `${c.year}_${c.gp}`;
-      const meta = calendar.races.find(r => r.race_id === race_id);
+      const meta = findRaceById(calendar.races, race_id);
       if (!meta) continue;
       if (!byRaceId.has(race_id)) {
         byRaceId.set(race_id, {

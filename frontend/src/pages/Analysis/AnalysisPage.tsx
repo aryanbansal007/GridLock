@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { API_BASE, flagFor, type RaceEntry, type CalendarResponse, seasonUrl } from '../../lib/f1';
+import { API_BASE, flagFor, findRaceById, type RaceEntry, type CalendarResponse, seasonUrl } from '../../lib/f1';
 import { useToast } from '../../components/Toast';
 import { DataSourceNote } from '../../components/DataSourceNote';
 import { driversManifestUrl, lapsUrl, unwrapManifest, type DriverManifest, type SessionLaps } from '../../lib/telemetry';
@@ -79,7 +79,7 @@ export default function AnalysisPage() {
       .then(r => r.ok ? r.json() : Promise.reject(new Error('Season calendar unavailable')))
       .then((cal: CalendarResponse) => {
         if (cancelled) return;
-        const found = cal.races.find(r => r.race_id === raceId);
+        const found = findRaceById(cal.races, raceId);
         if (!found) { setMetaError('Race not found'); return; }
         setRace(found);
       })

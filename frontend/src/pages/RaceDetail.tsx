@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { API_BASE, flagFor, fmtDateFull, type RaceEntry, type CalendarResponse, seasonUrl, sessionResultsUrl, usingObjectStorage } from '../lib/f1';
+import { API_BASE, flagFor, fmtDateFull, findRaceById, type RaceEntry, type CalendarResponse, seasonUrl, sessionResultsUrl, usingObjectStorage } from '../lib/f1';
 import { CircuitImage } from '../components/media/CircuitImage';
 import { useToast } from '../components/Toast';
 
@@ -64,7 +64,7 @@ export default function RaceDetail() {
       .then(r => r.ok ? r.json() : Promise.reject(new Error('Season calendar unavailable')))
       .then((cal: CalendarResponse) => {
         if (cancelled) return;
-        const found = cal.races.find(r => r.race_id === raceId);
+        const found = findRaceById(cal.races, raceId);
         if (!found) { setRaceMetaError('Race not found'); return; }
         setRace(found);
         // Default to the most relevant session: Race if it's happened, else Qualifying

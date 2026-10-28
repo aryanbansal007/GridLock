@@ -72,7 +72,7 @@ export default function Calendar() {
         {/* Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
           {races.map((r, i) => (
-            <RaceCard key={r.race_id} race={r} index={i} mounted={mounted} onOpen={() => navigate(`/races/${r.race_id}`)} />
+            <RaceCard key={`${r.race_id}_${r.round}`} race={r} index={i} mounted={mounted} onOpen={() => navigate(`/races/${r.race_id}`)} />
           ))}
           {races.length === 0 && Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="h-[220px] rounded-2xl bg-[#0d0e12] border border-white/5 animate-pulse" />

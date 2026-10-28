@@ -22,8 +22,9 @@ export function DataSourceNote({
 
   return (
     <p className={`text-[10px] leading-relaxed font-mono ${tone} ${className}`}>
-      Data via <span className={variant === 'panel' ? 'text-neutral-400' : 'text-gray-500'}>FastF1</span>,
-      which reads the official F1 timing feed. Coverage varies by session — a circuit
+      Data via <span className={variant === 'panel' ? 'text-neutral-400' : 'text-gray-500'}>FastF1</span> and{' '}
+      <span className={variant === 'panel' ? 'text-neutral-400' : 'text-gray-500'}>OpenF1</span>,
+      which read the official F1 timing feed. Coverage varies by session — a circuit
       that looks rough, a missing view, or gaps in a car&apos;s trace come from the
       upstream data for that event, not from GridLock.
     </p>
