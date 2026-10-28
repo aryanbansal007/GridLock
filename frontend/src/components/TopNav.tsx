@@ -14,13 +14,9 @@ const NAV_ITEMS = [
 
 // ─── Types (mirror backend/src/cache/season/<year>/{standings,calendar}.json) ──
 
-interface DriverStanding { name: string; team: string; number: string }
-interface ConstructorStanding { name: string }
-interface StandingsResponse { drivers: DriverStanding[]; constructors: ConstructorStanding[] }
 interface RaceEntry { round: number; name: string; circuit: string; date: string; status: 'completed' | 'ongoing' | 'upcoming'; race_id: string; race_time?: string | null }
 interface CalendarResponse { races: RaceEntry[] }
 
-type SearchResult = { kind: 'Driver' | 'Team' | 'Race'; label: string; sub: string; onSelect: () => void };
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
@@ -51,12 +47,7 @@ export const TopNav: React.FC = () => {
   const [connected, setConnected] = useState(false);
 
   const [calendar, setCalendar] = useState<CalendarResponse | null>(null);
-  const [standings, setStandings] = useState<StandingsResponse | null>(null);
 
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [query, setQuery] = useState('');
-  const searchRef = useRef<HTMLDivElement>(null);
-  const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Browsing needs no account; the nav shows Log in / Sign up instead of the profile menu
   // when there is no token.
@@ -90,7 +81,6 @@ export const TopNav: React.FC = () => {
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (profileRef.current && !profileRef.current.contains(e.target as Node)) setProfileOpen(false);
-      if (searchRef.current && !searchRef.current.contains(e.target as Node)) setSearchOpen(false);
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
@@ -112,18 +102,14 @@ export const TopNav: React.FC = () => {
     return () => { cancelled = true; clearInterval(id); };
   }, []);
 
-  // Real season data — powers the next-race chip and search
+  // Real season data — powers the next-race chip
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const [cRes, sRes] = await Promise.all([
-          fetch(seasonUrl(SEASON_YEAR, 'calendar')),
-          fetch(seasonUrl(SEASON_YEAR, 'standings')),
-        ]);
+        const cRes = await fetch(seasonUrl(SEASON_YEAR, 'calendar'));
         if (cancelled) return;
         if (cRes.ok) setCalendar(await cRes.json());
-        if (sRes.ok) setStandings(await sRes.json());
       } catch {
         // Nav bar degrades to logo + links if the backend is unreachable
       }
@@ -146,30 +132,6 @@ export const TopNav: React.FC = () => {
   // FastF1); fall back to 13:00 UTC on the date only when it's missing.
   const target = nextRace ? new Date(nextRace.race_time ?? `${nextRace.date}T13:00:00Z`) : null;
   const { d, h, m, s } = useCountdown(target);
-
-  const results = useMemo<SearchResult[]>(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return [];
-    const out: SearchResult[] = [];
-    for (const drv of standings?.drivers ?? []) {
-      if (drv.name.toLowerCase().includes(q) || drv.team.toLowerCase().includes(q)) {
-        out.push({ kind: 'Driver', label: drv.name, sub: drv.team, onSelect: () => navigate('/drivers') });
-      }
-    }
-    for (const team of standings?.constructors ?? []) {
-      if (team.name.toLowerCase().includes(q)) {
-        out.push({ kind: 'Team', label: team.name, sub: 'Constructor', onSelect: () => navigate('/teams') });
-      }
-    }
-    for (const race of races) {
-      if (race.name.toLowerCase().includes(q) || race.circuit.toLowerCase().includes(q)) {
-        out.push({ kind: 'Race', label: race.name, sub: race.circuit, onSelect: () => navigate(`/races/${race.race_id}`) });
-      }
-    }
-    return out.slice(0, 8);
-  }, [query, standings, races, navigate]);
-
-  const closeSearch = () => { setSearchOpen(false); setQuery(''); };
 
   return (
     <nav
@@ -253,49 +215,8 @@ export const TopNav: React.FC = () => {
           ))}
         </div>
 
-        {/* RIGHT: search, connection status, race engineer, profile */}
+        {/* RIGHT: connection status, race engineer, profile */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-          <div ref={searchRef} style={{ position: 'relative' }}>
-            <SearchBox
-              open={searchOpen}
-              query={query}
-              onOpen={() => { setSearchOpen(true); requestAnimationFrame(() => searchInputRef.current?.focus()); }}
-              onChange={setQuery}
-              onEscape={closeSearch}
-              inputRef={searchInputRef}
-            />
-            {searchOpen && query.trim() && (
-              <div style={{
-                position: 'absolute', right: 0, top: 'calc(100% + 8px)', width: 300,
-                background: 'rgba(8,8,12,0.95)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-                border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, overflow: 'hidden',
-                boxShadow: '0 24px 56px rgba(0,0,0,0.65)', zIndex: 100, maxHeight: 320, overflowY: 'auto',
-              }}>
-                {results.length === 0 ? (
-                  <div style={{ padding: '14px 16px', fontSize: 12, color: 'rgba(255,255,255,0.35)' }}>No matches</div>
-                ) : results.map((r, i) => (
-                  <button
-                    key={i}
-                    onClick={() => { r.onSelect(); closeSearch(); }}
-                    style={{
-                      width: '100%', textAlign: 'left', border: 'none', cursor: 'pointer',
-                      padding: '10px 14px', background: 'transparent',
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
-                    }}
-                    onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
-                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                  >
-                    <span style={{ minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.label}</div>
-                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>{r.sub}</div>
-                    </span>
-                    <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', color: '#e10600', textTransform: 'uppercase', flexShrink: 0 }}>{r.kind}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
           <ConnectionDot connected={connected} />
 
           <div style={{ width: 1, height: 18, background: 'rgba(255,255,255,0.08)' }} />
@@ -384,41 +305,6 @@ function NavLink({ label, active, onClick }: { label: string; active: boolean; o
         transition: 'transform 0.35s cubic-bezier(0.22,1,0.36,1), opacity 0.25s ease, background 0.25s ease',
       }} />
     </button>
-  );
-}
-
-function SearchBox({
-  open, query, onOpen, onChange, onEscape, inputRef,
-}: {
-  open: boolean; query: string;
-  onOpen: () => void; onChange: (v: string) => void; onEscape: () => void;
-  inputRef: React.RefObject<HTMLInputElement | null>;
-}) {
-  return (
-    <div
-      onClick={onOpen}
-      style={{
-        display: 'flex', alignItems: 'center', gap: 8, height: 34,
-        width: open ? 220 : 34, padding: open ? '0 12px' : 0, justifyContent: open ? 'flex-start' : 'center',
-        borderRadius: 8, cursor: open ? 'text' : 'pointer', overflow: 'hidden',
-        background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
-        transition: 'width 0.25s ease, padding 0.25s ease',
-      }}
-    >
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.45)" strokeWidth="2" strokeLinecap="round" style={{ flexShrink: 0 }}>
-        <circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" />
-      </svg>
-      {open && (
-        <input
-          ref={inputRef}
-          value={query}
-          onChange={e => onChange(e.target.value)}
-          onKeyDown={e => { if (e.key === 'Escape') onEscape(); }}
-          placeholder="Search drivers, teams, races…"
-          style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', fontSize: 12, color: '#fff', minWidth: 0 }}
-        />
-      )}
-    </div>
   );
 }
 
