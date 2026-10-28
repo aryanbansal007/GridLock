@@ -189,7 +189,7 @@ export default function Profile() {
                 )}
                 {selectedDriver && (
                   <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 border border-white/10">
-                    <DriverAvatar src={selectedDriver.image_url} name={selectedDriver.name} teamColor={selectedDriver.team_color} size={16} />
+                    <DriverAvatar src={selectedDriver.image_url} name={selectedDriver.name} abbr={selectedDriver.abbreviation} teamColor={selectedDriver.team_color} size={16} />
                     <span className="text-[11px] font-bold uppercase tracking-widest" style={{ color: `#${selectedDriver.team_color}` }}>
                       #{selectedDriver.number} {selectedDriver.name}
                     </span>
@@ -236,7 +236,7 @@ export default function Profile() {
                       boxShadow: isSelected ? `0 0 0 1px ${color}55, 0 8px 20px ${color}33` : 'none',
                     }}
                   >
-                    <DriverAvatar src={d.image_url} name={d.name} teamColor={d.team_color} size={38} />
+                    <DriverAvatar src={d.image_url} name={d.name} abbr={d.abbreviation} teamColor={d.team_color} size={38} />
                     <span
                       className="text-[9px] font-bold uppercase tracking-tight text-center leading-tight truncate w-full transition-colors"
                       style={{ color: isSelected ? '#fff' : '#6b7280' }}

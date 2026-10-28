@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { API_BASE } from '../lib/f1';
 
 export default function AuthPage() {
   const navigate = useNavigate();
-  const [isLogin, setIsLogin] = useState(true);
+  // The landing page's sign-up CTAs link to /auth?mode=signup; everything else opens on log in.
+  const [searchParams] = useSearchParams();
+  const [isLogin, setIsLogin] = useState(searchParams.get('mode') !== 'signup');
   const [formData, setFormData] = useState({ username: '', email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -29,7 +31,9 @@ export default function AuthPage() {
       if (response.ok) {
         if (isLogin) {
           localStorage.setItem('token', data.token);
-          navigate('/dashboard');
+          // Only follow same-site paths ("/x", not "//host" or a full URL).
+          const next = searchParams.get('next');
+          navigate(next && /^\/(?!\/)/.test(next) ? next : '/dashboard');
         } else {
           setNotice('Account created — log in below.');
           setIsLogin(true);

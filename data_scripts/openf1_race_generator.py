@@ -172,6 +172,12 @@ def build_track_status_timeline(race_control, t0):
         elif category == "Flag" and scope == "Track":
             if flag == "RED":
                 mode = "red"
+            elif mode == "red":
+                # A red flag lasts until the race is restarted (SESSION STARTED below).
+                # "TRACK CLEAR" and the green pit-exit light arrive mid-suspension, while
+                # the cars are still stopped, and must not end it — FastF1's TrackStatus
+                # did end it there, which reported a half-hour stoppage as ~2 minutes.
+                pass
             elif flag in ("GREEN", "CLEAR"):
                 mode = "clear"
                 yellow_sectors.clear()
@@ -183,8 +189,9 @@ def build_track_status_timeline(race_control, t0):
                 yellow_sectors.add(sector)
             elif flag in ("GREEN", "CLEAR"):
                 yellow_sectors.discard(sector)
-        elif category == "SessionStatus" and message.startswith("STARTED") and mode == "red":
+        elif category == "SessionStatus" and message == "SESSION STARTED" and mode == "red":
             mode = "clear"
+            yellow_sectors.clear()
         push(t)
 
     if ending_since is not None:

@@ -10,6 +10,25 @@ import {
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
+// Playbar bands, one per race-status stretch. Safety car and VSC are both orange, told
+// apart by fill (solid vs striped); yellow and red keep their flag colours.
+const FLAG_BAND_ORDER = ["yellow", "red", "safety_car", "vsc"];
+const FLAG_BAND_LABEL: Record<string, string> = {
+  yellow: "Yellow",
+  red: "Red flag",
+  safety_car: "Safety car",
+  vsc: "VSC",
+};
+const FLAG_BAND_STYLE: Record<string, React.CSSProperties> = {
+  yellow: { background: "#facc15" },
+  red: { background: "#ef4444" },
+  safety_car: { background: "#fb923c" },
+  vsc: {
+    background:
+      "repeating-linear-gradient(135deg, #fb923c 0 3px, rgba(251,146,60,0.25) 3px 6px)",
+  },
+};
+
 const FLAG_META: Record<
   string,
   { label: string; color: string; bg: string; pulse: boolean }
@@ -249,6 +268,23 @@ const LiveSimulator = () => {
     return max;
   }, [raceData]);
 
+  // Contiguous stretches of the race under a flag, for the bands on the playbar. VSC and
+  // "VSC ending" are one band (same restriction on track), and each stretch runs from its
+  // first frame to the frame before the status changes.
+  const flagSegments = useMemo(() => {
+    if (!raceData) return [];
+    const kind = (f: string) => (f === "vsc_ending" ? "vsc" : f);
+    const out: { kind: string; start: number; end: number }[] = [];
+    raceData.frames.forEach((frame: { flag?: string }, i: number) => {
+      const k = kind(frame.flag || "clear");
+      if (k === "clear") return;
+      const last = out[out.length - 1];
+      if (last && last.kind === k && last.end === i - 1) last.end = i;
+      else out.push({ kind: k, start: i, end: i });
+    });
+    return out;
+  }, [raceData]);
+
   const retiredDrivers = useMemo(() => {
     if (!raceData) return new Set<string>();
     const frame = raceData.frames[frameIndex];
@@ -481,9 +517,30 @@ const LiveSimulator = () => {
 
         {/* ── PLAYBAR ── */}
         <div className="flex-shrink-0 px-6 pb-5 pt-3 bg-[#080808] border-t border-neutral-800/50">
+          {flagSegments.length > 0 && (
+            <div className="mb-1.5 flex flex-wrap items-center justify-end gap-x-4 gap-y-1 text-[9px] font-bold uppercase tracking-widest text-neutral-500">
+              {FLAG_BAND_ORDER.filter((k) => flagSegments.some((seg) => seg.kind === k)).map((k) => (
+                <span key={k} className="flex items-center gap-1.5">
+                  <span className="h-1.5 w-3 rounded-[1px]" style={FLAG_BAND_STYLE[k]} />
+                  {FLAG_BAND_LABEL[k]}
+                </span>
+              ))}
+            </div>
+          )}
           <div className="relative mb-3 group">
             <div className="absolute inset-0 flex items-center pointer-events-none">
               <div className="w-full h-0.5 bg-neutral-800 rounded-full" />
+              {flagSegments.map((seg, i) => (
+                <div
+                  key={i}
+                  className="absolute h-1.5 rounded-[1px] opacity-90"
+                  style={{
+                    left: `${(seg.start / Math.max(totalFrames - 1, 1)) * 100}%`,
+                    width: `max(2px, ${((seg.end - seg.start + 1) / Math.max(totalFrames - 1, 1)) * 100}%)`,
+                    ...FLAG_BAND_STYLE[seg.kind],
+                  }}
+                />
+              ))}
               <div
                 className="absolute h-0.5 bg-red-600 rounded-full transition-none"
                 style={{ width: `${progressPct}%` }}

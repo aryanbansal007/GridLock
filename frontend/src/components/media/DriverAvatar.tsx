@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import { driverInitials } from '../../lib/f1';
+import { useDriverImage } from './useDriverImage';
 
 // Driver portrait with graceful fallback to an initials chip in the team colour.
 // Photos are external (Wikipedia) so they can occasionally fail — never show a broken image.
@@ -7,18 +7,20 @@ import { driverInitials } from '../../lib/f1';
 // how differently each source photo is lit/composed, and a slight zoom keeps faces reading at
 // a uniform scale across photos with varying amounts of headroom.
 export function DriverAvatar({
-  src, name, teamColor, size = 44, rounded = 'full', className = '',
+  src, name, abbr, number, teamColor, size = 44, rounded = 'full', className = '',
 }: {
   src?: string;
   name: string;
+  abbr?: string;
+  number?: string | number;
   teamColor: string;
   size?: number;
   rounded?: 'full' | 'lg';
   className?: string;
 }) {
-  const [failed, setFailed] = useState(false);
+  const img = useDriverImage({ abbr, name, number, src });
   const radius = rounded === 'full' ? '9999px' : '12px';
-  const showPhoto = src && !failed;
+  const showPhoto = !!img.url;
   const color = `#${teamColor}`;
 
   return (
@@ -36,11 +38,16 @@ export function DriverAvatar({
     >
       {showPhoto ? (
         <img
-          src={src}
+          src={img.url}
           alt={name}
           loading="lazy"
-          onError={() => setFailed(true)}
-          style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center', transform: 'scale(1.08)' }}
+          onError={img.onError}
+          onLoad={img.onLoad}
+          style={
+            img.cutout
+              ? { width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'bottom center', background: `${color}33` }
+              : { width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center', transform: 'scale(1.08)' }
+          }
         />
       ) : (
         <span style={{ fontSize: size * 0.36, fontWeight: 800, color: '#fff', letterSpacing: '-0.02em' }}>

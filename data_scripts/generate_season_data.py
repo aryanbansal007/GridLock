@@ -23,6 +23,7 @@ Notes:
   - Re-run this script after each race weekend to refresh data.
 """
 
+import unicodedata
 import argparse
 import os
 import json
@@ -53,6 +54,10 @@ TEAM_COLORS = {
     "RB":               "6692FF",
     "Kick Sauber":      "52E252",
     "Haas F1 Team":     "B6BABD",
+    # 2026 entries the table above predates (values from the race session results)
+    "Racing Bulls":     "6C98FF",
+    "Audi":             "F50537",
+    "Cadillac":         "909090",
     # Legacy names (older seasons)
     "AlphaTauri":       "5E8FAA",
     "Alfa Romeo":       "C92D4B",
@@ -174,6 +179,29 @@ def safe_gp_key(event_name: str) -> str:
     return event_name.lower().replace(" ", "_")
 
 
+# The same team arrives under different names depending on which round the result came
+# from ("Red Bull" in one, "Red Bull Racing" in another; "RB F1 Team" / "Racing Bulls";
+# "Alpine F1 Team" / "Alpine"; "Cadillac F1 Team" / "Cadillac"). Constructor points were
+# accumulated per raw name, so a team's total was split across several rows — which put
+# Red Bull Racing (332) level with McLaren (355) instead of the true 355, for one. Names
+# are folded onto one canonical form before anything is added up.
+TEAM_ALIASES = {
+    "Red Bull":          "Red Bull Racing",
+    "Oracle Red Bull Racing": "Red Bull Racing",
+    "RB F1 Team":        "Racing Bulls",
+    "Visa Cash App RB":  "Racing Bulls",
+    "RB":                "Racing Bulls",
+    "Alpine F1 Team":    "Alpine",
+    "Cadillac F1 Team":  "Cadillac",
+    "Aston Martin Aramco": "Aston Martin",
+}
+
+
+def canonical_team(name: str) -> str:
+    name = name.strip()
+    return TEAM_ALIASES.get(name, name)
+
+
 def get_team_color(team_name: str) -> str:
     """Return hex color for a team, fallback to grey."""
     return TEAM_COLORS.get(team_name, "808080")
@@ -185,9 +213,37 @@ def get_circuit_image(event_name: str) -> str:
     return CIRCUIT_IMAGES.get(key, "")
 
 
+# Names as the people are known, where a source returns a longer legal form.
+DISPLAY_NAMES = {
+    "Andrea Kimi Antonelli": "Kimi Antonelli",
+}
+
+
+def _fold(s: str) -> str:
+    """Lower-case with accents removed, for comparing names across sources."""
+    return "".join(c for c in unicodedata.normalize("NFKD", s) if not unicodedata.combining(c)).lower().strip()
+
+
 def get_driver_image(full_name: str) -> str:
-    """Return portrait URL for a driver, fallback to empty string."""
-    return DRIVER_IMAGES.get(full_name, "")
+    """Return portrait URL for a driver, fallback to empty string.
+
+    Exact match first, then tolerant of what differs between data sources: accents
+    ("Nico Hülkenberg" / "Hulkenberg") and extra given names ("Andrea Kimi Antonelli" /
+    "Kimi Antonelli"). Without this a driver whose name is spelt differently in a given
+    round lost their photo.
+    """
+    if full_name in DRIVER_IMAGES:
+        return DRIVER_IMAGES[full_name]
+    folded = {_fold(k): v for k, v in DRIVER_IMAGES.items()}
+    n = _fold(full_name)
+    if n in folded:
+        return folded[n]
+    parts = n.split()
+    for key, url in folded.items():
+        kp = key.split()
+        if parts and kp and kp[-1] == parts[-1] and kp[0] in parts:
+            return url
+    return ""
 
 
 def points_for_position(pos, fastest_lap=False, in_top_10=False) -> int:
@@ -365,7 +421,7 @@ def build_calendar(year, schedule, completed_sessions, cache_dir):
                 res = main_race.results.sort_values("Position")
                 top = res.iloc[0]
                 winner_name = str(top.get("FullName", top.get("Abbreviation", "")))
-                winner_team = str(top.get("TeamName", ""))
+                winner_team = canonical_team(str(top.get("TeamName", "")))
             except Exception:
                 pass
 
@@ -439,9 +495,9 @@ def build_standings(year, completed_sessions):
 
             for _, row in results.iterrows():
                 abbr      = str(row.get("Abbreviation", ""))
-                full_name = str(row.get("FullName", abbr))
+                full_name = DISPLAY_NAMES.get(str(row.get("FullName", abbr)), str(row.get("FullName", abbr)))
                 number    = str(row.get("DriverNumber", ""))
-                team      = str(row.get("TeamName", "Unknown"))
+                team      = canonical_team(str(row.get("TeamName", "Unknown")))
                 color     = get_team_color(team)
                 
                 position  = row.get("Position")
@@ -525,11 +581,14 @@ def build_standings(year, completed_sessions):
             c["points_last_race"] = c["points"] - constructor_points_before.get(team, 0.0)
 
     # ── Sort and assign positions ──
-    driver_list = sorted(drivers.values(), key=lambda d: d["points"], reverse=True)
+    # Level on points: most wins, then most podiums. The championship rule counts every
+    # finishing position down the order (wins, then 2nds, then 3rds...); wins-then-podiums
+    # is the same order whenever wins are equal and one side has more top-three finishes.
+    driver_list = sorted(drivers.values(), key=lambda d: (d["points"], d["wins"], d["podiums"]), reverse=True)
     for i, d in enumerate(driver_list):
         d["position"] = i + 1
 
-    constructor_list = sorted(constructors.values(), key=lambda c: c["points"], reverse=True)
+    constructor_list = sorted(constructors.values(), key=lambda c: (c["points"], c["wins"], c["podiums"]), reverse=True)
     for i, c in enumerate(constructor_list):
         c["position"] = i + 1
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   SEASON_YEAR, flagFor, pad, shortName, fmtDateShort, logoFor, type StandingsResponse, type CalendarResponse, type DriverStanding, type ConstructorStanding, type RaceEntry, seasonUrl,
@@ -6,9 +6,17 @@ import {
 import { DriverAvatar } from '../components/media/DriverAvatar';
 import { TeamLogo } from '../components/media/TeamLogo';
 import { CircuitImage } from '../components/media/CircuitImage';
+import { PointsBar, GapText, PointsDelta } from '../components/standings/parts';
+import { rise } from '../components/standings/tokens';
 
 const FAV_TEAM_KEY = 'gridlock_favorite_team';
 const FAV_DRIVER_KEY = 'gridlock_favorite_driver';
+
+// Most points one driver can still add: 25 for a Grand Prix win plus 8 for a sprint win
+// on sprint weekends. Used for the "still in contention" count — a driver is mathematically
+// alive while their gap to the leader is no bigger than this.
+const RACE_WIN_PTS = 25;
+const SPRINT_WIN_PTS = 8;
 
 function useCountdown(target: Date | null) {
   const [now, setNow] = useState(() => Date.now());
@@ -60,11 +68,12 @@ export default function Dashboard() {
     return () => cancelAnimationFrame(id);
   }, []);
 
-  const races = useMemo(() => calendar?.races ?? [], [calendar]);
+  // Cancelled rounds (2026 lists a cancelled Bahrain and Saudi Arabia) never count.
+  const races = useMemo(() => (calendar?.races ?? []).filter(r => r.status !== 'cancelled'), [calendar]);
   const nextRace = useMemo(() => races.find(r => r.status === 'upcoming') ?? null, [races]);
   const liveRace = useMemo(() => races.find(r => r.status === 'ongoing') ?? null, [races]);
   const recentRaces = useMemo(() => races.filter(r => r.status === 'completed').slice(-4).reverse(), [races]);
-  const upcoming = useMemo(() => races.filter(r => r.status === 'upcoming').slice(0, 4), [races]);
+  const upcoming = useMemo(() => races.filter(r => r.status === 'upcoming').slice(0, 3), [races]);
 
   // Count down to the race's actual start (race_time is a full UTC timestamp from
   // FastF1); fall back to 13:00 UTC on the date only when it's missing (e.g. a
@@ -78,10 +87,12 @@ export default function Dashboard() {
   if (loading) return <LoadingState />;
   if (error || !standings || !calendar) return <ErrorState message={error} />;
 
+  const latestRaceId = recentRaces[0]?.race_id ?? null;
+
   return (
-    <div className="min-h-screen bg-[#050505] text-white pt-10 pb-20 font-sans selection:bg-[#e10600] selection:text-white">
+    <div className="min-h-screen bg-[#050505] pb-16 pt-8 font-sans text-[#F5F5F5] selection:bg-[#e10600] selection:text-white">
       <div
-        className="max-w-[1400px] mx-auto px-6 lg:px-8 space-y-6 transition-all duration-700 ease-out"
+        className="mx-auto max-w-[1400px] space-y-4 px-5 transition-all duration-700 ease-out sm:px-6 lg:px-8"
         style={{ opacity: mounted ? 1 : 0, transform: mounted ? 'translateY(0)' : 'translateY(16px)' }}
       >
         <HeroSection
@@ -90,33 +101,35 @@ export default function Dashboard() {
           onRaceDetails={() => nextRace && navigate(`/races/${nextRace.race_id}`)}
         />
 
-        <Section delay={100}>
-          <div className="grid grid-cols-1 lg:grid-cols-[1.55fr_1fr] gap-6">
-            <DriversChampionship drivers={drivers} onOpen={() => navigate('/drivers')} />
-            <ConstructorsChampionship constructors={constructors} onOpen={() => navigate('/teams')} />
-          </div>
-        </Section>
-
-        <Section delay={200}>
-          <FollowingCard drivers={drivers} constructors={constructors} onOpenProfile={() => navigate('/profile')} />
-        </Section>
-
-        <Section delay={250}>
-          <QuickLaunch
-            latestRaceId={recentRaces[0]?.race_id ?? null}
+        <div style={rise(1)}>
+          <CommandBar
             onRaceEngineer={() => navigate('/race-engineer')}
             onSimulator={() => navigate('/simulator-setup')}
-            onAnalysis={(id) => navigate(`/analysis/${id}`)}
+            onAnalysis={latestRaceId ? () => navigate(`/analysis/${latestRaceId}`) : null}
+            latestName={recentRaces[0] ? shortName(recentRaces[0].name) : null}
           />
-        </Section>
+        </div>
 
-        <Section delay={300}>
-          <RecentHighlights races={recentRaces} onOpen={(id) => navigate(`/races/${id}`)} onSimulate={() => navigate('/simulator-setup')} />
-        </Section>
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+          <div className="lg:col-span-5" style={rise(2)}>
+            <DriversPanel drivers={drivers} mounted={mounted} onOpen={() => navigate('/drivers')} />
+          </div>
+          <div className="lg:col-span-4" style={rise(3)}>
+            <ConstructorsPanel constructors={constructors} mounted={mounted} onOpen={() => navigate('/teams')} />
+          </div>
+          <div className="lg:col-span-3" style={rise(4)}>
+            <SeasonPanel races={races} drivers={drivers} constructors={constructors} onOpenProfile={() => navigate('/profile')} onCalendar={() => navigate('/events')} />
+          </div>
+        </div>
 
-        <Section delay={400}>
-          <UpNext races={upcoming} onViewAll={() => navigate('/events')} onOpen={(id) => navigate(`/races/${id}`)} />
-        </Section>
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+          <div className="lg:col-span-8" style={rise(5)}>
+            <RecentResults races={recentRaces} onOpen={(id) => navigate(`/races/${id}`)} onAnalyze={(id) => navigate(`/analysis/${id}`)} />
+          </div>
+          <div className="lg:col-span-4" style={rise(6)}>
+            <UpNext races={upcoming} onViewAll={() => navigate('/events')} onOpen={(id) => navigate(`/races/${id}`)} />
+          </div>
+        </div>
       </div>
 
       <style>{`
@@ -128,34 +141,29 @@ export default function Dashboard() {
   );
 }
 
-// ─── Section (staggered entrance) ───────────────────────────────────────────
+// ─── Panel chrome ───────────────────────────────────────────────────────────
 
-function Section({ children, delay }: { children: React.ReactNode; delay: number }) {
-  const [visible, setVisible] = useState(false);
-  useEffect(() => {
-    const id = setTimeout(() => setVisible(true), delay);
-    return () => clearTimeout(id);
-  }, [delay]);
+function Panel({ title, action, onAction, children, className = '' }: {
+  title: string; action?: string; onAction?: () => void; children: ReactNode; className?: string;
+}) {
   return (
-    <div className="transition-all duration-700 ease-out"
-      style={{ opacity: visible ? 1 : 0, transform: visible ? 'translateY(0)' : 'translateY(14px)' }}>
-      {children}
-    </div>
+    <section className={`flex h-full flex-col border border-[#24262B] bg-[#0B0D10] ${className}`}>
+      <header className="flex items-center justify-between gap-3 border-b border-[#24262B] px-4 py-3">
+        <h2 className="flex items-center gap-2.5 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-[#969BA5]">
+          <span className="h-1.5 w-1.5 bg-[#E10600]" aria-hidden />{title}
+        </h2>
+        {action && onAction && (
+          <button onClick={onAction} className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[#969BA5] transition-colors hover:text-[#FF2D24] focus-visible:text-[#FF2D24] focus-visible:outline-none">
+            {action} →
+          </button>
+        )}
+      </header>
+      <div className="flex flex-1 flex-col">{children}</div>
+    </section>
   );
 }
 
-function SectionHeader({ label, action, onAction }: { label: string; action?: string; onAction?: () => void }) {
-  return (
-    <div className="flex items-center justify-between mb-4">
-      <span className="text-[10px] font-bold tracking-widest uppercase text-gray-500">{label}</span>
-      {action && (
-        <button onClick={onAction} className="text-[10px] font-bold tracking-widest uppercase text-[#e10600] hover:text-[#ff2a1f] transition-colors">
-          {action} →
-        </button>
-      )}
-    </div>
-  );
-}
+const lastName = (name: string) => name.trim().split(/\s+/).slice(-1)[0];
 
 // ─── Hero ───────────────────────────────────────────────────────────────────
 
@@ -234,271 +242,295 @@ function HeroSection({
   );
 }
 
-// ─── Championship Battle (top 2) ────────────────────────────────────────────
 
-// ─── Drivers' Championship (replaces the 4 tiles) ───────────────────────────
+// ─── Command bar: one click into the app's deepest tools ────────────────────
 
-function DriversChampionship({ drivers, onOpen }: { drivers: DriverStanding[]; onOpen: () => void }) {
-  const top = drivers.slice(0, 5);
+function CommandBar({ onRaceEngineer, onSimulator, onAnalysis, latestName }: {
+  onRaceEngineer: () => void; onSimulator: () => void; onAnalysis: (() => void) | null; latestName: string | null;
+}) {
+  const items = [
+    { label: 'Race Engineer AI', sub: 'Ask about strategy, rules, history', onClick: onRaceEngineer, icon: <path d="M4 5h16v10H9l-5 4V5Z M8 9h8 M8 12h5" /> },
+    { label: 'Race Simulator', sub: 'Replay any race on track', onClick: onSimulator, icon: <path d="M5 4l14 8-14 8V4Z" /> },
+    ...(onAnalysis ? [{ label: 'Latest Analysis', sub: latestName ? `${latestName} · telemetry & strategy` : 'Telemetry & strategy', onClick: onAnalysis, icon: <path d="M3 3v18h18 M7 15l4-6 4 3 4-8" /> }] : []),
+  ];
   return (
-    <div className="rounded-2xl bg-[#0d0e12] border border-white/5 p-6">
-      <SectionHeader label="Drivers' Championship" action="Full Table" onAction={onOpen} />
-      <div className="flex flex-col">
+    <div className="grid grid-cols-1 gap-px border border-[#24262B] bg-[#24262B] sm:grid-cols-3">
+      {items.map((t) => (
+        <button
+          key={t.label}
+          onClick={t.onClick}
+          className="group flex items-center gap-3.5 bg-[#0B0D10] px-4 py-3.5 text-left transition-colors hover:bg-[#111318] focus-visible:bg-[#111318] focus-visible:outline-none"
+        >
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center border border-[#24262B] text-[#E10600] transition-colors group-hover:border-[#E10600]/60">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>{t.icon}</svg>
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[13px] font-bold text-[#F5F5F5]">{t.label}</span>
+            <span className="block truncate text-[11px] text-[#6B7079]">{t.sub}</span>
+          </span>
+          <span className="text-[#6B7079] transition-transform group-hover:translate-x-0.5 group-hover:text-[#F5F5F5]" aria-hidden>→</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ─── Drivers' championship ──────────────────────────────────────────────────
+
+function DriversPanel({ drivers, mounted, onOpen }: { drivers: DriverStanding[]; mounted: boolean; onOpen: () => void }) {
+  const top = drivers.slice(0, 6);
+  const leader = top[0]?.points ?? 0;
+  return (
+    <Panel title="Drivers' championship" action="Full table" onAction={onOpen}>
+      <ol>
         {top.map((drv, i) => {
           const color = `#${drv.team_color}`;
-          const gained = drv.points_last_race ?? 0;
           return (
-            <div key={drv.abbreviation} className="group flex items-center gap-3 py-2.5 border-b border-white/[0.04] last:border-0">
-              <div className="w-5 text-center font-mono text-sm font-bold shrink-0" style={{ color: i === 0 ? '#e10600' : 'rgba(255,255,255,0.4)' }}>{drv.position}</div>
-              <DriverAvatar src={drv.image_url} name={drv.name} teamColor={drv.team_color} size={38} />
-              <div className="w-1 h-8 rounded-full shrink-0" style={{ background: color }} />
-              <div className="min-w-0 flex-1">
-                <div className="text-sm font-bold text-white truncate">{drv.name}</div>
-                <div className="text-[11px] text-gray-500 truncate">{drv.team}</div>
-              </div>
-              <div className="text-right shrink-0">
-                <div className="font-mono text-sm font-black tabular-nums text-white">{drv.points}</div>
-                <div className="text-[10px] font-mono" style={{ color: gained > 0 ? '#22c55e' : 'rgba(255,255,255,0.3)' }}>
-                  {gained > 0 ? `+${gained} last race` : '—'}
+            <li key={drv.abbreviation} className="relative grid grid-cols-[1.5rem_auto_1fr_auto] items-center gap-3 border-b border-[#14161A] px-4 py-2.5 last:border-b-0">
+              <span className="absolute inset-y-0 left-0 w-[2px]" style={{ background: color }} aria-hidden />
+              <span className={`text-center font-mono text-[13px] font-black tabular-nums ${i === 0 ? 'text-[#FFD700]' : 'text-[#6B7079]'}`}>{drv.position}</span>
+              <DriverAvatar src={drv.image_url} name={drv.name} abbr={drv.abbreviation} number={drv.number} teamColor={drv.team_color} size={34} rounded="lg" />
+              <div className="min-w-0">
+                <div className="flex items-baseline gap-2">
+                  <span className="truncate text-[14px] font-black uppercase tracking-[-0.01em]">{lastName(drv.name)}</span>
+                  <span className="hidden truncate text-[11px] text-[#6B7079] sm:inline">{drv.team}</span>
                 </div>
+                <div className="mt-1.5 pr-2"><PointsBar value={drv.points} max={leader} color={color} mounted={mounted} delay={i * 50} /></div>
               </div>
-            </div>
+              <div className="flex flex-col items-end">
+                <span className="flex items-baseline gap-1.5">
+                  <PointsDelta value={drv.points_last_race} />
+                  <span className="font-mono text-[17px] font-black leading-none tabular-nums">{drv.points}</span>
+                </span>
+                <span className="mt-1"><GapText gap={leader - drv.points} /></span>
+              </div>
+            </li>
           );
         })}
-      </div>
-    </div>
+      </ol>
+    </Panel>
   );
 }
 
-// ─── Constructors' Championship ─────────────────────────────────────────────
+// ─── Constructors' championship ─────────────────────────────────────────────
 
-function ConstructorsChampionship({ constructors, onOpen }: { constructors: ConstructorStanding[]; onOpen: () => void }) {
-  const top = constructors.slice(0, 3);
+function ConstructorsPanel({ constructors, mounted, onOpen }: { constructors: ConstructorStanding[]; mounted: boolean; onOpen: () => void }) {
+  const top = constructors.slice(0, 5);
+  const leader = top[0]?.points ?? 0;
   return (
-    <div className="rounded-2xl bg-[#0d0e12] border border-white/5 p-6">
-      <SectionHeader label="Constructors' Championship" action="Full Table" onAction={onOpen} />
-      <div className="flex flex-col">
+    <Panel title="Constructors" action="Full table" onAction={onOpen}>
+      <ol>
         {top.map((team, i) => {
           const color = `#${team.color}`;
-          const gained = team.points_last_race ?? 0;
           return (
-            <div key={team.name} className="group flex items-center gap-3 py-2.5 border-b border-white/[0.04] last:border-0">
-              <div className="w-5 text-center font-mono text-sm font-bold shrink-0" style={{ color: i === 0 ? '#e10600' : 'rgba(255,255,255,0.4)' }}>{team.position}</div>
-              <TeamLogo src={logoFor(team.name)} name={team.name} color={team.color} size={38} />
-              <div className="w-1 h-8 rounded-full shrink-0" style={{ background: color }} />
-              <div className="min-w-0 flex-1">
-                <div className="text-sm font-bold text-white truncate">{team.name}</div>
-                <div className="text-[11px] text-gray-500 truncate">{team.wins} Wins · {team.podiums} Podiums</div>
+            <li key={team.name} className="relative grid grid-cols-[1.5rem_auto_1fr_auto] items-center gap-3 border-b border-[#14161A] px-4 py-[11px] last:border-b-0">
+              <span className="absolute inset-y-0 left-0 w-[2px]" style={{ background: color }} aria-hidden />
+              <span className={`text-center font-mono text-[13px] font-black tabular-nums ${i === 0 ? 'text-[#FFD700]' : 'text-[#6B7079]'}`}>{team.position}</span>
+              <TeamLogo src={logoFor(team.name)} name={team.name} color={team.color} size={32} />
+              <div className="min-w-0">
+                <div className="truncate text-[14px] font-black uppercase tracking-[-0.01em]">{team.name}</div>
+                <div className="mt-1.5 pr-2"><PointsBar value={team.points} max={leader} color={color} mounted={mounted} delay={i * 50} /></div>
               </div>
-              <div className="text-right shrink-0">
-                <div className="font-mono text-sm font-black tabular-nums text-white">{team.points}</div>
-                <div className="text-[10px] font-mono" style={{ color: gained > 0 ? '#22c55e' : 'rgba(255,255,255,0.3)' }}>
-                  {gained > 0 ? `+${gained} last race` : '—'}
-                </div>
+              <div className="flex flex-col items-end">
+                <span className="flex items-baseline gap-1.5">
+                  <PointsDelta value={team.points_last_race} />
+                  <span className="font-mono text-[17px] font-black leading-none tabular-nums">{team.points}</span>
+                </span>
+                <span className="mt-1"><GapText gap={leader - team.points} /></span>
               </div>
-            </div>
+            </li>
           );
         })}
-      </div>
-    </div>
+      </ol>
+    </Panel>
   );
 }
 
-// ─── Following (personalized favorite driver/team) ─────────────────────────
+// ─── Season: progress, title maths, followed favourites ─────────────────────
 
-function FollowingCard({
-  drivers, constructors, onOpenProfile,
-}: { drivers: DriverStanding[]; constructors: ConstructorStanding[]; onOpenProfile: () => void }) {
+function SeasonPanel({ races, drivers, constructors, onOpenProfile, onCalendar }: {
+  races: RaceEntry[]; drivers: DriverStanding[]; constructors: ConstructorStanding[]; onOpenProfile: () => void; onCalendar: () => void;
+}) {
+  const done = races.filter((r) => r.status === 'completed').length;
+  const remaining = races.filter((r) => r.status !== 'completed');
+  const sprintsLeft = remaining.filter((r) => r.has_sprint).length;
+  const maxLeft = remaining.length * RACE_WIN_PTS + sprintsLeft * SPRINT_WIN_PTS;
+  const leader = drivers[0];
+  const lead = leader && drivers[1] ? leader.points - drivers[1].points : 0;
+  const alive = leader ? drivers.filter((d) => leader.points - d.points <= maxLeft).length : 0;
+
   const [favTeamName] = useState(() => localStorage.getItem(FAV_TEAM_KEY) ?? '');
   const [favDriverAbbr] = useState(() => localStorage.getItem(FAV_DRIVER_KEY) ?? '');
+  const favDriver = drivers.find((d) => d.abbreviation === favDriverAbbr);
+  const favTeam = constructors.find((t) => t.name === favTeamName);
 
-  const favDriver = drivers.find(d => d.abbreviation === favDriverAbbr);
-  const favTeam = constructors.find(t => t.name === favTeamName);
-
-  if (!favDriver && !favTeam) {
-    return (
-      <div className="rounded-2xl bg-[#0d0e12] border border-white/5 p-6 flex items-center justify-between gap-4 flex-wrap">
-        <div>
-          <span className="text-[10px] font-bold tracking-widest uppercase text-gray-500 block mb-1">Following</span>
-          <p className="text-sm text-gray-400">Pick a favorite driver and team in your profile to follow them here.</p>
+  return (
+    <Panel title="Season" action="Calendar" onAction={onCalendar}>
+      <div className="px-4 pt-4">
+        <div className="flex items-baseline justify-between">
+          <span className="font-mono text-[28px] font-black leading-none tracking-[-0.03em] tabular-nums">
+            {done}<span className="text-[15px] text-[#6B7079]">/{races.length}</span>
+          </span>
+          <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-[#969BA5]">rounds run</span>
         </div>
-        <button
-          onClick={onOpenProfile}
-          className="text-[11px] font-bold uppercase tracking-widest text-[#e10600] hover:text-[#ff2a1f] transition-colors shrink-0 cursor-pointer"
-        >
-          Set Favorites →
-        </button>
+        <div className="mt-3 flex gap-[2px]" aria-label={`${done} of ${races.length} rounds completed`} role="img">
+          {races.map((r, i) => (
+            <span
+              key={`${r.race_id}${r.round}`}
+              className="h-5 flex-1"
+              title={`R${r.round} ${shortName(r.name)}`}
+              style={{ background: r.status === 'completed' ? '#E10600' : i === done ? '#F5F5F5' : '#1A1C20' }}
+            />
+          ))}
+        </div>
       </div>
-    );
-  }
 
-  return (
-    <div className="rounded-2xl bg-[#0d0e12] border border-white/5 p-6">
-      <SectionHeader label="Following" action="Edit" onAction={onOpenProfile} />
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {favDriver && (
-          <div className="flex items-center gap-3 rounded-xl bg-white/[0.02] border border-white/5 p-4">
-            <DriverAvatar src={favDriver.image_url} name={favDriver.name} teamColor={favDriver.team_color} size={48} rounded="lg" />
-            <div className="min-w-0 flex-1">
-              <div className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-0.5">Your Driver</div>
-              <div className="text-sm font-bold text-white truncate">{favDriver.name}</div>
-              <div className="text-[11px] text-gray-500 truncate">P{favDriver.position} · {favDriver.points} pts</div>
-            </div>
-            {(favDriver.points_last_race ?? 0) > 0 && (
-              <div className="text-xs font-mono font-bold text-green-400 shrink-0">+{favDriver.points_last_race}</div>
+      <dl className="mt-4 grid grid-cols-2 gap-px border-y border-[#24262B] bg-[#24262B]">
+        <div className="bg-[#0B0D10] px-4 py-3">
+          <dt className="font-mono text-[9px] uppercase tracking-[0.16em] text-[#6B7079]">Leader's margin</dt>
+          <dd className="mt-1 font-mono text-[18px] font-black tabular-nums">{lead}<span className="ml-1 text-[10px] text-[#6B7079]">pts</span></dd>
+        </div>
+        <div className="bg-[#0B0D10] px-4 py-3">
+          <dt className="font-mono text-[9px] uppercase tracking-[0.16em] text-[#6B7079]">Max points left</dt>
+          <dd className="mt-1 font-mono text-[18px] font-black tabular-nums">{maxLeft}</dd>
+        </div>
+      </dl>
+
+      <div className="px-4 pt-3 text-[12px] leading-relaxed text-[#969BA5]">
+        {leader ? (
+          alive <= 1
+            ? <><span className="font-bold text-[#F5F5F5]">{leader.name}</span> has the title mathematically secured.</>
+            : <><span className="font-bold text-[#F5F5F5]">{alive} drivers</span> can still win the title{sprintsLeft ? ` · ${sprintsLeft} sprint${sprintsLeft > 1 ? 's' : ''} left` : ''}.</>
+        ) : 'Standings not available yet.'}
+      </div>
+      {alive > 1 && (
+        <ol className="space-y-1.5 px-4 pb-3 pt-2.5">
+          {drivers.slice(0, Math.min(alive, 4)).map((d) => (
+            <li key={d.abbreviation} className="flex items-center gap-2 font-mono text-[11px] tabular-nums">
+              <span className="h-2.5 w-[2px]" style={{ background: `#${d.team_color}` }} aria-hidden />
+              <span className="w-9 font-bold text-[#F5F5F5]">{d.abbreviation}</span>
+              <span className="text-[#6B7079]">{d.points} pts</span>
+              <span className="ml-auto"><GapText gap={leader.points - d.points} /></span>
+            </li>
+          ))}
+        </ol>
+      )}
+
+      <div className="mt-auto border-t border-[#24262B] px-4 py-3">
+        {favDriver || favTeam ? (
+          <div className="space-y-2">
+            {favDriver && (
+              <div className="flex items-center gap-2.5">
+                <DriverAvatar src={favDriver.image_url} name={favDriver.name} abbr={favDriver.abbreviation} number={favDriver.number} teamColor={favDriver.team_color} size={24} />
+                <span className="flex-1 truncate text-[12px] font-bold">{lastName(favDriver.name)}</span>
+                <span className="font-mono text-[11px] tabular-nums text-[#969BA5]">P{favDriver.position} · {favDriver.points}</span>
+              </div>
+            )}
+            {favTeam && (
+              <div className="flex items-center gap-2.5">
+                <TeamLogo src={logoFor(favTeam.name)} name={favTeam.name} color={favTeam.color} size={24} />
+                <span className="flex-1 truncate text-[12px] font-bold">{favTeam.name}</span>
+                <span className="font-mono text-[11px] tabular-nums text-[#969BA5]">P{favTeam.position} · {favTeam.points}</span>
+              </div>
             )}
           </div>
-        )}
-        {favTeam && (
-          <div className="flex items-center gap-3 rounded-xl bg-white/[0.02] border border-white/5 p-4">
-            <TeamLogo src={logoFor(favTeam.name)} name={favTeam.name} color={favTeam.color} size={48} />
-            <div className="min-w-0 flex-1">
-              <div className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-0.5">Your Team</div>
-              <div className="text-sm font-bold text-white truncate">{favTeam.name}</div>
-              <div className="text-[11px] text-gray-500 truncate">P{favTeam.position} · {favTeam.points} pts</div>
-            </div>
-            {(favTeam.points_last_race ?? 0) > 0 && (
-              <div className="text-xs font-mono font-bold text-green-400 shrink-0">+{favTeam.points_last_race}</div>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ─── Quick Launch (one-click into the app's deepest features) ──────────────
-
-function QuickLaunch({
-  latestRaceId, onRaceEngineer, onSimulator, onAnalysis,
-}: { latestRaceId: string | null; onRaceEngineer: () => void; onSimulator: () => void; onAnalysis: (raceId: string) => void }) {
-  const tiles = [
-    {
-      label: 'Race Engineer AI', sub: 'Ask about strategy, rules, or any driver/team',
-      onClick: onRaceEngineer,
-      icon: <path d="M12 2a4 4 0 0 1 4 4v3a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4Z M6 11v1a6 6 0 0 0 12 0v-1 M12 18v3 M9 21h6" />,
-    },
-    {
-      label: 'Live Race Simulator', sub: 'Replay any race lap-by-lap on track',
-      onClick: onSimulator,
-      icon: <path d="M3 13h18l-2-6H5l-2 6Z M5 13v6 M19 13v6 M9 7V4h6v3" />,
-    },
-    ...(latestRaceId ? [{
-      label: 'Latest Race Analysis', sub: 'Telemetry, tyre strategy & track dominance',
-      onClick: () => onAnalysis(latestRaceId),
-      icon: <path d="M3 3v18h18 M7 15l4-6 4 3 4-8" />,
-    }] : []),
-  ];
-
-  return (
-    <div className="rounded-2xl bg-[#0d0e12] border border-white/5 p-6">
-      <SectionHeader label="Quick Launch" />
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {tiles.map(t => (
-          <button
-            key={t.label}
-            onClick={t.onClick}
-            className="group text-left rounded-xl bg-black/30 border border-white/5 hover:border-[#e10600]/40 p-4 transition-all duration-300 hover:-translate-y-0.5 flex items-start gap-3"
-          >
-            <div className="w-9 h-9 rounded-lg bg-[#e10600]/10 border border-[#e10600]/20 flex items-center justify-center shrink-0 group-hover:bg-[#e10600]/20 transition-colors">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#e10600" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{t.icon}</svg>
-            </div>
-            <div className="min-w-0">
-              <div className="text-sm font-bold text-white group-hover:text-[#e10600] transition-colors">{t.label}</div>
-              <div className="text-[11px] text-gray-500 mt-0.5">{t.sub}</div>
-            </div>
+        ) : (
+          <button onClick={onOpenProfile} className="w-full text-left font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[#969BA5] transition-colors hover:text-[#FF2D24]">
+            ★ Follow a driver &amp; team →
           </button>
-        ))}
+        )}
       </div>
-    </div>
+    </Panel>
   );
 }
 
-// ─── Recent Highlights ──────────────────────────────────────────────────────
+// ─── Recent results ─────────────────────────────────────────────────────────
 
-function RecentHighlights({ races, onOpen, onSimulate }: { races: RaceEntry[]; onOpen: (id: string) => void; onSimulate: () => void }) {
-  if (!races.length) {
-    return (
-      <div className="rounded-2xl bg-[#0d0e12] border border-white/5 p-6 flex items-center justify-center text-gray-500 text-sm font-mono">
-        No races completed yet this season
-      </div>
-    );
-  }
+function RecentResults({ races, onOpen, onAnalyze }: { races: RaceEntry[]; onOpen: (id: string) => void; onAnalyze: (id: string) => void }) {
   return (
-    <div className="rounded-2xl bg-[#0d0e12] border border-white/5 p-6">
-      <SectionHeader label="Recent Race Highlights" />
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {races.map(r => (
-          <div key={r.race_id} className="group relative rounded-xl overflow-hidden bg-black/40 border border-white/5 hover:border-white/20 transition-all duration-300 hover:-translate-y-1">
-            <div className="relative h-36 overflow-hidden">
-              <CircuitImage src={r.image_url} alt={r.circuit} className="w-full h-full object-cover transition-all duration-500 group-hover:scale-110" style={{ opacity: 0.7 }} />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-              <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5">
-                <span className="text-base">{flagFor(r.country)}</span>
-                <span className="text-[10px] font-bold tracking-widest uppercase text-white/70 bg-black/40 px-1.5 py-0.5 rounded">R{r.round}</span>
-              </div>
-              <div className="absolute bottom-2.5 left-3 right-3">
-                <div className="text-sm font-bold text-white truncate">{shortName(r.name)}</div>
-                <div className="text-[10px] text-gray-400 font-mono">{r.circuit} · {fmtDateShort(r.date)}</div>
-              </div>
-            </div>
-            <div className="p-3 flex items-center justify-between gap-2">
-              {r.winner ? (
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="text-sm">🏆</span>
-                  <div className="min-w-0">
-                    <div className="text-xs font-bold text-white truncate">{r.winner}</div>
-                    <div className="text-[10px] font-semibold uppercase tracking-wide truncate" style={{ color: r.winner_team === 'Ferrari' ? '#e8002d' : 'rgba(255,255,255,0.4)' }}>{r.winner_team}</div>
-                  </div>
-                </div>
-              ) : <span className="text-[11px] text-gray-600 font-mono">—</span>}
-              <button
-                onClick={() => onOpen(r.race_id)}
-                className="shrink-0 text-[10px] font-bold uppercase tracking-widest text-[#e10600] opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-              >
-                Analyze →
+    <Panel title="Recent results">
+      {!races.length ? (
+        <p className="px-4 py-10 text-center font-mono text-[12px] text-[#6B7079]">No races completed yet this season</p>
+      ) : (
+        <div className="grid grid-cols-2 gap-px bg-[#24262B] xl:grid-cols-4">
+          {races.map((r) => (
+            <article key={r.race_id} className="group flex flex-col bg-[#0B0D10]">
+              <button onClick={() => onOpen(r.race_id)} className="relative h-24 overflow-hidden text-left focus-visible:outline-none" aria-label={`${r.name} race page`}>
+                <CircuitImage src={r.image_url} alt="" className="h-full w-full object-cover opacity-60 transition-transform duration-500 group-hover:scale-105" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0B0D10] via-[#0B0D10]/50 to-transparent" />
+                <span className="absolute left-3 top-2.5 bg-[#050505]/70 px-1.5 py-0.5 font-mono text-[10px] font-bold text-[#F5F5F5]">R{r.round}</span>
+                <span className="absolute bottom-2 left-3 right-3 flex items-center gap-1.5">
+                  <span className="text-[13px]" aria-hidden>{flagFor(r.country)}</span>
+                  <span className="truncate text-[13px] font-black">{shortName(r.name)}</span>
+                </span>
               </button>
-            </div>
-          </div>
-        ))}
-      </div>
-      <div className="mt-4 flex justify-center">
-        <button onClick={onSimulate} className="text-[11px] font-bold uppercase tracking-widest text-gray-400 hover:text-white transition-colors">
-          ⚡ Replay any race in the Simulator →
-        </button>
-      </div>
-    </div>
+              <div className="flex flex-1 flex-col justify-between gap-3 px-3 pb-3 pt-2">
+                <div className="truncate font-mono text-[10px] uppercase tracking-[0.12em] text-[#6B7079]">{r.circuit} · {fmtDateShort(r.date)}</div>
+                {r.winner ? (
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-[#FFD700]">Win</span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[13px] font-bold">{r.winner}</span>
+                      <span className="block truncate text-[10px] uppercase tracking-[0.08em] text-[#6B7079]">{r.winner_team}</span>
+                    </span>
+                  </div>
+                ) : <span className="text-[11px] text-[#6B7079]">—</span>}
+                <button onClick={() => onAnalyze(r.race_id)} className="self-start font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[#969BA5] transition-colors hover:text-[#FF2D24] focus-visible:text-[#FF2D24] focus-visible:outline-none">
+                  Analyze →
+                </button>
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
+    </Panel>
   );
 }
 
-// ─── Up Next (upcoming races WITH dates) ────────────────────────────────────
+// ─── Up next ────────────────────────────────────────────────────────────────
 
 function UpNext({ races, onViewAll, onOpen }: { races: RaceEntry[]; onViewAll: () => void; onOpen: (id: string) => void }) {
-  if (!races.length) return null;
+  // Read once on mount; day granularity doesn't need a ticking clock.
+  const [now] = useState(() => Date.now());
+  const daysTo = (r: RaceEntry) => {
+    const t = new Date(r.race_time ?? `${r.date}T13:00:00Z`).getTime();
+    return Math.max(0, Math.ceil((t - now) / 86400000));
+  };
   return (
-    <div className="rounded-2xl bg-[#0d0e12] border border-white/5 p-6">
-      <SectionHeader label="Up Next" action="View Full Calendar" onAction={onViewAll} />
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {races.map(r => (
-          <button
-            key={r.race_id}
-            onClick={() => onOpen(r.race_id)}
-            className="group text-left rounded-xl bg-black/30 border border-white/5 hover:border-white/15 p-4 transition-all duration-300 hover:-translate-y-0.5"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-lg">{flagFor(r.country)}</span>
-              <span className="text-[10px] font-mono text-gray-600">R{r.round}</span>
-            </div>
-            <div className="text-sm font-bold text-white truncate group-hover:text-[#e10600] transition-colors">{shortName(r.name)}</div>
-            <div className="text-[11px] text-gray-500 truncate mb-2">{r.circuit}</div>
-            <div className="inline-flex items-center gap-1.5 text-[11px] font-mono font-bold text-sky-300/80">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>
-              {new Date(`${r.date}T00:00:00Z`).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', timeZone: 'UTC' }).toUpperCase()}
-            </div>
-          </button>
-        ))}
-      </div>
-    </div>
+    <Panel title="Up next" action="Calendar" onAction={onViewAll}>
+      {!races.length ? (
+        <p className="px-4 py-10 text-center font-mono text-[12px] text-[#6B7079]">Season complete — see you next year.</p>
+      ) : (
+        <ol>
+          {races.map((r, i) => (
+            <li key={r.race_id}>
+              <button
+                onClick={() => onOpen(r.race_id)}
+                className="group grid w-full grid-cols-[auto_1fr_auto] items-center gap-3 border-b border-[#14161A] px-4 py-3.5 text-left transition-colors last:border-b-0 hover:bg-[#111318] focus-visible:bg-[#111318] focus-visible:outline-none"
+              >
+                <span className="flex w-10 flex-col items-center border border-[#24262B] py-1">
+                  <span className="font-mono text-[15px] font-black leading-none tabular-nums">{new Date(`${r.date}T00:00:00Z`).getUTCDate()}</span>
+                  <span className="mt-0.5 font-mono text-[8px] font-bold uppercase tracking-[0.12em] text-[#6B7079]">
+                    {new Date(`${r.date}T00:00:00Z`).toLocaleDateString('en-GB', { month: 'short', timeZone: 'UTC' })}
+                  </span>
+                </span>
+                <span className="min-w-0">
+                  <span className="flex items-center gap-1.5">
+                    <span className="text-[13px]" aria-hidden>{flagFor(r.country)}</span>
+                    <span className="truncate text-[13px] font-bold transition-colors group-hover:text-[#FF2D24]">{shortName(r.name)}</span>
+                    {r.has_sprint && <span className="border border-[#E10600]/50 px-1 font-mono text-[8px] font-bold uppercase tracking-[0.1em] text-[#FF2D24]">Sprint</span>}
+                  </span>
+                  <span className="block truncate font-mono text-[10px] uppercase tracking-[0.1em] text-[#6B7079]">R{r.round} · {r.circuit}</span>
+                </span>
+                <span className="text-right font-mono text-[11px] tabular-nums text-[#969BA5]">
+                  {i === 0 ? <span className="text-[#F5F5F5]">Next</span> : `${daysTo(r)}d`}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ol>
+      )}
+    </Panel>
   );
 }
 
@@ -506,13 +538,14 @@ function UpNext({ races, onViewAll, onOpen }: { races: RaceEntry[]; onViewAll: (
 
 function LoadingState() {
   return (
-    <div className="min-h-screen bg-[#050505] pt-10 pb-20">
-      <div className="max-w-[1400px] mx-auto px-6 lg:px-8 space-y-6">
-        <div className="w-full h-[360px] rounded-2xl bg-[#0d0e12] border border-white/5 animate-pulse" />
-        <div className="w-full h-[200px] rounded-2xl bg-[#0d0e12] border border-white/5 animate-pulse" />
-        <div className="grid grid-cols-1 lg:grid-cols-[1.55fr_1fr] gap-6">
-          <div className="h-[420px] rounded-2xl bg-[#0d0e12] border border-white/5 animate-pulse" />
-          <div className="h-[420px] rounded-2xl bg-[#0d0e12] border border-white/5 animate-pulse" />
+    <div className="min-h-screen bg-[#050505] pb-16 pt-8">
+      <div className="mx-auto max-w-[1400px] space-y-4 px-5 sm:px-6 lg:px-8">
+        <div className="h-[360px] w-full animate-pulse rounded-2xl border border-white/5 bg-[#0d0e12]" />
+        <div className="h-[66px] w-full animate-pulse border border-[#1A1C20] bg-[#0B0D10]" />
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+          <div className="h-[380px] animate-pulse border border-[#1A1C20] bg-[#0B0D10] lg:col-span-5" />
+          <div className="h-[380px] animate-pulse border border-[#1A1C20] bg-[#0B0D10] lg:col-span-4" />
+          <div className="h-[380px] animate-pulse border border-[#1A1C20] bg-[#0B0D10] lg:col-span-3" />
         </div>
       </div>
     </div>
@@ -521,9 +554,9 @@ function LoadingState() {
 
 function ErrorState({ message }: { message: string | null }) {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-[#050505] gap-3">
-      <div className="text-[#e10600] font-mono text-sm">⚠️ Connection Lost</div>
-      <div className="text-sm text-gray-500 font-mono">{message ?? 'Ensure the backend is running.'}</div>
+    <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-[#050505]">
+      <div className="font-mono text-[12px] font-bold uppercase tracking-[0.16em] text-[#e10600]">Connection lost</div>
+      <div className="font-mono text-sm text-gray-500">{message ?? 'Ensure the backend is running.'}</div>
     </div>
   );
 }

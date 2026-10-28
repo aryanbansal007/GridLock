@@ -20,3 +20,35 @@
     cursor: not-allowed;
   }
 }
+/* ── Landing page motion ─────────────────────────────────────────────────────
+   Short, one-shot reveals. Everything is static under prefers-reduced-motion. */
+@keyframes gl-rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes gl-draw {
+  from { stroke-dashoffset: 1; }
+  to   { stroke-dashoffset: 0; }
+}
+@keyframes gl-flow {
+  to { stroke-dashoffset: -12; }
+}
+.gl-rise { animation: gl-rise 700ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.gl-draw { stroke-dasharray: 1; animation: gl-draw 1600ms cubic-bezier(0.4, 0, 0.2, 1) 400ms both; }
+.gl-flow { animation: gl-flow 1.2s linear infinite; }
+.gl-reveal { opacity: 0; transform: translateY(18px); transition: opacity 700ms ease, transform 700ms cubic-bezier(0.2, 0.7, 0.2, 1); }
+.gl-reveal.is-in { opacity: 1; transform: none; }
+
+.gl-range { appearance: none; background: #24262B; border-radius: 0; }
+.gl-range::-webkit-slider-thumb { appearance: none; width: 12px; height: 12px; background: #E10600; border: 2px solid #050505; }
+.gl-range::-moz-range-thumb { width: 12px; height: 12px; background: #E10600; border: 2px solid #050505; border-radius: 0; }
+.gl-range:focus-visible { outline: 2px solid #FF2D24; outline-offset: 4px; }
+
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gl-rise, .gl-draw, .gl-flow { animation: none; }
+  .gl-draw { stroke-dasharray: none; }
+  .gl-reveal { opacity: 1; transform: none; transition: none; }
+}

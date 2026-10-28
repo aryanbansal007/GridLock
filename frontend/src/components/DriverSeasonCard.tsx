@@ -91,7 +91,7 @@ export function DriverSeasonCard({ driver, year, onClose }: { driver: DriverStan
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m18 6-12 12M6 6l12 12" /></svg>
           </button>
           <div className="flex items-center gap-4">
-            <DriverAvatar src={driver.image_url} name={driver.name} teamColor={driver.team_color} size={72} rounded="lg" />
+            <DriverAvatar src={driver.image_url} name={driver.name} abbr={driver.abbreviation} teamColor={driver.team_color} size={72} rounded="lg" />
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <h2 className="text-lg font-black tracking-tight truncate">{driver.name}</h2>

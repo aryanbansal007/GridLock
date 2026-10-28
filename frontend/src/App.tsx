@@ -18,15 +18,19 @@ import Calendar from './pages/Calendar';
 import RaceDetail from './pages/RaceDetail';
 import AnalysisPage from './pages/Analysis/AnalysisPage';
 
-// Auth Protection Wrapper
+// Auth gate, used only where an account is genuinely needed: the Race Engineer (the AI
+// calls cost money and are tied to a user's chat history) and the profile. Everything
+// else — standings, calendar, race pages, analysis, the simulator — is open to anyone.
+// The destination rides along as ?next= so logging in drops people where they were headed.
 const ProtectedRoute = ({ children }: { children: ReactElement }) => {
-  return localStorage.getItem('token') ? children : <Navigate to="/auth" replace />;
+  const location = useLocation();
+  if (localStorage.getItem('token')) return children;
+  return <Navigate to={`/auth?next=${encodeURIComponent(location.pathname + location.search)}`} replace />;
 };
 
 // The bare "/" URL is the only route that behaves differently depending on auth
-// state: logged-out visitors see the public marketing Landing Page, logged-in
-// visitors go straight to their dashboard. Every other route stays gated by
-// ProtectedRoute (a deep link should prompt login, not show marketing content).
+// state: visitors without an account see the marketing Landing Page, logged-in
+// visitors go straight to their dashboard.
 const RootIndex = () => {
   return localStorage.getItem('token') ? <Navigate to="/dashboard" replace /> : <LandingPage />;
 };
@@ -88,14 +92,16 @@ export default function App() {
 
         {/* Unified TopNav screen space — a pathless layout route, since each
             child below now owns its own absolute path (avoids two routes both
-            claiming "/", which RootIndex already owns on its own). */}
-        <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
+            claiming "/", which RootIndex already owns on its own). Open to everyone. */}
+        <Route element={<MainLayout />}>
           {/* Core Analytics Views */}
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/drivers" element={<Drivers />} />
           <Route path="/teams" element={<Teams />} />
-          <Route path="/race-engineer" element={<RaceEngineer />} />
-          <Route path="/profile" element={<Profile />} />
+
+          {/* Account-only: needs a login (see ProtectedRoute) */}
+          <Route path="/race-engineer" element={<ProtectedRoute><RaceEngineer /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
 
           {/* Full season calendar */}
           <Route path="/events" element={<Calendar />} />

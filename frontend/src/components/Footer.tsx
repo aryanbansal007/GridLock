@@ -60,7 +60,7 @@ export function Footer() {
             </div>
             <p className="text-xs text-gray-500 leading-relaxed max-w-sm">
               A fan-built Formula 1 analytics platform — standings, race results, telemetry
-              comparison, and a full race replay simulator, built on real timing data via FastF1.
+              comparison, and a full race replay simulator, built on real timing data via FastF1 and OpenF1.
             </p>
           </div>
 
@@ -82,7 +82,7 @@ export function Footer() {
             or affiliated with Formula 1, the FIA, or any Formula 1 team. F1, FORMULA ONE,
             FORMULA 1, FIA FORMULA ONE WORLD CHAMPIONSHIP, GRAND PRIX, and related marks are
             trademarks of Formula One Licensing B.V. All telemetry and results data is sourced
-            from the public FastF1 library.
+            from the public FastF1 library and the OpenF1 API.
           </p>
         </div>
       </div>

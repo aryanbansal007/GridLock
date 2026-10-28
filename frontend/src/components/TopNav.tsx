@@ -58,6 +58,10 @@ export const TopNav: React.FC = () => {
   const searchRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
+  // Browsing needs no account; the nav shows Log in / Sign up instead of the profile menu
+  // when there is no token.
+  const hasToken = !!localStorage.getItem('token');
+
   const username = useMemo(() => {
     const token = localStorage.getItem('token');
     if (!token) return null;
@@ -298,7 +302,24 @@ export const TopNav: React.FC = () => {
 
           <RaceEngineerButton active={location.pathname.startsWith('/race-engineer')} onClick={() => navigate('/race-engineer')} />
 
-          <div ref={profileRef} style={{ position: 'relative' }}>
+          {!hasToken && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <button
+                onClick={() => navigate('/auth')}
+                style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.6)', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '8px 10px' }}
+              >
+                Log in
+              </button>
+              <button
+                onClick={() => navigate('/auth?mode=signup')}
+                style={{ background: '#e10600', border: 'none', color: '#fff', fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '8px 14px', borderRadius: 6 }}
+              >
+                Sign up
+              </button>
+            </div>
+          )}
+
+          {hasToken && <div ref={profileRef} style={{ position: 'relative' }}>
             <ProfileButton open={profileOpen} onClick={() => setProfileOpen(v => !v)} />
             {profileOpen && (
               <div style={{
@@ -320,11 +341,11 @@ export const TopNav: React.FC = () => {
                 />
                 <DropdownItem
                   label="Logout"
-                  onClick={() => { localStorage.removeItem('token'); navigate('/auth'); setProfileOpen(false); }}
+                  onClick={() => { localStorage.removeItem('token'); navigate('/'); setProfileOpen(false); }}
                 />
               </div>
             )}
-          </div>
+          </div>}
         </div>
       </div>
 

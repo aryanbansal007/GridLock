@@ -1,12 +1,29 @@
-import { useEffect, useState } from 'react';
-import {
-  SEASON_YEAR, lighten, type StandingsResponse, type DriverStanding, seasonUrl,
-} from '../lib/f1';
+import { useEffect, useMemo, useState, type KeyboardEvent } from 'react';
+import { SEASON_YEAR, type StandingsResponse, type DriverStanding, seasonUrl } from '../lib/f1';
 import { DriverAvatar } from '../components/media/DriverAvatar';
 import { SeasonSelector } from '../components/SeasonSelector';
 import { DriverSeasonCard } from '../components/DriverSeasonCard';
+import {
+  PageHeader, PointsDelta, PointsBar, GapText, Stat, Watermark, DriverPhoto, Skeleton, ErrorState,
+} from '../components/standings/parts';
+import { MEDAL, rise } from '../components/standings/tokens';
 
-const MEDAL = ['#FFD700', '#C0C0C0', '#CD7F32']; // gold, silver, bronze
+const splitName = (name: string) => {
+  const parts = name.trim().split(/\s+/);
+  return { first: parts.slice(0, -1).join(' '), last: parts[parts.length - 1] };
+};
+
+// Surnames are never split mid-word, so long ones get a smaller size instead
+// ("BORTOLETO", "HULKENBERG" must fit the same column as "NORRIS").
+const surnameSize = (last: string, lead: boolean) => {
+  const n = last.length;
+  const [big, mid, small] = lead ? [3.4, 2.7, 2.2] : [2.1, 1.75, 1.45];
+  return `${n <= 7 ? big : n <= 10 ? mid : small}rem`;
+};
+
+const activate = (fn: () => void) => (e: KeyboardEvent) => {
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fn(); }
+};
 
 export default function Drivers() {
   const [currentYear, setCurrentYear] = useState<number>(SEASON_YEAR);
@@ -36,43 +53,54 @@ export default function Drivers() {
 
   useEffect(() => { const id = requestAnimationFrame(() => setMounted(true)); return () => cancelAnimationFrame(id); }, []);
 
-  const drivers = data?.drivers ?? [];
-  const podium = drivers.slice(0, 3);
+  const drivers = useMemo(() => data?.drivers ?? [], [data]);
+  const leaderPts = drivers[0]?.points ?? 0;
+  const [first, second, third] = drivers;
   const rest = drivers.slice(3);
-  // display order for podium: 2nd, 1st, 3rd (center elevated)
-  const podiumDisplay = [podium[1], podium[0], podium[2]].filter(Boolean);
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white pt-10 pb-20 font-sans">
-      <div className="max-w-[1100px] mx-auto px-6">
+    <div className="min-h-screen bg-[#050505] pb-24 pt-10 font-sans text-[#F5F5F5]">
+      <div className="mx-auto max-w-[1240px] px-5 sm:px-8">
+        <PageHeader
+          kicker={`${currentYear} season${data ? ` · after round ${data.meta.rounds_counted}` : ''}`}
+          title="Driver Standings"
+          sub={data ? `${drivers.length} drivers · points from race and sprint results` : 'Loading standings…'}
+          right={<SeasonSelector currentYear={currentYear} onChange={setCurrentYear} />}
+        />
 
-        <div className="flex items-start justify-between gap-4 mb-10">
+        {loading && <LoadingState />}
+        {error && !loading && <ErrorState message={error} />}
+
+        {!loading && !error && data && first && (
           <div>
-            <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-gray-500 mb-2">{currentYear} Season</p>
-            <h1 className="text-3xl md:text-4xl font-black italic tracking-tight uppercase">Driver Standings</h1>
-            <p className="text-sm text-gray-500 mt-1">{data ? `${data.meta.rounds_counted} rounds completed · points from race results` : 'Loading telemetry…'}</p>
-          </div>
-          <SeasonSelector currentYear={currentYear} onChange={setCurrentYear} />
-        </div>
-
-        {loading && <SkeletonStandings />}
-        {error && !loading && (
-          <div className="flex flex-col items-center justify-center py-24 gap-2">
-            <div className="text-[#e10600] font-mono text-sm">Connection Lost</div>
-            <div className="text-xs text-gray-500 font-mono">{error}</div>
-          </div>
-        )}
-
-        {!loading && !error && data && (
-          <div className="transition-all duration-700 ease-out" style={{ opacity: mounted ? 1 : 0, transform: mounted ? 'translateY(0)' : 'translateY(14px)' }}>
-            {/* Podium */}
-            <div className="grid grid-cols-3 gap-3 md:gap-5 items-end mb-10">
-              {podiumDisplay.map(d => <PodiumCard key={d.abbreviation} driver={d} onSelect={() => setSelectedDriver(d)} />)}
+            {/* Top three */}
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+              <div className="lg:col-span-6" style={rise(0)}>
+                <LeaderCard driver={first} onSelect={() => setSelectedDriver(first)} />
+              </div>
+              <div className="grid gap-4 lg:col-span-6">
+                {[second, third].filter(Boolean).map((d, i) => (
+                  <div key={d.abbreviation} style={rise(i + 1)}>
+                    <SideCard driver={d} gap={leaderPts - d.points} onSelect={() => setSelectedDriver(d)} />
+                  </div>
+                ))}
+              </div>
             </div>
 
-            {/* Rest */}
-            <div className="flex flex-col gap-2">
-              {rest.map(d => <DriverRow key={d.abbreviation} driver={d} onSelect={() => setSelectedDriver(d)} />)}
+            {/* Rest of the field */}
+            <div className="mt-10 border border-[#24262B] bg-[#0B0D10]">
+              <div className="hidden grid-cols-[2.5rem_1fr_repeat(3,3.5rem)_4rem_9rem] items-center gap-4 border-b border-[#24262B] px-4 py-2.5 font-mono text-[9px] font-semibold uppercase tracking-[0.16em] text-[#6B7079] sm:grid">
+                <span className="text-center">Pos</span>
+                <span>Driver</span>
+                <span className="text-right">Wins</span>
+                <span className="text-right">Pod.</span>
+                <span className="text-right">DNF</span>
+                <span className="text-right">Gap</span>
+                <span className="text-right">Points</span>
+              </div>
+              {rest.map((d, i) => (
+                <DriverRow key={d.abbreviation} driver={d} gap={leaderPts - d.points} max={leaderPts} mounted={mounted} index={i} onSelect={() => setSelectedDriver(d)} />
+              ))}
             </div>
           </div>
         )}
@@ -85,124 +113,162 @@ export default function Drivers() {
   );
 }
 
-// Real riser height per rank — the bigger the gap between 1st/2nd/3rd, the more
-// it reads as an actual medal-ceremony podium instead of three equal cards.
-const RISER_HEIGHT: Record<number, number> = { 1: 116, 2: 80, 3: 56 };
-
-function PodiumCard({ driver: d, onSelect }: { driver: DriverStanding; onSelect: () => void }) {
-  const rank = d.position; // 1,2,3
-  const medal = MEDAL[rank - 1] ?? '#888';
+/** Championship leader: the big card. Portrait fades into the content on wide screens. */
+function LeaderCard({ driver: d, onSelect }: { driver: DriverStanding; onSelect: () => void }) {
   const color = `#${d.team_color}`;
-  const isFirst = rank === 1;
-  const riser = RISER_HEIGHT[rank] ?? 56;
-  return (
-    <div className="flex flex-col items-center transition-transform duration-300 hover:-translate-y-1 cursor-pointer" onClick={onSelect}>
-      {/* driver info card */}
-      <div
-        className={`relative w-full rounded-2xl overflow-hidden border ${isFirst ? 'border-white/15' : 'border-white/5'}`}
-        style={{ background: `linear-gradient(180deg, ${color}22 0%, #0d0e12 55%)` }}
-      >
-        <div className="h-1" style={{ background: medal }} />
-        <div className="p-4 flex flex-col items-center text-center">
-          {isFirst && <span className="text-[10px] font-bold tracking-widest uppercase text-[#FFD700] mb-2">Leader</span>}
-          <DriverAvatar src={d.image_url} name={d.name} teamColor={d.team_color} size={isFirst ? 92 : 72} rounded="lg" className="mb-3" />
-          <div className="flex items-center gap-1.5 max-w-full">
-            <span className="text-sm md:text-base font-bold tracking-tight truncate">{d.name}</span>
-            <span className="text-[10px] font-mono text-gray-600 shrink-0">#{d.number}</span>
-          </div>
-          <div className="text-[11px] text-gray-500 font-medium mb-2 truncate max-w-full">{d.team}</div>
-          <div className="w-8 h-1 rounded-full mb-2" style={{ background: color, boxShadow: `0 0 10px ${color}80` }} />
-          <div className="font-mono text-2xl md:text-3xl font-black tabular-nums">{d.points}<span className="text-[10px] text-gray-500 ml-1">PTS</span><PointsDelta value={d.points_last_race} /></div>
-          <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">{d.wins}W · {d.podiums}P</div>
-        </div>
-      </div>
-
-      {/* podium riser — the driver visibly "stands" on a block whose height encodes rank */}
-      <div
-        className="w-full flex items-start justify-center rounded-b-lg relative overflow-hidden"
-        style={{
-          height: riser,
-          marginTop: -1,
-          background: `linear-gradient(180deg, ${medal}2e 0%, rgba(255,255,255,0.02) 100%)`,
-          borderTop: `2px solid ${medal}`,
-          borderLeft: '1px solid rgba(255,255,255,0.06)',
-          borderRight: '1px solid rgba(255,255,255,0.06)',
-          borderBottom: '1px solid rgba(255,255,255,0.06)',
-        }}
-      >
-        <span className="font-mono font-black leading-none pt-2" style={{ fontSize: riser * 0.44, color: `${medal}` , opacity: 0.9 }}>{rank}</span>
-      </div>
-    </div>
-  );
-}
-
-function DriverRow({ driver: d, onSelect }: { driver: DriverStanding; onSelect: () => void }) {
-  const color = `#${d.team_color}`;
-  const glow = lighten(d.team_color, 0.1);
+  const { first, last } = splitName(d.name);
   return (
     <div
-      onClick={onSelect}
-      className="group relative flex items-center gap-4 rounded-xl bg-[#0d0e12] border border-white/5 hover:border-white/15 px-4 py-3 transition-all duration-300 overflow-hidden cursor-pointer"
+      role="button" tabIndex={0} onClick={onSelect} onKeyDown={activate(onSelect)}
+      aria-label={`${d.name}, championship leader, ${d.points} points. Open season details`}
+      className="group relative isolate flex h-full min-h-[300px] cursor-pointer flex-col overflow-hidden border border-[#24262B] transition-colors hover:border-[#3a3d44] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF2D24] sm:min-h-[440px] sm:flex-row"
+      style={{ background: `radial-gradient(120% 90% at 85% 0%, ${color}40 0%, transparent 60%), linear-gradient(180deg, #0D0F13, #090A0C)` }}
     >
-      <div className="absolute inset-y-0 left-0 w-1/3 opacity-0 group-hover:opacity-10 transition-opacity duration-500 pointer-events-none"
-        style={{ background: `linear-gradient(to right, ${glow}, transparent)` }} />
-      <div className="relative z-10 w-7 text-center font-mono text-lg font-black text-gray-500 group-hover:text-white transition-colors shrink-0">{d.position}</div>
-      <DriverAvatar src={d.image_url} name={d.name} teamColor={d.team_color} size={46} className="relative z-10" />
-      <div className="relative z-10 w-1 h-10 rounded-full shrink-0" style={{ background: color, boxShadow: `0 0 8px ${color}66` }} />
-      <div className="relative z-10 min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <span className="text-base font-bold tracking-tight truncate">{d.name}</span>
-          <span className="text-[10px] font-mono text-gray-600 shrink-0">#{d.number}</span>
+      <div className="absolute inset-x-0 top-0 h-[3px]" style={{ background: MEDAL[0] }} />
+      <Watermark className="-bottom-4 -right-2 text-[10rem] sm:-bottom-10 sm:text-[21rem]">{d.number}</Watermark>
+
+      <div className="relative z-10 flex flex-1 flex-col justify-between p-6 sm:max-w-[58%] sm:p-8">
+        <div>
+          <div className="flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: MEDAL[0] }}>
+            <span aria-hidden>▲</span> Championship leader
+          </div>
+          <div className="mt-6 font-mono text-[11px] uppercase tracking-[0.16em] text-[#969BA5]">{first}</div>
+          <h2 className="mt-0.5 font-black uppercase leading-[0.92] tracking-[-0.04em]" style={{ fontSize: surnameSize(last, true) }}>{last}</h2>
+          <div className="mt-3 flex items-center gap-2.5 text-[13px] text-[#C9CCD1]">
+            <span className="h-3 w-[3px]" style={{ background: color }} aria-hidden />
+            {d.team}
+            <span className="font-mono text-[11px] text-[#6B7079]">#{d.number}</span>
+          </div>
         </div>
-        <div className="text-xs text-gray-500 truncate">{d.team}</div>
+
+        <div className="mt-8">
+          <div className="flex items-baseline gap-2">
+            <span className="font-mono text-[clamp(3rem,6vw,4.5rem)] font-black leading-none tracking-[-0.04em] tabular-nums">{d.points}</span>
+            <span className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-[#969BA5]">pts</span>
+            <PointsDelta value={d.points_last_race} />
+          </div>
+          <div className="mt-5 grid grid-cols-3 gap-4 border-t border-white/10 pt-4">
+            <Stat label="Wins" value={d.wins} big />
+            <Stat label="Podiums" value={d.podiums} big />
+            <Stat label="DNF" value={d.dnfs} big />
+          </div>
+        </div>
       </div>
-      <div className="relative z-10 hidden sm:flex items-center gap-6 pr-6 border-r border-white/5 text-right">
-        <Stat label="Wins" value={d.wins} />
-        <Stat label="Podiums" value={d.podiums} />
-        <Stat label="DNF" value={d.dnfs} />
+
+      <div className="relative order-first h-56 sm:order-none sm:h-auto sm:flex-1">
+        <div className="absolute inset-0 sm:[mask-image:linear-gradient(to_right,transparent,black_28%)]">
+          <DriverPhoto name={d.name} abbr={d.abbreviation} number={d.number} src={d.image_url} color={color} />
+        </div>
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-[#090A0C] to-transparent" />
       </div>
-      <div className="relative z-10 flex flex-col items-end min-w-[70px]">
-        <div className="flex items-center gap-1">
-          <span className="font-mono text-2xl font-black tabular-nums group-hover:text-[#e10600] transition-colors">{d.points}</span>
+    </div>
+  );
+}
+
+/** P2 and P3: a compact horizontal card. */
+function SideCard({ driver: d, gap, onSelect }: { driver: DriverStanding; gap: number; onSelect: () => void }) {
+  const color = `#${d.team_color}`;
+  const medal = MEDAL[d.position - 1] ?? '#888';
+  const { first, last } = splitName(d.name);
+  return (
+    <div
+      role="button" tabIndex={0} onClick={onSelect} onKeyDown={activate(onSelect)}
+      aria-label={`${d.name}, P${d.position}, ${d.points} points. Open season details`}
+      className="group relative isolate grid min-h-[212px] cursor-pointer grid-cols-[minmax(7rem,0.8fr)_1.2fr] overflow-hidden border border-[#24262B] transition-colors hover:border-[#3a3d44] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF2D24]"
+      style={{ background: `radial-gradient(110% 120% at 0% 0%, ${color}38 0%, transparent 60%), linear-gradient(180deg, #0D0F13, #090A0C)` }}
+    >
+      <div className="absolute inset-x-0 top-0 h-[3px]" style={{ background: medal }} />
+      <Watermark className="-bottom-5 right-1 text-[11rem]">{d.number}</Watermark>
+
+      <div className="relative">
+        <div className="absolute inset-0 [mask-image:linear-gradient(to_left,transparent,black_30%)]">
+          <DriverPhoto name={d.name} abbr={d.abbreviation} number={d.number} src={d.image_url} color={color} />
+        </div>
+        <span className="absolute left-3 top-4 font-mono text-[26px] font-black leading-none" style={{ color: medal }}>P{d.position}</span>
+      </div>
+
+      <div className="relative z-10 flex flex-col justify-between p-5">
+        <div>
+          <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-[#969BA5]">{first}</div>
+          <h3 className="font-black uppercase leading-[0.95] tracking-[-0.03em]" style={{ fontSize: surnameSize(last, false) }}>{last}</h3>
+          <div className="mt-2 flex items-center gap-2 text-[12px] text-[#C9CCD1]">
+            <span className="h-2.5 w-[3px]" style={{ background: color }} aria-hidden />
+            <span className="truncate">{d.team}</span>
+          </div>
+        </div>
+        <div>
+          <div className="flex items-baseline gap-1.5">
+            <span className="font-mono text-4xl font-black leading-none tracking-[-0.03em] tabular-nums">{d.points}</span>
+            <span className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-[#969BA5]">pts</span>
+            <PointsDelta value={d.points_last_race} />
+          </div>
+          <div className="mt-3 grid grid-cols-4 gap-2 border-t border-white/10 pt-3">
+            <Stat label="Wins" value={d.wins} />
+            <Stat label="Pod." value={d.podiums} />
+            <Stat label="DNF" value={d.dnfs} />
+            <Stat label="Gap" value={<GapText gap={gap} />} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DriverRow({ driver: d, gap, max, mounted, index, onSelect }: {
+  driver: DriverStanding; gap: number; max: number; mounted: boolean; index: number; onSelect: () => void;
+}) {
+  const color = `#${d.team_color}`;
+  const { first, last } = splitName(d.name);
+  return (
+    <div
+      role="button" tabIndex={0} onClick={onSelect} onKeyDown={activate(onSelect)}
+      aria-label={`${d.name}, P${d.position}, ${d.points} points. Open season details`}
+      className="group relative grid cursor-pointer grid-cols-[1.75rem_1fr_auto] items-center gap-3 border-b border-[#14161A] px-3 py-2.5 transition-colors sm:px-4 sm:gap-4 last:border-b-0 hover:bg-[#111318] focus-visible:bg-[#111318] focus-visible:outline-none sm:grid-cols-[2.5rem_1fr_repeat(3,3.5rem)_4rem_9rem]"
+      style={rise(index + 3)}
+    >
+      <span className="absolute inset-y-0 left-0 w-[3px] opacity-70 transition-opacity group-hover:opacity-100" style={{ background: color }} aria-hidden />
+      <span className="text-center font-mono text-[15px] font-black tabular-nums text-[#6B7079] transition-colors group-hover:text-[#F5F5F5]">{d.position}</span>
+
+      <div className="flex min-w-0 items-center gap-3.5">
+        <DriverAvatar src={d.image_url} name={d.name} abbr={d.abbreviation} number={d.number} teamColor={d.team_color} size={40} rounded="lg" />
+        <div className="min-w-0">
+          <div className="flex items-baseline gap-2">
+            <span className="hidden font-mono text-[10px] uppercase tracking-[0.12em] text-[#6B7079] sm:inline">{first}</span>
+            <span className="truncate text-[15px] font-black uppercase tracking-[-0.01em]">{last}</span>
+            <span className="font-mono text-[10px] text-[#6B7079]">#{d.number}</span>
+          </div>
+          <div className="mt-0.5 truncate text-[12px] text-[#969BA5]">{d.team}</div>
+        </div>
+      </div>
+
+      <span className="hidden text-right font-mono text-[14px] tabular-nums text-[#C9CCD1] sm:block">{d.wins}</span>
+      <span className="hidden text-right font-mono text-[14px] tabular-nums text-[#C9CCD1] sm:block">{d.podiums}</span>
+      <span className="hidden text-right font-mono text-[14px] tabular-nums text-[#C9CCD1] sm:block">{d.dnfs}</span>
+      <span className="hidden text-right sm:block"><GapText gap={gap} /></span>
+
+      <div className="flex min-w-[4.5rem] flex-col items-end gap-1.5 sm:min-w-0">
+        <div className="flex items-baseline gap-1.5">
           <PointsDelta value={d.points_last_race} />
+          <span className="font-mono text-[22px] font-black leading-none tabular-nums transition-colors group-hover:text-[#FF2D24]">{d.points}</span>
         </div>
-        <span className="text-[9px] text-gray-600 font-black uppercase tracking-widest -mt-1">Points</span>
+        <PointsBar value={d.points} max={max} color={color} mounted={mounted} delay={index * 35} />
       </div>
     </div>
   );
 }
 
-// Points gained in the most recent completed round — nothing rendered if the driver/team
-// didn't score (0 or undefined), so it never implies a "just raced" state when they didn't.
-function PointsDelta({ value }: { value?: number }) {
-  if (!value) return null;
-  return (
-    <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-green-400">
-      <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 19V5M5 12l7-7 7 7" />
-      </svg>
-      {value}
-    </span>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="flex flex-col">
-      <span className="text-[9px] text-gray-500 font-bold uppercase tracking-widest">{label}</span>
-      <span className="font-mono text-base font-bold text-gray-300">{value}</span>
-    </div>
-  );
-}
-
-function SkeletonStandings() {
+function LoadingState() {
   return (
     <div>
-      <div className="grid grid-cols-3 gap-3 md:gap-5 items-end mb-10">
-        {[76, 96, 76].map((h, i) => <div key={i} className="rounded-2xl bg-[#0d0e12] border border-white/5 animate-pulse" style={{ height: h + 140, marginTop: i === 1 ? 0 : 24 }} />)}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+        <Skeleton className="h-[440px] lg:col-span-6" />
+        <div className="grid gap-4 lg:col-span-6">
+          <Skeleton className="h-[212px]" />
+          <Skeleton className="h-[212px]" />
+        </div>
       </div>
-      <div className="flex flex-col gap-2">
-        {Array.from({ length: 8 }).map((_, i) => <div key={i} className="h-[68px] rounded-xl bg-[#0d0e12] border border-white/5 animate-pulse" />)}
+      <div className="mt-10 space-y-px">
+        {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-[62px]" />)}
       </div>
     </div>
   );
