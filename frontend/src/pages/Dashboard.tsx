@@ -230,11 +230,11 @@ function HeroSection({
         </div>
         {featured && (
           <div className="flex flex-col items-start md:items-end shrink-0">
-            <div className="text-xs font-bold tracking-widest text-gray-400">ROUND {featured.round}</div>
-            <div className="font-mono text-sm font-bold text-white mb-1 tabular-nums">
+            <div className="text-xs font-bold tracking-widest text-[#FF2D24] [text-shadow:0_1px_6px_rgba(0,0,0,0.9)]">ROUND {featured.round}</div>
+            <div className="font-mono text-sm font-bold text-white mb-1 tabular-nums [text-shadow:0_1px_6px_rgba(0,0,0,0.9)]">
               {new Date(`${featured.date}T00:00:00Z`).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' }).toUpperCase()}
             </div>
-            <div className="text-xs text-gray-500 text-left md:text-right">{featured.circuit}<br />{featured.country}</div>
+            <div className="text-xs font-semibold text-gray-100 text-left md:text-right [text-shadow:0_1px_6px_rgba(0,0,0,0.9)]">{featured.circuit}<br />{featured.country}</div>
           </div>
         )}
       </div>
