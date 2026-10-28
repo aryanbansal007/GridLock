@@ -341,13 +341,16 @@ export function SeasonFeature() {
             <Reveal className="border border-[#24262B] bg-[#0B0D10] p-4" delay={160}>
               <div className="flex items-center justify-between"><Tag tone="text">Calendar</Tag><Tag>{races.length ? `${done}/${races.length} rounds` : ''}</Tag></div>
               <div className="mt-3 flex gap-[3px]" aria-hidden>
-                {races.map((r) => <span key={`${r.race_id}${r.round}`} className={`h-6 flex-1 ${r.status === 'completed' ? 'bg-[#E10600]' : 'bg-[#1A1C20]'}`} />)}
+                {races.map((r) => <span key={`${r.race_id}${r.round}`} className={`h-6 flex-1 ${r.status === 'completed' ? 'bg-[#E10600]' : r === next ? 'border border-[#FF2D24] bg-[#FF2D24]/20' : 'bg-[#2A2D33]'}`} />)}
               </div>
-              <p className="mt-3 text-[13px] text-[#969BA5]">
-                {calendar === 'error' ? 'Calendar unavailable right now.'
-                  : next ? <>Next: <span className="font-semibold text-[#F5F5F5]">{next.name}</span> <span className="font-mono text-[11px]">· {next.circuit}</span></>
-                  : races.length ? 'Season complete.' : 'Loading calendar…'}
-              </p>
+              {calendar === 'error' ? <p className="mt-3 text-[13px] text-[#C9CCD1]">Calendar unavailable right now.</p>
+                : next ? (
+                  <div className="mt-3">
+                    <p className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-[#FF2D24]">Next · Round {next.round}</p>
+                    <p className="mt-1 text-[15px] font-bold text-[#F5F5F5]">{next.name}</p>
+                    <p className="font-mono text-[11px] uppercase tracking-[0.08em] text-[#C9CCD1]">{next.circuit}</p>
+                  </div>
+                ) : <p className="mt-3 text-[13px] text-[#C9CCD1]">{races.length ? 'Season complete.' : 'Loading calendar…'}</p>}
             </Reveal>
           </div>
         </div>
