@@ -56,7 +56,7 @@ TEAM_COLORS = {
     "Haas F1 Team":     "B6BABD",
     # 2026 entries the table above predates (values from the race session results)
     "Racing Bulls":     "6C98FF",
-    "Audi":             "F50537",
+    "Audi":             "FF6B6B",  # was F50537, too close to Ferrari
     "Cadillac":         "909090",
     # Legacy names (older seasons)
     "AlphaTauri":       "5E8FAA",
