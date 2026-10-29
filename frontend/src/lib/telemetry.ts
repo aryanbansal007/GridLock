@@ -128,6 +128,17 @@ export const lapsUrl = (y: string, g: string, s: string) =>
 export const conditionsUrl = (y: string, g: string, s: string) =>
   usingObjectStorage() ? `${objectBase(y, g, s)}/conditions.json` : `${apiBase(y, g, s)}/conditions`;
 
+export const raceControlUrl = (y: string, g: string, s: string) =>
+  usingObjectStorage() ? `${objectBase(y, g, s)}/race_control.json` : `${apiBase(y, g, s)}/race_control`;
+
+export const raceControlLogUrl = (y: string, g: string, s: string) =>
+  usingObjectStorage() ? `${objectBase(y, g, s)}/race_control_log.json` : `${apiBase(y, g, s)}/race_control_log`;
+
+export const documentsUrl = (y: string, g: string) =>
+  usingObjectStorage()
+    ? `${DATA_BASE}/${y}/${safeGp(g)}/documents.json`
+    : `${API_BASE}/api/races/data/${y}/${encodeURIComponent(g)}/documents`;
+
 export const qualiUrl = (y: string, g: string, s: string) =>
   usingObjectStorage() ? `${objectBase(y, g, s)}/quali.json` : `${apiBase(y, g, s)}/quali`;
 

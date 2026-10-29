@@ -5,10 +5,12 @@ import { trackRotation } from "../../lib/trackRotation";
 import Leaderboard from "./components/Leaderboard";
 import QualiBoard from "./components/QualiBoard";
 import DriverTimingBar from "./components/DriverTimingBar";
+import RaceControlNotices from "./components/RaceControlNotices";
+import { activeNotices, type Notice } from "../../lib/raceControl";
 import { qualiStateAt, driverTimingAt, formatClock, TONE_HEX, type QualiData } from "../../lib/quali";
 import { DataSourceNote } from "../../components/DataSourceNote";
 import {
-  driversManifestUrl, driverDataUrl, trackUrl, conditionsUrl, qualiUrl, unwrapManifest,
+  driversManifestUrl, driverDataUrl, trackUrl, conditionsUrl, qualiUrl, raceControlUrl, unwrapManifest,
 } from "../../lib/telemetry";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
@@ -126,6 +128,7 @@ const LiveSimulator = () => {
 
   const [raceData, setRaceData] = useState<any>(null);
   const [quali, setQuali] = useState<QualiData | null>(null);
+  const [notices, setNotices] = useState<Notice[]>([]);
   const [frameIndex, setFrameIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -259,7 +262,15 @@ const LiveSimulator = () => {
           } catch { /* fall back to the plain board */ }
         }
 
+        // Stewards' notices are optional: sessions generated before they existed just show none.
+        let rcNotices: Notice[] = [];
+        try {
+          const rcRes = await fetch(raceControlUrl(year, gp, session));
+          if (rcRes.ok) rcNotices = ((await rcRes.json()) as { messages?: Notice[] }).messages ?? [];
+        } catch { /* no notices */ }
+
         if (cancelled) return;
+        setNotices(rcNotices);
         setQuali(qualiData);
         setRaceData(data);
         setFrameIndex(0);
@@ -417,7 +428,7 @@ const LiveSimulator = () => {
   const elapsedSec = currentFrame.t - raceData.frames[0].t;
   const flag = (currentFrame.flag as string) || "clear";
   const flagMeta = FLAG_META[flag] || FLAG_META.clear;
-  const qualiState = quali ? qualiStateAt(quali, currentFrame.t) : null;
+  const liveNotices = activeNotices(notices, currentFrame.t, playbackSpeed);
   // The selected driver's sector colours, drawn on the track while they are on a push lap.
   const sectorColors = (() => {
     if (!quali) return null;
@@ -536,6 +547,7 @@ const LiveSimulator = () => {
 
         {/* ── TRACK AREA ── */}
         <div className="flex-1 min-h-0 relative">
+          <RaceControlNotices notices={liveNotices} colors={raceData.meta.team_colors} />
           {selectedDriver && !quali && currentFrame.cars[selectedDriver] && (
             <div className="absolute top-4 left-4 z-40 w-52 bg-neutral-900/90 border border-neutral-700 rounded-xl p-3.5 shadow-2xl backdrop-blur-md">
               <div className="flex justify-between items-center mb-3">
@@ -561,38 +573,13 @@ const LiveSimulator = () => {
             </div>
           )}
 
-          {qualiState?.phase === "break" && quali && (
-            <div className="absolute inset-x-0 top-4 z-30 flex justify-center pointer-events-none">
-              <div className="pointer-events-auto flex items-center gap-4 rounded-xl border border-yellow-500/30 bg-neutral-900/90 px-5 py-3 shadow-2xl backdrop-blur-md">
-                <div>
-                  <div className="text-[10px] font-black uppercase tracking-[0.2em] text-yellow-400">
-                    {quali.segments[qualiState.segIdx].name} complete
-                  </div>
-                  <div className="text-sm font-black text-white">
-                    {quali.segments[qualiState.segIdx + 1].name} starts in{" "}
-                    <span className="font-mono tabular-nums">{formatClock(qualiState.countdown ?? 0)}</span>
-                  </div>
-                </div>
-                <button
-                  onClick={() => {
-                    const dt = (raceData.meta.sample_interval_ms || 300) / 1000;
-                    const target = quali.segments[qualiState.segIdx + 1].start - 3;
-                    setFrameIndex(Math.min(totalFrames - 1, Math.max(0, Math.round((target - raceData.frames[0].t) / dt))));
-                  }}
-                  className="rounded-lg bg-white px-3 py-1.5 text-[11px] font-black uppercase tracking-wider text-black hover:bg-neutral-200"
-                >
-                  Skip →
-                </button>
-              </div>
-            </div>
-          )}
-
           <RaceTrack
             drivers={drivers}
             positions={currentFrame.cars}
             trackOutline={raceData.track_outline}
             bounds={raceData.meta.bounds}
             rotation={trackRotation(gp)}
+            reserveTop={notices.length > 0 ? 34 : 0}
             flag={flag}
             transitionMs={currentTransitionMs}
             showNames

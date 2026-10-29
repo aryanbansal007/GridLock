@@ -36,6 +36,29 @@ export const checkConditionsCache = (year: string, gp: string, session: string):
     return fs.existsSync(targetFilePath) ? targetFilePath : null;
 };
 
+// Stewards' and race director's notices that name a driver (penalties, investigations,
+// deleted laps), written as race_control.json; sessions generated before it existed have none.
+export const checkRaceControlCache = (year: string, gp: string, session: string): string | null => {
+    const safeGpName = gp.toLowerCase().replace(/ /g, "_");
+    const safeSession = session.toUpperCase();
+    const targetFilePath = path.join(CACHE_DIR, year, safeGpName, safeSession, 'race_control.json');
+    return fs.existsSync(targetFilePath) ? targetFilePath : null;
+};
+
+// Every race control message of a session (race_control_log.json) and the weekend's index of
+// FIA stewards' documents (documents.json, one per race, not per session).
+export const checkRaceControlLogCache = (year: string, gp: string, session: string): string | null => {
+    const safeGpName = gp.toLowerCase().replace(/ /g, "_");
+    const targetFilePath = path.join(CACHE_DIR, year, safeGpName, session.toUpperCase(), 'race_control_log.json');
+    return fs.existsSync(targetFilePath) ? targetFilePath : null;
+};
+
+export const checkDocumentsCache = (year: string, gp: string): string | null => {
+    const safeGpName = gp.toLowerCase().replace(/ /g, "_");
+    const targetFilePath = path.join(CACHE_DIR, year, safeGpName, 'documents.json');
+    return fs.existsSync(targetFilePath) ? targetFilePath : null;
+};
+
 // Qualifying only: segment windows and each driver's timed laps (quali.json), from which
 // the simulator derives the Q1/Q2/Q3 running order. Sessions without one have no file.
 export const checkQualiCache = (year: string, gp: string, session: string): string | null => {

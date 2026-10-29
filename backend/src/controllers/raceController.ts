@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import fs from 'fs';
 import path from 'path';
 import { exec } from 'child_process';
-import { checkDriverCache, checkTrackCache, checkLapsCache, checkConditionsCache, checkQualiCache, checkLapsHaveSegments, getDriverManifest, runPythonGenerator, getAvailableRaces } from '../services/raceService.js';
+import { checkDriverCache, checkTrackCache, checkLapsCache, checkConditionsCache, checkQualiCache, checkRaceControlCache, checkRaceControlLogCache, checkDocumentsCache, checkLapsHaveSegments, getDriverManifest, runPythonGenerator, getAvailableRaces } from '../services/raceService.js';
 import { CACHE_DIR, SCRIPT_DIR, PYTHON_BIN } from '../config/paths.js';
 
 export const generateRace = async (req: Request, res: Response) => {
@@ -163,6 +163,39 @@ export const getConditionsData = (req: Request, res: Response) => {
     }
 
     sendCachedJson(res, conditionsPath, "Failed to read conditions data.");
+};
+
+// GET /api/races/data/:year/:gp/:session/race_control
+// Streams the driver-specific stewards' notices shown over the replay.
+export const getRaceControlData = (req: Request, res: Response) => {
+    const p = checkRaceControlCache(String(req.params.year), String(req.params.gp), String(req.params.session));
+    if (!p) {
+        return res.status(404).json({ error: "No race control file found for this session." });
+    }
+
+    sendCachedJson(res, p, "Failed to read race control data.");
+};
+
+// GET /api/races/data/:year/:gp/:session/race_control_log
+// Every race control message of the session, for the log on the race page.
+export const getRaceControlLog = (req: Request, res: Response) => {
+    const p = checkRaceControlLogCache(String(req.params.year), String(req.params.gp), String(req.params.session));
+    if (!p) {
+        return res.status(404).json({ error: "No race control log found for this session." });
+    }
+
+    sendCachedJson(res, p, "Failed to read race control log.");
+};
+
+// GET /api/races/data/:year/:gp/documents
+// Index of the FIA stewards' documents for the weekend (links to fia.com).
+export const getDocumentsIndex = (req: Request, res: Response) => {
+    const p = checkDocumentsCache(String(req.params.year), String(req.params.gp));
+    if (!p) {
+        return res.status(404).json({ error: "No documents index found for this race." });
+    }
+
+    sendCachedJson(res, p, "Failed to read documents index.");
 };
 
 // GET /api/races/data/:year/:gp/:session/quali

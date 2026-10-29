@@ -52,3 +52,14 @@
   .gl-draw { stroke-dasharray: none; }
   .gl-reveal { opacity: 1; transform: none; transition: none; }
 }
+
+
+@keyframes gl-notice-life {
+  0%   { opacity: 0; transform: translateY(-18px) scale(0.97); }
+  6%   { opacity: 1; transform: none; }
+  92%  { opacity: 1; transform: none; }
+  100% { opacity: 0; transform: translateY(-12px) scale(0.98); }
+}
+@media (prefers-reduced-motion: reduce) {
+  @keyframes gl-notice-life { 0% { opacity: 0; } 6%, 92% { opacity: 1; } 100% { opacity: 0; } }
+}

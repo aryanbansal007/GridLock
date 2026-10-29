@@ -43,6 +43,8 @@ export interface RaceTrackProps {
   // Pixels on the left kept clear of track (for overlays floating over the map), applied
   // only when the map is wide enough that the track still ends up large.
   reserveLeft?: number;
+  // Pixels at the top kept clear of track, for a message that drops in over the map.
+  reserveTop?: number;
   flag?: string;
   showNames?: boolean;
   finishLine?: FinishLine | null;
@@ -90,18 +92,18 @@ const FLAG_TRACK_COLOR: Record<string, string> = {
 
 // ─── projection ──────────────────────────────────────────────────────────────
 
-interface View { w: number; h: number; insetLeft: number }
+interface View { w: number; h: number; insetLeft: number; insetTop: number }
 
 const makeProjector = (rawBounds: Bounds, rotation: number, outline: TrackPoint[], view: View) => {
   const bounds = rotatedBounds(outline, rotation, rawBounds);
   const dataW  = bounds.x_max - bounds.x_min || 1;
   const dataH  = bounds.y_max - bounds.y_min || 1;
   const availW = Math.max(view.w - view.insetLeft - PADDING * 2, 1);
-  const availH = Math.max(view.h - PADDING * 2, 1);
+  const availH = Math.max(view.h - PADDING * 2 - view.insetTop, 1);
 
   const scale   = Math.min(availW / dataW, availH / dataH);
   const offsetX = view.insetLeft + PADDING + (availW - dataW * scale) / 2;
-  const offsetY = PADDING + (availH - dataH * scale) / 2;
+  const offsetY = PADDING + view.insetTop + (availH - dataH * scale) / 2;
 
   return (rawX: number, rawY: number) => {
     const { x, y } = rotatePoint(rawX, rawY, rotation);
@@ -165,6 +167,7 @@ const RaceTrack = ({
   bounds,
   rotation        = 0,
   reserveLeft     = 0,
+  reserveTop      = 0,
   flag            = "clear",
   showNames       = false,
   finishLine      = null,
@@ -190,8 +193,8 @@ const RaceTrack = ({
   // still keeps most of the width; on a narrow map the overlay just floats on top.
   const insetLeft = size.w >= reserveLeft * 3 ? reserveLeft : 0;
   const project = useMemo(
-    () => makeProjector(bounds, rotation, trackOutline, { w: size.w, h: size.h, insetLeft }),
-    [bounds, rotation, trackOutline, size.w, size.h, insetLeft],
+    () => makeProjector(bounds, rotation, trackOutline, { w: size.w, h: size.h, insetLeft, insetTop: reserveTop }),
+    [bounds, rotation, trackOutline, size.w, size.h, insetLeft, reserveTop],
   );
 
   // ── debounced pit state (mirrors Leaderboard.tsx logic exactly) ──

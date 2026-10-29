@@ -160,6 +160,7 @@ export default function RaceDetail() {
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
           <SessionTabs current={session} onChange={setSession} raceStatus={resolvedRace.status} hasSprint={resolvedRace.has_sprint ?? true} />
           <div className="flex items-center gap-2">
+            <RaceControlButton race={resolvedRace} />
             <AnalyticsButton race={resolvedRace} />
             <SimulatorButton race={resolvedRace} year={year} session={session} />
           </div>
@@ -176,6 +177,7 @@ export default function RaceDetail() {
             <Classification session={session} data={current} photos={photos} />
           )}
         </div>
+
       </div>
     </div>
   );
@@ -306,6 +308,26 @@ function SimulatorButton({ race, year, session }: { race: RaceEntry; year: strin
           Watch replay
         </>
       )}
+    </button>
+  );
+}
+
+function RaceControlButton({ race }: { race: RaceEntry }) {
+  const navigate = useNavigate();
+  const disabled = race.status === 'upcoming';
+  return (
+    <button
+      onClick={() => !disabled && navigate(`/races/${race.race_id}/control`)}
+      disabled={disabled}
+      title={disabled ? 'Available after the session runs' : "Race control messages and the FIA stewards' documents"}
+      className={`flex h-10 items-center gap-2 border px-4 font-mono text-[11px] font-bold uppercase tracking-[0.12em] transition-colors ${
+        disabled
+          ? 'cursor-not-allowed border-[#1A1C20] text-[#3a3d44]'
+          : 'border-[#24262B] bg-[#0B0D10] text-[#C9CCD1] hover:border-[#C5C9D1] hover:text-white'
+      }`}
+    >
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M4 21V4M4 5h13l-2 4 2 4H4" /></svg>
+      Race control
     </button>
   );
 }

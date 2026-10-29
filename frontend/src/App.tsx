@@ -16,6 +16,7 @@ import Teams from './pages/Teams';
 import Profile from './pages/Profile';
 import Calendar from './pages/Calendar';
 import RaceDetail from './pages/RaceDetail';
+import RaceControlPage from './pages/RaceControlPage';
 import AnalysisPage from './pages/Analysis/AnalysisPage';
 
 // Auth gate, used only where an account is genuinely needed: the Race Engineer (the AI
@@ -108,6 +109,7 @@ export default function App() {
 
           {/* Race Analytics detail pages */}
           <Route path="/races/:raceId" element={<RaceDetail />} />
+          <Route path="/races/:raceId/control" element={<RaceControlPage />} />
           <Route path="/analysis/:raceId" element={<AnalysisPage />} />
 
           {/* Maintained for legacy compatibility during integration transition */}

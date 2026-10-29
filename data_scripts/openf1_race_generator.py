@@ -347,6 +347,94 @@ def build_quali_file(session_name, spans, loaded, results, race_control, numbers
     return {"version": 2, "session": session_name, "segments": segments, "sector_marks": marks, "drivers": drivers}
 
 
+DRIVER_TAG_RE = re.compile(r"\((\w{3})\)")
+CLOCK_TAIL_RE = re.compile(r"\s*\(\d{1,2}:\d{2}:\d{2}\)\s*$")
+
+
+def build_race_control_feed(race_control, numbers_to_abbr, t0, offset=0.0):
+    """The stewards' and race director's notices that name a driver (penalties, investigations,
+    deleted laps, ...), as they should appear over the replay. Flags, safety cars and session
+    status are already drawn from the track-status timeline, and blue/yellow sector flags are
+    noise here, so only the driver-specific notices are kept. `offset` shifts the OpenF1 clock
+    onto the replay's own (FastF1-era files count from the feed start, not the session start)."""
+    out = []
+    for r in sorted(race_control, key=lambda r: r["date"]):
+        text = (r.get("message") or "").strip()
+        up = text.upper()
+        flag = (r.get("flag") or "").upper()
+        drivers = []
+        known = set(numbers_to_abbr.values())
+        for abbr in DRIVER_TAG_RE.findall(text):
+            if abbr in known and abbr not in drivers:
+                drivers.append(abbr)
+        if not drivers and r.get("driver_number") in numbers_to_abbr:
+            drivers = [numbers_to_abbr[r["driver_number"]]]
+        reason = CLOCK_TAIL_RE.sub("", text.rsplit(" - ", 1)[1]).strip().capitalize() if " - " in text else ""
+
+        kind = title = None
+        if "DELETED" in up and "TRACK LIMITS" in up:
+            kind, title = "track_limits", "Lap time deleted"
+            m = re.search(r"TRACK LIMITS AT (TURN \d+)", up)
+            t_m = re.search(r"TIME (\d+:\d+\.\d+)", up)
+            reason = " · ".join(x for x in (m.group(1).capitalize() if m else "Track limits",
+                                            t_m.group(1) if t_m else "") if x)
+        elif "PENALTY SERVED" in up:
+            kind, title = "cleared", "Penalty served"
+        elif "PENALTY" in up and "FOR CAR" in up:
+            kind = "penalty"
+            t_m = re.search(r"(\d+) SECOND TIME PENALTY", up)
+            title = (f"{t_m.group(1)} s time penalty" if t_m
+                     else "Drive-through penalty" if "DRIVE THROUGH" in up
+                     else "Stop/go penalty" if "STOP/GO" in up or "STOP AND GO" in up
+                     else "Penalty")
+        elif "NO FURTHER INVESTIGATION" in up or "NO FURTHER ACTION" in up or "NO INVESTIGATION NECESSARY" in up:
+            kind, title = "cleared", "No further investigation"
+        elif "UNDER INVESTIGATION" in up:
+            kind, title = "investigation", "Under investigation"
+        elif "WILL BE INVESTIGATED" in up:
+            kind, title = "investigation", "To be investigated after the race"
+        elif "INCIDENT" in up and "NOTED" in up:
+            kind, title = "noted", "Incident noted"
+        elif flag in ("BLACK AND WHITE", "BLACK") and drivers:
+            kind, title = "penalty", f"{flag.title().replace('And', 'and')} flag"
+        if not kind or not drivers:
+            continue
+        out.append({
+            "t": round(parse_ts(r["date"]) - t0 + offset, 2),
+            "lap": r.get("lap_number"),
+            "kind": kind,
+            "title": title,
+            "drivers": drivers,
+            "detail": reason,
+        })
+    # "Incident noted" is the stewards' first word on something they then investigate, clear or
+    # penalise a minute later; showing both is the same news twice, so keep the outcome.
+    def superseded(i, n):
+        if n["kind"] != "noted":
+            return False
+        return any(m["kind"] != "noted" and 0 <= m["t"] - n["t"] <= 120 and set(m["drivers"]) & set(n["drivers"])
+                   for m in out[i + 1:])
+
+    return [n for i, n in enumerate(out) if not superseded(i, n)]
+
+
+def build_race_control_log(race_control, numbers_to_abbr):
+    """Every race control message, as published, for the full log on the race page."""
+    out = []
+    for r in sorted(race_control, key=lambda r: r["date"]):
+        out.append({
+            "time": r["date"][11:19],
+            "lap": r.get("lap_number"),
+            "category": r.get("category"),
+            "flag": r.get("flag"),
+            "scope": r.get("scope"),
+            "sector": r.get("sector"),
+            "driver": numbers_to_abbr.get(r.get("driver_number")),
+            "message": (r.get("message") or "").strip(),
+        })
+    return out
+
+
 def build_weather_timeline(weather, t0):
     events = [
         {
@@ -730,6 +818,10 @@ def main():
         with open(os.path.join(out_dir, "quali.json"), "w") as f:
             json.dump(quali, f)
         print("Segments:", [(g["name"], round(g["start"]), round(g["end"])) for g in quali["segments"]])
+    with open(os.path.join(out_dir, "race_control.json"), "w") as f:
+        json.dump({"messages": build_race_control_feed(race_control, numbers_to_abbr, t0)}, f)
+    with open(os.path.join(out_dir, "race_control_log.json"), "w") as f:
+        json.dump({"messages": build_race_control_log(race_control, numbers_to_abbr)}, f)
     write_conditions_file(frames, args.sample_ms, out_dir)
     print(f"Done. Wrote track.json, laps.json, conditions.json to {out_dir}")
 

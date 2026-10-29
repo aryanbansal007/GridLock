@@ -36,7 +36,7 @@ Practice sessions have results only, no replay.
 Where the files land (inside `gridlock-data/`):
 
 ```
-2026/<gp_slug>/<SESSION>/          telemetry: drivers/, track.json, laps.json, conditions.json (+ quali.json for Q and SQ)
+2026/<gp_slug>/<SESSION>/          telemetry: drivers/, track.json, laps.json, conditions.json, race_control.json (+ quali.json for Q and SQ)
 session_results/2026/<round>/<SESSION>.json    results table
 season/2026/calendar.json, standings.json      season data (refreshed by the backend by itself)
 races-index.json                   list of what has a replay (rebuilt by the workflow)
@@ -87,6 +87,12 @@ Session codes: `R`, `Q`, `S` (sprint), `SQ` (sprint qualifying).
 Each takes roughly 3 to 6 minutes. The `--cache-dir` stores downloaded OpenF1 responses, so a re-run after a fix is fast.
 
 `--gp` must be the calendar race name exactly, because it decides the folder name.
+
+`race_control.json` (the FIA penalty, investigation and track-limits notices shown over the replay) is written by the same command. For a session generated earlier, add it without redoing the telemetry:
+
+```bash
+venv/bin/python openf1_race_control.py --year 2026 --data ../gridlock-data --cache-dir ~/of1cache
+```
 
 ### 3. Generate the results tables
 
