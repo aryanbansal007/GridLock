@@ -45,7 +45,7 @@ export function DriverAvatar({
           onLoad={img.onLoad}
           style={
             img.cutout
-              ? { width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'bottom center', background: `${color}33` }
+              ? { width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center', background: `${color}33`, transform: 'scale(1.5)', transformOrigin: '50% 8%' }
               : { width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center', transform: 'scale(1.08)' }
           }
         />

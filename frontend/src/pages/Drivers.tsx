@@ -157,7 +157,7 @@ function LeaderCard({ driver: d, onSelect }: { driver: DriverStanding; onSelect:
 
       <div className="relative order-first h-56 sm:order-none sm:h-auto sm:flex-1">
         <div className="absolute inset-0 sm:[mask-image:linear-gradient(to_right,transparent,black_28%)]">
-          <DriverPhoto name={d.name} abbr={d.abbreviation} number={d.number} src={d.image_url} color={color} />
+          <DriverPhoto name={d.name} abbr={d.abbreviation} number={d.number} src={d.image_url} color={color} zoom={1.22} />
         </div>
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-[#090A0C] to-transparent" />
       </div>
@@ -230,7 +230,7 @@ function DriverRow({ driver: d, gap, max, mounted, index, onSelect }: {
       <span className="text-center font-mono text-[15px] font-black tabular-nums text-[#A7ACB6] transition-colors group-hover:text-[#F5F5F5]">{d.position}</span>
 
       <div className="flex min-w-0 items-center gap-3.5">
-        <DriverAvatar src={d.image_url} name={d.name} abbr={d.abbreviation} number={d.number} teamColor={d.team_color} size={40} rounded="lg" />
+        <DriverAvatar src={d.image_url} name={d.name} abbr={d.abbreviation} number={d.number} teamColor={d.team_color} size={40} />
         <div className="min-w-0">
           <div className="flex items-baseline gap-2">
             <span className="hidden font-mono text-[10px] uppercase tracking-[0.12em] text-[#A7ACB6] sm:inline">{first}</span>

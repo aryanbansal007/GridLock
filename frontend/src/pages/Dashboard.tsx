@@ -289,7 +289,7 @@ function DriversPanel({ drivers, mounted, onOpen }: { drivers: DriverStanding[];
             <li key={drv.abbreviation} className="relative grid grid-cols-[1.5rem_auto_1fr_auto] items-center gap-3 border-b border-[#14161A] px-4 py-2.5 last:border-b-0">
               <span className="absolute inset-y-0 left-0 w-[2px]" style={{ background: color }} aria-hidden />
               <span className={`text-center font-mono text-[13px] font-black tabular-nums ${i === 0 ? 'text-[#FFD700]' : 'text-[#A7ACB6]'}`}>{drv.position}</span>
-              <DriverAvatar src={drv.image_url} name={drv.name} abbr={drv.abbreviation} number={drv.number} teamColor={drv.team_color} size={34} rounded="lg" />
+              <DriverAvatar src={drv.image_url} name={drv.name} abbr={drv.abbreviation} number={drv.number} teamColor={drv.team_color} size={34} />
               <div className="min-w-0">
                 <div className="flex items-baseline gap-2">
                   <span className="truncate text-[14px] font-black uppercase tracking-[-0.01em]">{lastName(drv.name)}</span>

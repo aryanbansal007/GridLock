@@ -104,7 +104,7 @@ export default function TyreStrategy({ year, gp, session, round, drivers: codes,
   }, [gridLaps, gridOrder]);
 
   if (loading) return <div className="rounded-2xl bg-[#0d0e12] border border-white/5 h-[520px] animate-pulse" />;
-  if (error || list.length === 0) return <Panel msg={error ?? 'No data available'} />;
+  if (error) return <Panel msg={error} />;
 
   const hasDeg = Object.values(degByDriver).some(s => s.length > 0);
 
@@ -160,7 +160,9 @@ export default function TyreStrategy({ year, gp, session, round, drivers: codes,
             </ScatterChart>
           </ResponsiveContainer>
         ) : (
-          <div className="py-14 text-center text-gray-500 text-xs font-mono">No accurate timed laps to plot for this session.</div>
+          <div className="py-14 text-center text-gray-400 text-xs font-mono">
+            {list.length === 0 ? 'Pick a driver above to see their tyre degradation.' : 'No accurate timed laps to plot for this session.'}
+          </div>
         )}
         <div className="flex gap-4 justify-center flex-wrap pt-1 text-[11px] font-mono">
           {list.map(d => <span key={d.driver} style={{ color: colors[d.driver] }}>● {d.driver}</span>)}

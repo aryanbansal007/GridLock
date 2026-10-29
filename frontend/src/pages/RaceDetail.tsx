@@ -392,7 +392,7 @@ function PodiumLead({ row: r, src, fastestAbbr }: { row: RaceResultRow; src?: st
       </div>
       <div className="relative order-first h-52 sm:order-none sm:h-auto sm:flex-1">
         <div className="absolute inset-0 sm:[mask-image:linear-gradient(to_right,transparent,black_28%)]">
-          <DriverPhoto name={r.driver} abbr={r.abbreviation} src={src} color={color} />
+          <DriverPhoto name={r.driver} abbr={r.abbreviation} src={src} color={color} zoom={1.2} />
         </div>
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-[#090A0C] to-transparent" />
       </div>
@@ -541,7 +541,7 @@ function ResultsTable({ session, rows, photos, fastestAbbr }: { session: Session
             <span className="absolute inset-y-0 left-0 w-[3px] opacity-70 transition-opacity group-hover:opacity-100" style={{ background: color }} aria-hidden />
             <span className="text-center font-mono text-[15px] font-black tabular-nums text-[#A7ACB6] transition-colors group-hover:text-[#F5F5F5]">{row.position ?? '—'}</span>
             <div className="flex min-w-0 items-center gap-3">
-              <DriverAvatar src={photos[row.abbreviation]} name={row.driver} abbr={row.abbreviation} teamColor={row.team_color} size={36} rounded="lg" />
+              <DriverAvatar src={photos[row.abbreviation]} name={row.driver} abbr={row.abbreviation} teamColor={row.team_color} size={36} />
               <div className="min-w-0">
                 <div className="flex items-baseline gap-2">
                   <span className="hidden font-mono text-[10px] uppercase tracking-[0.12em] text-[#A7ACB6] sm:inline">{first}</span>

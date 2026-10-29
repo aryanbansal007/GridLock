@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useTransition } from 'react';
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import {
   LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine,
 } from 'recharts';
@@ -96,19 +96,17 @@ export default function TelemetryComparison({ year, gp, session, segment, driver
   // stepMeters=2 (vs. the 1m default) halves the point count per line — still
   // far denser than the chart can visually distinguish, but meaningfully less
   // SVG path/DOM work for recharts to lay out — combined with each chart now
-  // only mounting on an explicit "Load Chart" click (see LazyChart below),
-  // this keeps even the animated draw-in smooth instead of janky.
+  // each chart mounting in turn (see LazyChart below), this keeps even the
+  // animated draw-in smooth instead of janky.
   const multiData = useMemo(() => buildMultiSeriesGrid(list, sel, 2), [list, sel]);
   const isPair = list.length === 2;
   const deltaData = useMemo(() => (isPair ? buildComparisonGrid(list[0], list[1], sel, 2) : []), [isPair, list, sel]);
 
-  // Every chart below is gated behind its own "Load Chart" button (LazyChart)
-  // instead of rendering all 6-7 heavy recharts instances at once on every
-  // lap/driver change — that simultaneous render was what actually froze the
-  // page. Changing the lap/driver/segment selection should make every chart
-  // go back to its "not loaded" placeholder rather than silently keep
-  // rendering stale data — remounting the whole gated section via `key` is
-  // the simplest correct way to reset every LazyChart's internal state together.
+  // Every chart below mounts through LazyChart, which queues them one after another
+  // instead of rendering all 6-7 heavy recharts instances at once (that simultaneous
+  // render is what froze the page). Changing the lap/driver/segment selection redraws
+  // every chart from its placeholder rather than silently keeping stale data —
+  // remounting the section via `key` resets every LazyChart's state together.
   const chartsKey = `${sel === 'fastest' ? 'fastest' : 'segment' in sel ? `seg${sel.segment}` : `lap${sel.lap}`}|${list.map(d => d.driver).join(',')}`;
 
   if (loading) return <BufferingPanel label="Buffering telemetry…" />;
@@ -137,7 +135,7 @@ export default function TelemetryComparison({ year, gp, session, segment, driver
 
       <div key={chartsKey} className="flex flex-col gap-4">
         {isPair && (
-          <LazyChart title="Speed Delta" unit={`km/h · ${list[0].driver} − ${list[1].driver}`} height={140} render={() => (
+          <LazyChart delay={0} title="Speed Delta" unit={`km/h · ${list[0].driver} − ${list[1].driver}`} height={140} render={() => (
             <>
               <ResponsiveContainer width="100%" height={140}>
                 <AreaChart data={deltaData} margin={chartMargin}>
@@ -176,7 +174,7 @@ export default function TelemetryComparison({ year, gp, session, segment, driver
         {/* 2x3 grid — 6 charts of equal weight, evenly balanced instead of Speed
             sitting full-width above an odd-numbered 2-column block. */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <LazyChart title="Speed" unit="km/h" height={180} render={() => (
+          <LazyChart delay={110} title="Speed" unit="km/h" height={180} render={() => (
             <ResponsiveContainer width="100%" height={180}>
               <LineChart data={multiData} margin={chartMargin}>
                 <CartesianGrid stroke={GRID} />
@@ -193,7 +191,7 @@ export default function TelemetryComparison({ year, gp, session, segment, driver
             </ResponsiveContainer>
           )} />
 
-          <LazyChart title="Throttle" unit="%" height={180} render={() => (
+          <LazyChart delay={220} title="Throttle" unit="%" height={180} render={() => (
             <ResponsiveContainer width="100%" height={180}>
               <LineChart data={multiData} margin={chartMargin}>
                 <CartesianGrid stroke={GRID} />
@@ -210,7 +208,7 @@ export default function TelemetryComparison({ year, gp, session, segment, driver
             </ResponsiveContainer>
           )} />
 
-          <LazyChart title="Brake" unit="%" height={180} render={() => (
+          <LazyChart delay={330} title="Brake" unit="%" height={180} render={() => (
             <ResponsiveContainer width="100%" height={180}>
               <LineChart data={multiData} margin={chartMargin}>
                 <CartesianGrid stroke={GRID} />
@@ -227,7 +225,7 @@ export default function TelemetryComparison({ year, gp, session, segment, driver
             </ResponsiveContainer>
           )} />
 
-          <LazyChart title="Gear" unit="" height={180} render={() => (
+          <LazyChart delay={440} title="Gear" unit="" height={180} render={() => (
             <ResponsiveContainer width="100%" height={180}>
               <LineChart data={multiData} margin={chartMargin}>
                 <CartesianGrid stroke={GRID} />
@@ -244,7 +242,7 @@ export default function TelemetryComparison({ year, gp, session, segment, driver
             </ResponsiveContainer>
           )} />
 
-          <LazyChart title="RPM" unit="rpm" height={180} render={() => (
+          <LazyChart delay={550} title="RPM" unit="rpm" height={180} render={() => (
             <ResponsiveContainer width="100%" height={180}>
               <LineChart data={multiData} margin={chartMargin}>
                 <CartesianGrid stroke={GRID} />
@@ -261,7 +259,7 @@ export default function TelemetryComparison({ year, gp, session, segment, driver
             </ResponsiveContainer>
           )} />
 
-          <LazyChart title="DRS" unit="" height={180} render={() => (
+          <LazyChart delay={660} title="DRS" unit="" height={180} render={() => (
             <ResponsiveContainer width="100%" height={180}>
               <LineChart data={multiData} margin={chartMargin}>
                 <CartesianGrid stroke={GRID} />
@@ -279,7 +277,7 @@ export default function TelemetryComparison({ year, gp, session, segment, driver
           )} />
         </div>
 
-        <LazyChart title="Driving State" unit="by distance" height={140} render={() => (
+        <LazyChart delay={770} title="Driving State" unit="by distance" height={140} render={() => (
           <DrivingStateStrip list={list} sel={sel} corners={corners} avgLapLength={track?.avg_lap_length ?? 0} styles={styles} bare />
         )} />
       </div>
@@ -287,39 +285,38 @@ export default function TelemetryComparison({ year, gp, session, segment, driver
   );
 }
 
-// Gates one chart behind an explicit "Load Chart" click instead of mounting
-// the (expensive) recharts instance immediately — rendering all 6-7 charts
-// simultaneously on every lap/driver change was what actually froze the page,
-// not any one chart individually. `render` is a function (not raw children)
-// so the actual chart JSX is only ever constructed once actually needed.
-// Clicking Load is wrapped in a transition so the click itself never blocks —
-// React mounts the (still relatively heavy) chart in the background and this
-// button shows a brief spinner state until it's ready.
-function LazyChart({ title, unit, height, render }: { title: string; unit?: string; height: number; render: () => React.ReactNode }) {
+// Mounts one chart when it nears the viewport, staggered by `delay`, so picking a driver
+// draws the charts in one after another with their usual draw-in animation. Rendering all
+// 6-7 recharts instances in a single pass is what used to freeze the page, which is why
+// each one is queued in a transition instead of mounted together. `render` is a function
+// (not raw children) so the chart JSX is only built once it is actually needed.
+function LazyChart({ title, unit, height, render, delay = 0 }: { title: string; unit?: string; height: number; render: () => React.ReactNode; delay?: number }) {
   const [loaded, setLoaded] = useState(false);
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || loaded) return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const mount = () => { timer = setTimeout(() => startTransition(() => setLoaded(true)), delay); };
+    if (typeof IntersectionObserver === 'undefined') { mount(); return () => clearTimeout(timer); }
+    const io = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) { io.disconnect(); mount(); }
+    }, { rootMargin: '240px' });
+    io.observe(el);
+    return () => { io.disconnect(); clearTimeout(timer); };
+  }, [loaded, delay]);
 
   return (
-    <div className="rounded-2xl bg-[#0d0e12] border border-white/5 p-4">
+    <div ref={ref} className="rounded-2xl bg-[#0d0e12] border border-white/5 p-4">
       <div className="flex items-baseline justify-between mb-2">
         <h3 className="text-xs font-bold uppercase tracking-widest text-gray-300">{title}</h3>
-        {unit && <span className="text-[10px] font-mono text-gray-600">{unit}</span>}
+        {unit && <span className="text-[10px] font-mono text-gray-400">{unit}</span>}
       </div>
       {loaded ? render() : (
-        <div className="flex flex-col items-center justify-center gap-3" style={{ height }}>
-          <span className="text-[11px] font-mono text-gray-500">Select a lap/driver(s) and load to view this chart</span>
-          <button
-            onClick={() => startTransition(() => setLoaded(true))}
-            disabled={isPending}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 disabled:opacity-60 border border-white/10 text-xs font-mono font-bold text-gray-200 transition-colors"
-          >
-            {isPending ? (
-              <span className="w-3.5 h-3.5 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 3v18h18M7 15l4-4 4 4 5-6" /></svg>
-            )}
-            {isPending ? 'Loading…' : 'Load Chart'}
-          </button>
+        <div className="flex items-center justify-center rounded-xl bg-white/[0.025] animate-pulse" style={{ height }} aria-label={`Loading ${title}`}>
+          <span className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
         </div>
       )}
     </div>

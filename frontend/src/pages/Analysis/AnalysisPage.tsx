@@ -36,13 +36,14 @@ function resolveSession(s: SessionCode): { api: ApiSession; segment: number | nu
 }
 
 type Mode = 'comparison' | 'dominance' | 'simulation' | 'positions' | 'laptimes' | 'tyre';
-const MODES: { key: Mode; label: string; sub: string; needsDrivers: boolean }[] = [
+const MODES: { key: Mode; label: string; sub: string; needsDrivers: boolean; allowEmpty?: boolean }[] = [
   { key: 'comparison', label: 'Telemetry', sub: 'Speed · Throttle · Brake', needsDrivers: true },
   { key: 'dominance', label: 'Track Dominance', sub: 'Who’s faster, where', needsDrivers: true },
   { key: 'simulation', label: 'Lap Sim', sub: 'Ghost-car replay', needsDrivers: true },
   { key: 'laptimes', label: 'Lap Times', sub: 'Pace through the race', needsDrivers: true },
   { key: 'positions', label: 'Positions', sub: 'Lap-by-lap classification', needsDrivers: false },
-  { key: 'tyre', label: 'Tyre Strategy', sub: 'Stints · Degradation', needsDrivers: true },
+  // The stint timeline covers the whole grid, so it shows before anyone is picked.
+  { key: 'tyre', label: 'Tyre Strategy', sub: 'Stints · Degradation', needsDrivers: true, allowEmpty: true },
 ];
 
 type ManifestState = DriverManifest | 'loading' | 'missing' | 'unavailable' | 'error';
@@ -150,30 +151,16 @@ export default function AnalysisPage() {
     return new Set(codes);
   }, [segment, sessionLaps]);
 
-  // Default selection to a single driver — the race winner (pole sitter for quali).
-  // When a Q1/Q2/Q3 segment is active, only pick from that segment's actual
-  // survivors (e.g. never default to a driver knocked out before Q3).
+  // Nothing is preselected: the user picks the drivers and the charts draw as soon as they
+  // do. When the session or Q1/Q2/Q3 segment changes, drop anyone who isn't in it (e.g. a
+  // driver knocked out before Q3).
   useEffect(() => {
     if (typeof manifest !== 'object') return;
-    let entries = Object.entries(manifest);
-    if (segmentDriverCodes) entries = entries.filter(([c]) => segmentDriverCodes.has(c));
-    if (entries.length === 0) return;
     setSelected(prev => {
-      const stillValid = prev.filter(c => manifest[c] && (!segmentDriverCodes || segmentDriverCodes.has(c)));
-      if (stillValid.length > 0) return stillValid;
-      // Race/Sprint: match the calendar winner's full name to a driver code.
-      if ((apiSession === 'R' || apiSession === 'S') && resolvedRace?.winner) {
-        const w = entries.find(([, e]) => e.full_name === resolvedRace.winner);
-        if (w) return [w[0]];
-      }
-      // Otherwise the fastest driver (pole for quali).
-      const byPace = entries
-        .filter(([, e]) => e.fastest_lap?.lap_time_s != null)
-        .sort((a, b) => (a[1].fastest_lap!.lap_time_s! - b[1].fastest_lap!.lap_time_s!));
-      const first = (byPace[0] ?? entries[0])[0];
-      return [first];
+      const valid = prev.filter(c => manifest[c] && (!segmentDriverCodes || segmentDriverCodes.has(c)));
+      return valid.length === prev.length ? prev : valid;
     });
-  }, [manifest, apiSession, resolvedRace, segmentDriverCodes]);
+  }, [manifest, segmentDriverCodes]);
 
   const generate = async () => {
     if (!resolvedRace) return;
@@ -313,8 +300,8 @@ export default function AnalysisPage() {
               </>
             )}
             <div className="mt-5">
-              {activeMode.needsDrivers && selected.length === 0 ? (
-                <EmptyPanel title="Add a driver" sub="Use the picker above to add one or more drivers." />
+              {activeMode.needsDrivers && !activeMode.allowEmpty && selected.length === 0 ? (
+                <EmptyPanel title="Choose a driver" sub="Pick one or more drivers above and the charts will draw straight away." />
               ) : mode === 'comparison' ? (
                 <TelemetryComparison year={year} gp={resolvedRace.name} session={apiSession} segment={segment} drivers={selected} manifest={manifest} colorOverrides={colorOverrides} />
               ) : mode === 'dominance' ? (

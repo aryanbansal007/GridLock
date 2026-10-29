@@ -84,7 +84,7 @@ export function Watermark({ children, className = '' }: { children: ReactNode; c
  * stands on the bottom edge over the team-coloured backdrop. Without any photo it falls
  * back to big initials.
  */
-export function DriverPhoto({ name, abbr, number, src, color }: { name: string; abbr?: string; number?: string | number; src?: string; color: string }) {
+export function DriverPhoto({ name, abbr, number, src, color, zoom = 1 }: { name: string; abbr?: string; number?: string | number; src?: string; color: string; zoom?: number }) {
   const img = useDriverImage({ abbr, name, number, src });
   if (!img.url) {
     return (
@@ -103,7 +103,7 @@ export function DriverPhoto({ name, abbr, number, src, color }: { name: string; 
       className="absolute inset-0 h-full w-full"
       style={
         img.cutout
-          ? { objectFit: 'contain', objectPosition: 'bottom center', filter: `drop-shadow(0 12px 28px ${color}55)` }
+          ? { objectFit: 'contain', objectPosition: 'bottom center', filter: `drop-shadow(0 12px 28px ${color}55)`, transform: zoom === 1 ? undefined : `scale(${zoom})`, transformOrigin: 'bottom center' }
           : { objectFit: 'cover', objectPosition: 'top center' }
       }
     />
