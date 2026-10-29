@@ -130,7 +130,7 @@ export default function RaceDetail() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-[#050505]">
         <div className="font-mono text-[12px] font-bold uppercase tracking-[0.16em] text-[#e10600]">{raceMetaError}</div>
-        <button onClick={() => navigate(`/events?year=${year}`)} className="font-mono text-[11px] uppercase tracking-[0.14em] text-gray-500 transition-colors hover:text-white">← Back to calendar</button>
+        <button onClick={() => navigate(`/events?year=${year}`)} className="font-mono text-[11px] uppercase tracking-[0.14em] text-gray-400 transition-colors hover:text-white">← Back to calendar</button>
       </div>
     );
   }
@@ -150,7 +150,7 @@ export default function RaceDetail() {
   return (
     <div className="min-h-screen bg-[#050505] pb-20 pt-6 font-sans text-[#F5F5F5]">
       <div className="mx-auto max-w-[1240px] px-5 sm:px-8">
-        <button onClick={() => navigate(`/events?year=${year}`)} className="mb-4 flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[#6B7079] transition-colors hover:text-[#F5F5F5]">
+        <button onClick={() => navigate(`/events?year=${year}`)} className="mb-4 flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[#A7ACB6] transition-colors hover:text-[#F5F5F5]">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden><path d="m15 18-6-6 6-6" /></svg>
           Calendar
         </button>
@@ -194,7 +194,7 @@ function RaceHeader({ race, year }: { race: RaceEntry; year: string }) {
       <div className="flex min-h-[210px] flex-col justify-end gap-4 p-6 sm:p-8">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
           <Kicker>{year} season · round {race.round}</Kicker>
-          <span className={`font-mono text-[10px] font-bold uppercase tracking-[0.16em] ${race.has_sprint ? 'text-[#FF2D24]' : 'text-[#6B7079]'}`}>
+          <span className={`font-mono text-[10px] font-bold uppercase tracking-[0.16em] ${race.has_sprint ? 'text-[#FF2D24]' : 'text-[#A7ACB6]'}`}>
             {race.has_sprint ? 'Sprint weekend' : 'Standard weekend'}
           </span>
           {race.status === 'ongoing' && (
@@ -207,7 +207,7 @@ function RaceHeader({ race, year }: { race: RaceEntry; year: string }) {
           <h1 className="flex items-center gap-3 text-[clamp(1.9rem,4.4vw,3.4rem)] font-black uppercase leading-[0.95] tracking-[-0.04em]">
             <span className="text-[0.7em]" aria-hidden>{flagFor(race.country)}</span>{race.name}
           </h1>
-          <p className="mt-2 font-mono text-[12px] uppercase tracking-[0.12em] text-[#969BA5]">{race.circuit} · {fmtDateFull(race.date)}</p>
+          <p className="mt-2 font-mono text-[12px] uppercase tracking-[0.12em] text-[#C5C9D1]">{race.circuit} · {fmtDateFull(race.date)}</p>
         </div>
       </div>
     </header>
@@ -232,7 +232,7 @@ function SessionTabs({ current, onChange, raceStatus, hasSprint }: { current: Se
             disabled={disabled}
             onClick={() => onChange(s.code)}
             className={`relative shrink-0 px-4 py-2.5 font-mono text-[11px] font-bold uppercase tracking-[0.12em] transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[#FF2D24] ${
-              disabled ? 'cursor-not-allowed text-[#3a3d44]' : active ? 'bg-[#111318] text-[#F5F5F5]' : 'text-[#6B7079] hover:text-[#C9CCD1]'
+              disabled ? 'cursor-not-allowed text-[#3a3d44]' : active ? 'bg-[#111318] text-[#F5F5F5]' : 'text-[#A7ACB6] hover:text-[#C9CCD1]'
             }`}
           >
             {s.short}
@@ -321,7 +321,7 @@ function AnalyticsButton({ race }: { race: RaceEntry }) {
       className={`flex h-10 items-center gap-2 border px-4 font-mono text-[11px] font-bold uppercase tracking-[0.12em] transition-colors ${
         disabled
           ? 'cursor-not-allowed border-[#1A1C20] text-[#3a3d44]'
-          : 'border-[#24262B] bg-[#0B0D10] text-[#C9CCD1] hover:border-[#969BA5] hover:text-white'
+          : 'border-[#24262B] bg-[#0B0D10] text-[#C9CCD1] hover:border-[#C5C9D1] hover:text-white'
       }`}
     >
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -377,7 +377,7 @@ function PodiumLead({ row: r, src, fastestAbbr }: { row: RaceResultRow; src?: st
       <div className="relative z-10 flex flex-1 flex-col justify-between p-6 sm:max-w-[60%] sm:p-7">
         <div>
           <div className="font-mono text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: MEDAL[0] }}>▲ Race winner</div>
-          <div className="mt-5 font-mono text-[11px] uppercase tracking-[0.16em] text-[#969BA5]">{first}</div>
+          <div className="mt-5 font-mono text-[11px] uppercase tracking-[0.16em] text-[#C5C9D1]">{first}</div>
           <h2 className="mt-0.5 font-black uppercase leading-[0.92] tracking-[-0.04em]" style={{ fontSize: `${last.length <= 7 ? 3 : last.length <= 10 ? 2.5 : 2.1}rem` }}>{last}</h2>
           <div className="mt-2.5 flex items-center gap-2.5 text-[13px] text-[#C9CCD1]">
             <span className="h-3 w-[3px]" style={{ background: color }} aria-hidden />{r.team}
@@ -420,7 +420,7 @@ function PodiumSide({ row: r, src, fastestAbbr }: { row: RaceResultRow; src?: st
       </div>
       <div className="relative z-10 flex flex-col justify-between p-4 sm:p-5">
         <div>
-          <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-[#969BA5]">{first}</div>
+          <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-[#C5C9D1]">{first}</div>
           <h3 className="font-black uppercase leading-[0.95] tracking-[-0.03em]" style={{ fontSize: `${last.length <= 7 ? 1.9 : last.length <= 10 ? 1.6 : 1.35}rem` }}>{last}</h3>
           <div className="mt-1.5 flex items-center gap-2 text-[12px] text-[#C9CCD1]">
             <span className="h-2.5 w-[3px]" style={{ background: color }} aria-hidden /><span className="truncate">{r.team}</span>
@@ -442,7 +442,7 @@ function PodiumSide({ row: r, src, fastestAbbr }: { row: RaceResultRow; src?: st
 function Fact({ label, value, accent }: { label: string; value: string | number; accent?: string }) {
   return (
     <div className="flex flex-col">
-      <span className="font-mono text-[9px] font-semibold uppercase tracking-[0.16em] text-[#6B7079]">{label}</span>
+      <span className="font-mono text-[9px] font-semibold uppercase tracking-[0.16em] text-[#A7ACB6]">{label}</span>
       <span className="font-mono text-[17px] font-black tabular-nums" style={{ color: accent }}>{value}</span>
     </div>
   );
@@ -486,9 +486,9 @@ function SummaryStrip({ rows, fastest }: { rows: RaceResultRow[]; fastest: Faste
     <dl className="grid grid-cols-2 gap-px border border-[#24262B] bg-[#24262B] lg:grid-cols-4">
       {items.map((it) => (
         <div key={it.label} className="bg-[#0B0D10] px-4 py-3.5">
-          <dt className="font-mono text-[9px] font-semibold uppercase tracking-[0.16em] text-[#6B7079]">{it.label}</dt>
+          <dt className="font-mono text-[9px] font-semibold uppercase tracking-[0.16em] text-[#A7ACB6]">{it.label}</dt>
           <dd className="mt-1 font-mono text-[22px] font-black leading-none tabular-nums" style={{ color: it.color }}>{it.value}</dd>
-          <dd className="mt-1.5 truncate font-mono text-[10px] uppercase tracking-[0.1em] text-[#6B7079]">{it.sub}</dd>
+          <dd className="mt-1.5 truncate font-mono text-[10px] uppercase tracking-[0.1em] text-[#A7ACB6]">{it.sub}</dd>
         </div>
       ))}
     </dl>
@@ -499,7 +499,7 @@ function StatusPill({ status }: { status?: string }) {
   if (!status) return null;
   const retired = isRetired(status);
   const lapped = /lapped|\+\d+ laps?/i.test(status);
-  const tone = retired ? 'border-[#E10600]/40 text-[#FF2D24]' : lapped ? 'border-[#D97706]/40 text-[#F59E0B]' : 'border-[#24262B] text-[#969BA5]';
+  const tone = retired ? 'border-[#E10600]/40 text-[#FF2D24]' : lapped ? 'border-[#D97706]/40 text-[#F59E0B]' : 'border-[#24262B] text-[#C5C9D1]';
   return <span className={`inline-block border px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-[0.12em] ${tone}`}>{status}</span>;
 }
 
@@ -519,7 +519,7 @@ function ResultsTable({ session, rows, photos, fastestAbbr }: { session: Session
 
   return (
     <div className="border border-[#24262B] bg-[#0B0D10]">
-      <div className={`grid ${cols} items-center gap-3 border-b border-[#24262B] px-4 py-2.5 font-mono text-[9px] font-semibold uppercase tracking-[0.16em] text-[#6B7079]`}>
+      <div className={`grid ${cols} items-center gap-3 border-b border-[#24262B] px-4 py-2.5 font-mono text-[9px] font-semibold uppercase tracking-[0.16em] text-[#A7ACB6]`}>
         <span className="text-center">Pos</span>
         <span>Driver</span>
         {isRace && <><span className="hidden text-right sm:block">Grid</span><span className="text-right">+/−</span><span className="hidden text-right sm:block">Status</span><span className="text-right">Pts</span></>}
@@ -539,17 +539,17 @@ function ResultsTable({ session, rows, photos, fastestAbbr }: { session: Session
             style={rise(i + 3)}
           >
             <span className="absolute inset-y-0 left-0 w-[3px] opacity-70 transition-opacity group-hover:opacity-100" style={{ background: color }} aria-hidden />
-            <span className="text-center font-mono text-[15px] font-black tabular-nums text-[#6B7079] transition-colors group-hover:text-[#F5F5F5]">{row.position ?? '—'}</span>
+            <span className="text-center font-mono text-[15px] font-black tabular-nums text-[#A7ACB6] transition-colors group-hover:text-[#F5F5F5]">{row.position ?? '—'}</span>
             <div className="flex min-w-0 items-center gap-3">
               <DriverAvatar src={photos[row.abbreviation]} name={row.driver} abbr={row.abbreviation} teamColor={row.team_color} size={36} rounded="lg" />
               <div className="min-w-0">
                 <div className="flex items-baseline gap-2">
-                  <span className="hidden font-mono text-[10px] uppercase tracking-[0.12em] text-[#6B7079] sm:inline">{first}</span>
+                  <span className="hidden font-mono text-[10px] uppercase tracking-[0.12em] text-[#A7ACB6] sm:inline">{first}</span>
                   <span className="truncate text-[15px] font-black uppercase tracking-[-0.01em]">{last}</span>
                   {fastestAbbr === row.abbreviation && <span title="Fastest lap" className="text-[#c084fc]" aria-label="Fastest lap">⚡</span>}
                   {isQuali && row.position === 1 && <span className="border border-[#FFD700]/40 px-1 font-mono text-[8px] font-bold uppercase tracking-[0.12em] text-[#FFD700]">Pole</span>}
                 </div>
-                <div className="mt-0.5 flex items-center gap-2 text-[12px] text-[#969BA5]">
+                <div className="mt-0.5 flex items-center gap-2 text-[12px] text-[#C5C9D1]">
                   <span className="truncate">{row.team}</span>
                   {isRace && out && <span className="sm:hidden"><StatusPill status={row.status} /></span>}
                 </div>
@@ -558,7 +558,7 @@ function ResultsTable({ session, rows, photos, fastestAbbr }: { session: Session
             {isRace && (
               <>
                 <span className="hidden text-right font-mono text-[14px] tabular-nums text-[#C9CCD1] sm:block">{row.grid ?? '—'}</span>
-                <span className="text-right font-mono text-[13px] font-bold tabular-nums" style={{ color: delta === null || delta === 0 ? '#6B7079' : delta > 0 ? '#2EB84B' : '#FF2D24' }}>
+                <span className="text-right font-mono text-[13px] font-bold tabular-nums" style={{ color: delta === null || delta === 0 ? '#A7ACB6' : delta > 0 ? '#2EB84B' : '#FF2D24' }}>
                   {delta === null ? '—' : delta === 0 ? '=' : delta > 0 ? `▲${delta}` : `▼${-delta}`}
                 </span>
                 <span className="hidden text-right sm:block"><StatusPill status={row.status} /></span>
@@ -567,8 +567,8 @@ function ResultsTable({ session, rows, photos, fastestAbbr }: { session: Session
             )}
             {isQuali && (
               <>
-                <span className="hidden text-right font-mono text-[13px] tabular-nums text-[#969BA5] sm:block">{row.q1 ?? '—'}</span>
-                <span className="hidden text-right font-mono text-[13px] tabular-nums text-[#969BA5] sm:block">{row.q2 ?? '—'}</span>
+                <span className="hidden text-right font-mono text-[13px] tabular-nums text-[#C5C9D1] sm:block">{row.q1 ?? '—'}</span>
+                <span className="hidden text-right font-mono text-[13px] tabular-nums text-[#C5C9D1] sm:block">{row.q2 ?? '—'}</span>
                 <span className="hidden text-right font-mono text-[14px] font-bold tabular-nums text-[#F5F5F5] sm:block">{row.q3 ?? '—'}</span>
                 <span className="text-right font-mono text-[14px] font-bold tabular-nums text-[#F5F5F5] sm:hidden">{quali3}</span>
               </>
@@ -599,8 +599,8 @@ function SkeletonTable() {
 function EmptyState({ title, sub }: { title: string; sub: string }) {
   return (
     <div className="flex flex-col items-center justify-center gap-2 border border-[#24262B] bg-[#0B0D10] py-20">
-      <div className="font-mono text-[12px] font-bold uppercase tracking-[0.16em] text-[#969BA5]">{title}</div>
-      <div className="font-mono text-[11px] text-[#6B7079]">{sub}</div>
+      <div className="font-mono text-[12px] font-bold uppercase tracking-[0.16em] text-[#C5C9D1]">{title}</div>
+      <div className="font-mono text-[11px] text-[#A7ACB6]">{sub}</div>
     </div>
   );
 }

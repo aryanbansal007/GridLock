@@ -6,7 +6,7 @@ export function Kicker({ children }: { children: ReactNode }) {
   return (
     <div className="flex items-center gap-3">
       <span className="h-px w-8 bg-[#E10600]" aria-hidden />
-      <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-[#969BA5]">{children}</span>
+      <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-[#C5C9D1]">{children}</span>
     </div>
   );
 }
@@ -17,7 +17,7 @@ export function PageHeader({ kicker, title, sub, right }: { kicker: string; titl
       <div>
         <Kicker>{kicker}</Kicker>
         <h1 className="mt-4 text-[clamp(2rem,4.2vw,3.25rem)] font-black leading-[0.95] tracking-[-0.04em] text-[#F5F5F5]">{title}</h1>
-        <p className="mt-3 text-[13px] text-[#969BA5]">{sub}</p>
+        <p className="mt-3 text-[13px] text-[#C5C9D1]">{sub}</p>
       </div>
       {right}
     </header>
@@ -40,7 +40,7 @@ export function PointsDelta({ value }: { value?: number }) {
 export function Stat({ label, value, big = false }: { label: string; value: ReactNode; big?: boolean }) {
   return (
     <div className="flex flex-col">
-      <span className="font-mono text-[9px] font-semibold uppercase tracking-[0.16em] text-[#6B7079]">{label}</span>
+      <span className="font-mono text-[9px] font-semibold uppercase tracking-[0.16em] text-[#A7ACB6]">{label}</span>
       <span className={`font-mono font-bold tabular-nums text-[#F5F5F5] ${big ? 'text-xl' : 'text-[15px]'}`}>{value}</span>
     </div>
   );
@@ -62,7 +62,7 @@ export function PointsBar({ value, max, color, mounted, delay = 0 }: { value: nu
 /** "−45" behind the leader, "Leader" for P1. */
 export function GapText({ gap }: { gap: number }) {
   if (gap <= 0) return <span className="font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-[#FFD700]">Leader</span>;
-  return <span className="font-mono text-[12px] tabular-nums text-[#969BA5]">−{Number.isInteger(gap) ? gap : gap.toFixed(1)}</span>;
+  return <span className="font-mono text-[12px] tabular-nums text-[#C5C9D1]">−{Number.isInteger(gap) ? gap : gap.toFixed(1)}</span>;
 }
 
 /** Large outlined number behind a card's content (racing number / rank). */
@@ -118,7 +118,7 @@ export function ErrorState({ message }: { message: string }) {
   return (
     <div className="flex flex-col items-center justify-center gap-2 border border-[#24262B] bg-[#0B0D10] py-24">
       <div className="font-mono text-[12px] font-bold uppercase tracking-[0.16em] text-[#E10600]">Standings unavailable</div>
-      <div className="font-mono text-[11px] text-[#6B7079]">{message}</div>
+      <div className="font-mono text-[11px] text-[#A7ACB6]">{message}</div>
     </div>
   );
 }

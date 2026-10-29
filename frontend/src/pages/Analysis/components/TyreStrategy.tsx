@@ -7,9 +7,12 @@ import {
   type DriverManifest, type DriverTelemetry, type LapSummary, type SessionLaps,
 } from '../../../lib/telemetry';
 import { useDriverSet } from '../useDriverSet';
+import { sessionResultsUrl } from '../../../lib/f1';
 
 interface Props {
   year: string; gp: string; session: string;
+  /** Championship round, to look up the official classification. */
+  round?: number | string;
   drivers: string[]; manifest: DriverManifest;
   colorOverrides?: Record<string, string>;
 }
@@ -30,7 +33,7 @@ function finalPosition(laps: LapSummary[]): number | null {
   return null;
 }
 
-export default function TyreStrategy({ year, gp, session, drivers: codes, colorOverrides }: Props) {
+export default function TyreStrategy({ year, gp, session, round, drivers: codes, colorOverrides }: Props) {
   const { drivers, loading, error } = useDriverSet(year, gp, session, codes);
   const list = useMemo(() => codes.map(c => drivers[c]).filter((d): d is DriverTelemetry => !!d), [codes, drivers]);
   const colors = useMemo(() => driverColors(list.map(d => ({ driver: d.driver, team_color: d.team_color })), colorOverrides), [list, colorOverrides]);
@@ -59,13 +62,32 @@ export default function TyreStrategy({ year, gp, session, drivers: codes, colorO
     return () => { cancelled = true; };
   }, [year, gp, session]);
 
+  // The official classification decides the order and the numbers. The last lap's running
+  // position is not it: a car can be shuffled after the flag (penalties, a lapped car
+  // crossing the line), which gave two drivers the same number.
+  const [official, setOfficial] = useState<Record<string, number> | null>(null);
+  useEffect(() => {
+    if (round == null || (session !== 'R' && session !== 'S')) return;
+    let cancelled = false;
+    fetch(sessionResultsUrl(year, round, session))
+      .then(r => (r.ok ? r.json() : null))
+      .then((data: { results?: { abbreviation: string; position: number | null }[] } | null) => {
+        if (cancelled || !data?.results) return;
+        const map: Record<string, number> = {};
+        for (const row of data.results) if (row.position != null) map[row.abbreviation] = row.position;
+        setOfficial(Object.keys(map).length ? map : null);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [year, round, session]);
+
   const gridOrder = useMemo(() => {
     if (typeof gridLaps !== 'object') return [];
     const isRaceLike = session === 'R' || session === 'S';
     return Object.keys(gridLaps).sort((a, b) => {
       if (isRaceLike) {
-        const pa = finalPosition(gridLaps[a].laps);
-        const pb = finalPosition(gridLaps[b].laps);
+        const pa = official?.[a] ?? finalPosition(gridLaps[a].laps);
+        const pb = official?.[b] ?? finalPosition(gridLaps[b].laps);
         if (pa != null && pb != null) return pa - pb;
         if (pa != null) return -1;
         if (pb != null) return 1;
@@ -74,7 +96,7 @@ export default function TyreStrategy({ year, gp, session, drivers: codes, colorO
       const fb = gridLaps[b].fastest_lap?.lap_time_s ?? Infinity;
       return fa - fb;
     });
-  }, [gridLaps, session]);
+  }, [gridLaps, session, official]);
 
   const gridMaxLaps = useMemo(() => {
     if (typeof gridLaps !== 'object') return 1;
@@ -96,15 +118,19 @@ export default function TyreStrategy({ year, gp, session, drivers: codes, colorO
 
       {/* Stint timelines — whole grid, ordered by finishing position */}
       <div className="rounded-2xl bg-[#0d0e12] border border-white/5 p-5">
-        <h3 className="text-xs font-bold uppercase tracking-widest text-gray-300 mb-4">Stint Timeline</h3>
+        <div className="mb-3 flex items-baseline justify-between">
+          <h3 className="text-xs font-bold uppercase tracking-widest text-gray-300">Stint Timeline</h3>
+          <span className="font-mono text-[10px] text-gray-400">number = laps on that set · hover for detail</span>
+        </div>
         {gridLaps === 'loading' ? (
           <div className="h-64 animate-pulse rounded-xl bg-white/[0.02]" />
         ) : gridLaps === 'missing' || gridLaps === 'error' || gridOrder.length === 0 ? (
           <div className="py-10 text-center text-gray-500 text-xs font-mono">No lap data available for this session.</div>
         ) : (
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col">
+            <LapAxis maxLaps={gridMaxLaps} />
             {gridOrder.map((code, i) => (
-              <StintRow key={code} code={code} laps={gridLaps[code].laps} position={session === 'R' || session === 'S' ? finalPosition(gridLaps[code].laps) : i + 1}
+              <StintRow key={code} code={code} laps={gridLaps[code].laps} position={session === 'R' || session === 'S' ? (official?.[code] ?? finalPosition(gridLaps[code].laps)) : i + 1}
                 maxLaps={gridMaxLaps} highlighted={codes.includes(code)} />
             ))}
           </div>
@@ -144,45 +170,74 @@ export default function TyreStrategy({ year, gp, session, drivers: codes, colorO
   );
 }
 
+// Fixed columns shared by the axis and every row so the lap scale lines up.
+const ROW_COLS = '68px 1fr 44px';
+const AXIS_STEP = 10;
+
+/** Gridlines every 10 laps, drawn as a background so they line up with the axis ticks. */
+const gridlines = (maxLaps: number): React.CSSProperties => ({
+  backgroundImage: 'linear-gradient(to right, rgba(255,255,255,0.07) 1px, transparent 1px)',
+  backgroundSize: `${(AXIS_STEP / maxLaps) * 100}% 100%`,
+});
+
+function LapAxis({ maxLaps }: { maxLaps: number }) {
+  const ticks: number[] = [];
+  for (let l = 0; l <= maxLaps; l += AXIS_STEP) ticks.push(l);
+  return (
+    <div className="grid items-end pb-1" style={{ gridTemplateColumns: ROW_COLS }} aria-hidden>
+      <span />
+      <div className="relative h-4">
+        {ticks.map((l) => (
+          <span key={l} className="absolute top-0 -translate-x-1/2 font-mono text-[9px] text-gray-400" style={{ left: `${(l / maxLaps) * 100}%` }}>
+            {l === 0 ? '' : l}
+          </span>
+        ))}
+      </div>
+      <span className="text-right font-mono text-[9px] uppercase tracking-wider text-gray-500">Stops</span>
+    </div>
+  );
+}
+
 function StintRow({ code, laps, position, maxLaps, highlighted }: {
   code: string; laps: LapSummary[]; position: number | null; maxLaps: number; highlighted: boolean;
 }) {
   const stints = deriveStints(laps);
+  const stops = Math.max(0, stints.length - 1);
   return (
-    <div className={`flex items-center gap-3 rounded-lg px-2 py-1 -mx-2 transition-colors ${highlighted ? 'bg-white/[0.06]' : ''}`}>
-      <div className="w-14 shrink-0 flex items-center gap-1.5">
-        <span className="text-[9px] font-mono text-gray-600 w-5 text-right shrink-0">{position != null ? `P${position}` : ''}</span>
-        <span className="text-sm font-black text-white">{code}</span>
+    <div className={`grid items-center rounded-sm transition-colors ${highlighted ? 'bg-white/[0.06]' : 'hover:bg-white/[0.03]'}`}
+      style={{ gridTemplateColumns: ROW_COLS, height: 22 }}>
+      <div className="flex items-center gap-1.5 pl-1">
+        <span className="w-5 shrink-0 text-right font-mono text-[9px] text-gray-400">{position != null ? position : ''}</span>
+        <span className="text-[11px] font-black tracking-wide text-white">{code}</span>
       </div>
-      <div className="flex-1 flex gap-0.5 h-9">
+      <div className="flex h-[14px] items-center gap-px" style={gridlines(maxLaps)}>
         {stints.map((s, i) => {
           const color = TYRE_COLORS[s.compound] ?? TYRE_COLORS.UNKNOWN;
           const dark = s.compound === 'HARD' || s.compound === 'MEDIUM';
           return (
             // Custom CSS-fade tooltip instead of the native `title` attribute —
-            // browser tooltips have an unstyled, laggy appear delay; this fades
-            // in immediately on hover, styled to match the rest of the page.
-            // NOTE: rounded-corner clipping lives on the inner absolute div below,
-            // not on this outer relative container — overflow-hidden here would
-            // clip the tooltip too, since it's positioned outside this box (bottom-full).
-            <div key={i} className="group relative flex items-center justify-center cursor-default"
-              style={{ width: `${(s.laps / maxLaps) * 100}%`, minWidth: 18 }}>
-              <div className="absolute inset-0 rounded-[4px]" style={{ background: color }} />
-              <span className="relative text-[10px] font-black" style={{ color: dark ? '#111' : '#fff' }}>
-                {s.compound[0]}<span className="opacity-70 font-bold">{s.laps}</span>
-              </span>
-              <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-20 whitespace-nowrap opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 transition-all duration-150 ease-out">
-                <div className="rounded-lg bg-[#0a0a0c] border border-white/10 px-3 py-1.5 shadow-xl">
+            // browser tooltips have an unstyled, laggy appear delay. Clipping to the
+            // rounded corners sits on the inner div: overflow-hidden on this outer
+            // box would clip the tooltip, which is positioned outside it.
+            <div key={i} className="group relative h-full cursor-default" style={{ width: `${(s.laps / maxLaps) * 100}%` }}>
+              <div className="absolute inset-0 flex items-center justify-center overflow-hidden rounded-[3px]" style={{ background: color }}>
+                <span className="px-0.5 font-mono text-[9px] font-bold leading-none tabular-nums" style={{ color: dark ? '#111' : '#fff' }}>
+                  {s.laps}
+                </span>
+              </div>
+              <div className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-1.5 -translate-x-1/2 scale-95 whitespace-nowrap opacity-0 transition-all duration-150 ease-out group-hover:scale-100 group-hover:opacity-100">
+                <div className="rounded-lg border border-white/10 bg-[#0a0a0c] px-3 py-1.5 shadow-xl">
                   <div className="text-[11px] font-bold text-white">{s.compound}</div>
-                  <div className="text-[10px] text-gray-400 font-mono">Laps {s.startLap}–{s.endLap} · {s.laps} lap{s.laps === 1 ? '' : 's'}</div>
+                  <div className="font-mono text-[10px] text-gray-300">Laps {s.startLap}–{s.endLap} · {s.laps} lap{s.laps === 1 ? '' : 's'}</div>
                 </div>
-                <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 w-2 h-2 rotate-45 bg-[#0a0a0c] border-r border-b border-white/10" />
+                <div className="absolute left-1/2 top-full -mt-1 h-2 w-2 -translate-x-1/2 rotate-45 border-b border-r border-white/10 bg-[#0a0a0c]" />
               </div>
             </div>
           );
         })}
-        {stints.length === 0 && <div className="text-[11px] text-gray-600 font-mono self-center">No stint data</div>}
+        {stints.length === 0 && <div className="font-mono text-[10px] text-gray-500">No stint data</div>}
       </div>
+      <div className="pr-1 text-right font-mono text-[10px] text-gray-300 tabular-nums">{stints.length ? `${stops}` : ''}</div>
     </div>
   );
 }
@@ -190,11 +245,11 @@ function StintRow({ code, laps, position, maxLaps, highlighted }: {
 function CompoundLegend() {
   const items = ['SOFT', 'MEDIUM', 'HARD', 'INTERMEDIATE', 'WET'];
   return (
-    <div className="flex gap-3 mt-4 flex-wrap">
+    <div className="flex gap-3 mt-3 flex-wrap">
       {items.map(c => (
         <div key={c} className="flex items-center gap-1.5">
           <span className="w-3 h-3 rounded-sm" style={{ background: TYRE_COLORS[c] }} />
-          <span className="text-[10px] font-mono text-gray-500">{c}</span>
+          <span className="text-[10px] font-mono text-gray-300">{c}</span>
         </div>
       ))}
     </div>

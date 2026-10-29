@@ -41,7 +41,7 @@ function FAQItem({ q, a }: { q: string; a: string }) {
         </svg>
       </button>
       {open && (
-        <p className="pb-3 text-[11px] leading-relaxed text-gray-500 pr-6">{a}</p>
+        <p className="pb-3 text-[11px] leading-relaxed text-gray-400 pr-6">{a}</p>
       )}
     </div>
   );
@@ -58,7 +58,7 @@ export function Footer() {
               <span className="font-mono text-sm font-black tracking-tight uppercase text-white">GRID</span>
               <span className="font-mono text-sm font-black tracking-tight uppercase text-[#e10600]">LOCK</span>
             </div>
-            <p className="text-xs text-gray-500 leading-relaxed max-w-sm">
+            <p className="text-xs text-gray-400 leading-relaxed max-w-sm">
               A fan-built Formula 1 analytics platform — standings, race results, telemetry
               comparison, and a full race replay simulator, built on real timing data via FastF1 and OpenF1.
             </p>
@@ -66,7 +66,7 @@ export function Footer() {
 
           {/* FAQ */}
           <div>
-            <h3 className="text-[10px] font-bold tracking-[0.2em] uppercase text-gray-500 mb-2">FAQ</h3>
+            <h3 className="text-[10px] font-bold tracking-[0.2em] uppercase text-gray-400 mb-2">FAQ</h3>
             <div>
               {FAQ_ITEMS.map((item) => (
                 <FAQItem key={item.q} q={item.q} a={item.a} />
@@ -77,7 +77,7 @@ export function Footer() {
 
         {/* Legal disclaimer */}
         <div className="mt-8 pt-6 border-t border-white/5">
-          <p className="text-[10px] leading-relaxed text-gray-600 max-w-3xl">
+          <p className="text-[10px] leading-relaxed text-gray-400 max-w-3xl">
             GridLock is an unofficial, fan-made project and is not associated with, endorsed by,
             or affiliated with Formula 1, the FIA, or any Formula 1 team. F1, FORMULA ONE,
             FORMULA 1, FIA FORMULA ONE WORLD CHAMPIONSHIP, GRAND PRIX, and related marks are

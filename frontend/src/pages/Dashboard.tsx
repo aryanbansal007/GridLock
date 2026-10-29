@@ -149,11 +149,11 @@ function Panel({ title, action, onAction, children, className = '' }: {
   return (
     <section className={`flex h-full flex-col border border-[#24262B] bg-[#0B0D10] ${className}`}>
       <header className="flex items-center justify-between gap-3 border-b border-[#24262B] px-4 py-3">
-        <h2 className="flex items-center gap-2.5 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-[#969BA5]">
+        <h2 className="flex items-center gap-2.5 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-[#C5C9D1]">
           <span className="h-1.5 w-1.5 bg-[#E10600]" aria-hidden />{title}
         </h2>
         {action && onAction && (
-          <button onClick={onAction} className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[#969BA5] transition-colors hover:text-[#FF2D24] focus-visible:text-[#FF2D24] focus-visible:outline-none">
+          <button onClick={onAction} className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[#C5C9D1] transition-colors hover:text-[#FF2D24] focus-visible:text-[#FF2D24] focus-visible:outline-none">
             {action} →
           </button>
         )}
@@ -207,7 +207,7 @@ function HeroSection({
                 {[{ v: d, l: 'DAYS' }, { v: h, l: 'HRS' }, { v: m, l: 'MINS' }, { v: s, l: 'SECS' }].map((t, i) => (
                   <div key={i} className="flex flex-col">
                     <span className="font-mono text-3xl font-bold tabular-nums">{pad(t.v)}</span>
-                    <span className="text-[10px] text-gray-500 font-bold tracking-widest">{t.l}</span>
+                    <span className="text-[10px] text-gray-400 font-bold tracking-widest">{t.l}</span>
                   </div>
                 ))}
               </div>
@@ -266,9 +266,9 @@ function CommandBar({ onRaceEngineer, onSimulator, onAnalysis, latestName }: {
           </span>
           <span className="min-w-0 flex-1">
             <span className="block text-[13px] font-bold text-[#F5F5F5]">{t.label}</span>
-            <span className="block truncate text-[11px] text-[#6B7079]">{t.sub}</span>
+            <span className="block truncate text-[11px] text-[#A7ACB6]">{t.sub}</span>
           </span>
-          <span className="text-[#6B7079] transition-transform group-hover:translate-x-0.5 group-hover:text-[#F5F5F5]" aria-hidden>→</span>
+          <span className="text-[#A7ACB6] transition-transform group-hover:translate-x-0.5 group-hover:text-[#F5F5F5]" aria-hidden>→</span>
         </button>
       ))}
     </div>
@@ -288,12 +288,12 @@ function DriversPanel({ drivers, mounted, onOpen }: { drivers: DriverStanding[];
           return (
             <li key={drv.abbreviation} className="relative grid grid-cols-[1.5rem_auto_1fr_auto] items-center gap-3 border-b border-[#14161A] px-4 py-2.5 last:border-b-0">
               <span className="absolute inset-y-0 left-0 w-[2px]" style={{ background: color }} aria-hidden />
-              <span className={`text-center font-mono text-[13px] font-black tabular-nums ${i === 0 ? 'text-[#FFD700]' : 'text-[#6B7079]'}`}>{drv.position}</span>
+              <span className={`text-center font-mono text-[13px] font-black tabular-nums ${i === 0 ? 'text-[#FFD700]' : 'text-[#A7ACB6]'}`}>{drv.position}</span>
               <DriverAvatar src={drv.image_url} name={drv.name} abbr={drv.abbreviation} number={drv.number} teamColor={drv.team_color} size={34} rounded="lg" />
               <div className="min-w-0">
                 <div className="flex items-baseline gap-2">
                   <span className="truncate text-[14px] font-black uppercase tracking-[-0.01em]">{lastName(drv.name)}</span>
-                  <span className="hidden truncate text-[11px] text-[#6B7079] sm:inline">{drv.team}</span>
+                  <span className="hidden truncate text-[11px] text-[#A7ACB6] sm:inline">{drv.team}</span>
                 </div>
                 <div className="mt-1.5 pr-2"><PointsBar value={drv.points} max={leader} color={color} mounted={mounted} delay={i * 50} /></div>
               </div>
@@ -325,7 +325,7 @@ function ConstructorsPanel({ constructors, mounted, onOpen }: { constructors: Co
           return (
             <li key={team.name} className="relative grid grid-cols-[1.5rem_auto_1fr_auto] items-center gap-3 border-b border-[#14161A] px-4 py-[11px] last:border-b-0">
               <span className="absolute inset-y-0 left-0 w-[2px]" style={{ background: color }} aria-hidden />
-              <span className={`text-center font-mono text-[13px] font-black tabular-nums ${i === 0 ? 'text-[#FFD700]' : 'text-[#6B7079]'}`}>{team.position}</span>
+              <span className={`text-center font-mono text-[13px] font-black tabular-nums ${i === 0 ? 'text-[#FFD700]' : 'text-[#A7ACB6]'}`}>{team.position}</span>
               <TeamLogo src={logoFor(team.name)} name={team.name} color={team.color} size={32} />
               <div className="min-w-0">
                 <div className="truncate text-[14px] font-black uppercase tracking-[-0.01em]">{team.name}</div>
@@ -369,9 +369,9 @@ function SeasonPanel({ races, drivers, constructors, onOpenProfile, onCalendar }
       <div className="px-4 pt-4">
         <div className="flex items-baseline justify-between">
           <span className="font-mono text-[28px] font-black leading-none tracking-[-0.03em] tabular-nums">
-            {done}<span className="text-[15px] text-[#6B7079]">/{races.length}</span>
+            {done}<span className="text-[15px] text-[#A7ACB6]">/{races.length}</span>
           </span>
-          <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-[#969BA5]">rounds run</span>
+          <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-[#C5C9D1]">rounds run</span>
         </div>
         <div className="mt-3 flex gap-[2px]" aria-label={`${done} of ${races.length} rounds completed`} role="img">
           {races.map((r, i) => (
@@ -387,16 +387,16 @@ function SeasonPanel({ races, drivers, constructors, onOpenProfile, onCalendar }
 
       <dl className="mt-4 grid grid-cols-2 gap-px border-y border-[#24262B] bg-[#24262B]">
         <div className="bg-[#0B0D10] px-4 py-3">
-          <dt className="font-mono text-[9px] uppercase tracking-[0.16em] text-[#6B7079]">Leader's margin</dt>
-          <dd className="mt-1 font-mono text-[18px] font-black tabular-nums">{lead}<span className="ml-1 text-[10px] text-[#6B7079]">pts</span></dd>
+          <dt className="font-mono text-[9px] uppercase tracking-[0.16em] text-[#A7ACB6]">Leader's margin</dt>
+          <dd className="mt-1 font-mono text-[18px] font-black tabular-nums">{lead}<span className="ml-1 text-[10px] text-[#A7ACB6]">pts</span></dd>
         </div>
         <div className="bg-[#0B0D10] px-4 py-3">
-          <dt className="font-mono text-[9px] uppercase tracking-[0.16em] text-[#6B7079]">Max points left</dt>
+          <dt className="font-mono text-[9px] uppercase tracking-[0.16em] text-[#A7ACB6]">Max points left</dt>
           <dd className="mt-1 font-mono text-[18px] font-black tabular-nums">{maxLeft}</dd>
         </div>
       </dl>
 
-      <div className="px-4 pt-3 text-[12px] leading-relaxed text-[#969BA5]">
+      <div className="px-4 pt-3 text-[12px] leading-relaxed text-[#C5C9D1]">
         {leader ? (
           alive <= 1
             ? <><span className="font-bold text-[#F5F5F5]">{leader.name}</span> has the title mathematically secured.</>
@@ -409,7 +409,7 @@ function SeasonPanel({ races, drivers, constructors, onOpenProfile, onCalendar }
             <li key={d.abbreviation} className="flex items-center gap-2 font-mono text-[11px] tabular-nums">
               <span className="h-2.5 w-[2px]" style={{ background: `#${d.team_color}` }} aria-hidden />
               <span className="w-9 font-bold text-[#F5F5F5]">{d.abbreviation}</span>
-              <span className="text-[#6B7079]">{d.points} pts</span>
+              <span className="text-[#A7ACB6]">{d.points} pts</span>
               <span className="ml-auto"><GapText gap={leader.points - d.points} /></span>
             </li>
           ))}
@@ -423,19 +423,19 @@ function SeasonPanel({ races, drivers, constructors, onOpenProfile, onCalendar }
               <div className="flex items-center gap-2.5">
                 <DriverAvatar src={favDriver.image_url} name={favDriver.name} abbr={favDriver.abbreviation} number={favDriver.number} teamColor={favDriver.team_color} size={24} />
                 <span className="flex-1 truncate text-[12px] font-bold">{lastName(favDriver.name)}</span>
-                <span className="font-mono text-[11px] tabular-nums text-[#969BA5]">P{favDriver.position} · {favDriver.points}</span>
+                <span className="font-mono text-[11px] tabular-nums text-[#C5C9D1]">P{favDriver.position} · {favDriver.points}</span>
               </div>
             )}
             {favTeam && (
               <div className="flex items-center gap-2.5">
                 <TeamLogo src={logoFor(favTeam.name)} name={favTeam.name} color={favTeam.color} size={24} />
                 <span className="flex-1 truncate text-[12px] font-bold">{favTeam.name}</span>
-                <span className="font-mono text-[11px] tabular-nums text-[#969BA5]">P{favTeam.position} · {favTeam.points}</span>
+                <span className="font-mono text-[11px] tabular-nums text-[#C5C9D1]">P{favTeam.position} · {favTeam.points}</span>
               </div>
             )}
           </div>
         ) : (
-          <button onClick={onOpenProfile} className="w-full text-left font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[#969BA5] transition-colors hover:text-[#FF2D24]">
+          <button onClick={onOpenProfile} className="w-full text-left font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[#C5C9D1] transition-colors hover:text-[#FF2D24]">
             ★ Follow a driver &amp; team →
           </button>
         )}
@@ -450,7 +450,7 @@ function RecentResults({ races, onOpen, onAnalyze }: { races: RaceEntry[]; onOpe
   return (
     <Panel title="Recent results">
       {!races.length ? (
-        <p className="px-4 py-10 text-center font-mono text-[12px] text-[#6B7079]">No races completed yet this season</p>
+        <p className="px-4 py-10 text-center font-mono text-[12px] text-[#A7ACB6]">No races completed yet this season</p>
       ) : (
         <div className="grid grid-cols-2 gap-px bg-[#24262B] xl:grid-cols-4">
           {races.map((r) => (
@@ -465,17 +465,17 @@ function RecentResults({ races, onOpen, onAnalyze }: { races: RaceEntry[]; onOpe
                 </span>
               </button>
               <div className="flex flex-1 flex-col justify-between gap-3 px-3 pb-3 pt-2">
-                <div className="truncate font-mono text-[10px] uppercase tracking-[0.12em] text-[#6B7079]">{r.circuit} · {fmtDateShort(r.date)}</div>
+                <div className="truncate font-mono text-[10px] uppercase tracking-[0.12em] text-[#A7ACB6]">{r.circuit} · {fmtDateShort(r.date)}</div>
                 {r.winner ? (
                   <div className="flex items-center gap-2">
                     <span className="font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-[#FFD700]">Win</span>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-[13px] font-bold">{r.winner}</span>
-                      <span className="block truncate text-[10px] uppercase tracking-[0.08em] text-[#6B7079]">{r.winner_team}</span>
+                      <span className="block truncate text-[10px] uppercase tracking-[0.08em] text-[#A7ACB6]">{r.winner_team}</span>
                     </span>
                   </div>
-                ) : <span className="text-[11px] text-[#6B7079]">—</span>}
-                <button onClick={() => onAnalyze(r.race_id)} className="self-start font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[#969BA5] transition-colors hover:text-[#FF2D24] focus-visible:text-[#FF2D24] focus-visible:outline-none">
+                ) : <span className="text-[11px] text-[#A7ACB6]">—</span>}
+                <button onClick={() => onAnalyze(r.race_id)} className="self-start font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[#C5C9D1] transition-colors hover:text-[#FF2D24] focus-visible:text-[#FF2D24] focus-visible:outline-none">
                   Analyze →
                 </button>
               </div>
@@ -499,7 +499,7 @@ function UpNext({ races, onViewAll, onOpen }: { races: RaceEntry[]; onViewAll: (
   return (
     <Panel title="Up next" action="Calendar" onAction={onViewAll}>
       {!races.length ? (
-        <p className="px-4 py-10 text-center font-mono text-[12px] text-[#6B7079]">Season complete — see you next year.</p>
+        <p className="px-4 py-10 text-center font-mono text-[12px] text-[#A7ACB6]">Season complete — see you next year.</p>
       ) : (
         <ol>
           {races.map((r, i) => (
@@ -510,7 +510,7 @@ function UpNext({ races, onViewAll, onOpen }: { races: RaceEntry[]; onViewAll: (
               >
                 <span className="flex w-10 flex-col items-center border border-[#24262B] py-1">
                   <span className="font-mono text-[15px] font-black leading-none tabular-nums">{new Date(`${r.date}T00:00:00Z`).getUTCDate()}</span>
-                  <span className="mt-0.5 font-mono text-[8px] font-bold uppercase tracking-[0.12em] text-[#6B7079]">
+                  <span className="mt-0.5 font-mono text-[8px] font-bold uppercase tracking-[0.12em] text-[#A7ACB6]">
                     {new Date(`${r.date}T00:00:00Z`).toLocaleDateString('en-GB', { month: 'short', timeZone: 'UTC' })}
                   </span>
                 </span>
@@ -520,9 +520,9 @@ function UpNext({ races, onViewAll, onOpen }: { races: RaceEntry[]; onViewAll: (
                     <span className="truncate text-[13px] font-bold transition-colors group-hover:text-[#FF2D24]">{shortName(r.name)}</span>
                     {r.has_sprint && <span className="border border-[#E10600]/50 px-1 font-mono text-[8px] font-bold uppercase tracking-[0.1em] text-[#FF2D24]">Sprint</span>}
                   </span>
-                  <span className="block truncate font-mono text-[10px] uppercase tracking-[0.1em] text-[#6B7079]">R{r.round} · {r.circuit}</span>
+                  <span className="block truncate font-mono text-[10px] uppercase tracking-[0.1em] text-[#A7ACB6]">R{r.round} · {r.circuit}</span>
                 </span>
-                <span className="text-right font-mono text-[11px] tabular-nums text-[#969BA5]">
+                <span className="text-right font-mono text-[11px] tabular-nums text-[#C5C9D1]">
                   {i === 0 ? <span className="text-[#F5F5F5]">Next</span> : `${daysTo(r)}d`}
                 </span>
               </button>
@@ -556,7 +556,7 @@ function ErrorState({ message }: { message: string | null }) {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-[#050505]">
       <div className="font-mono text-[12px] font-bold uppercase tracking-[0.16em] text-[#e10600]">Connection lost</div>
-      <div className="font-mono text-sm text-gray-500">{message ?? 'Ensure the backend is running.'}</div>
+      <div className="font-mono text-sm text-gray-400">{message ?? 'Ensure the backend is running.'}</div>
     </div>
   );
 }

@@ -55,7 +55,7 @@ export function LandingNav() {
         <ul className="hidden items-center gap-7 lg:flex">
           {LINKS.map((l) => (
             <li key={l.href}>
-              <a href={l.href} className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#969BA5] transition-colors hover:text-[#F5F5F5] focus-visible:text-[#F5F5F5] focus-visible:outline-none focus-visible:underline focus-visible:underline-offset-8">
+              <a href={l.href} className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#C5C9D1] transition-colors hover:text-[#F5F5F5] focus-visible:text-[#F5F5F5] focus-visible:outline-none focus-visible:underline focus-visible:underline-offset-8">
                 {l.label}
               </a>
             </li>
@@ -63,7 +63,7 @@ export function LandingNav() {
         </ul>
 
         <div className="hidden items-center gap-2 lg:flex">
-          <button type="button" onClick={() => navigate('/auth')} className="px-3 py-2 text-[12px] font-bold uppercase tracking-[0.12em] text-[#969BA5] transition-colors hover:text-[#F5F5F5] focus-visible:outline-2 focus-visible:outline-[#FF2D24]">
+          <button type="button" onClick={() => navigate('/auth')} className="px-3 py-2 text-[12px] font-bold uppercase tracking-[0.12em] text-[#C5C9D1] transition-colors hover:text-[#F5F5F5] focus-visible:outline-2 focus-visible:outline-[#FF2D24]">
             Log in
           </button>
           <button type="button" onClick={() => navigate('/dashboard')} className="bg-[#E10600] px-4 py-2.5 text-[11px] font-black uppercase tracking-[0.14em] text-white transition-colors hover:bg-[#FF2D24] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF2D24]">

@@ -50,6 +50,10 @@ export interface RaceTrackProps {
   // Set of driver codes who have retired — their circles are removed from the track entirely.
   // The backend keeps sending their last known coordinates, so we must filter them out explicitly.
   retiredDrivers?: Set<string>;
+  // Where sectors 1 and 2 end (same coordinates as the outline). Draws the S1/S2/S3 split on
+  // the track; `sectorColors` (one per sector) tints a sector for the selected driver's lap.
+  sectorMarks?: TrackPoint[] | null;
+  sectorColors?: (string | null)[] | null;
 }
 
 // ─── constants ───────────────────────────────────────────────────────────────
@@ -166,6 +170,8 @@ const RaceTrack = ({
   finishLine      = null,
   transitionMs    = 300,
   retiredDrivers  = new Set<string>(),
+  sectorMarks     = null,
+  sectorColors    = null,
 }: RaceTrackProps) => {
   const wrapRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ w: 1000, h: 700 });
@@ -204,6 +210,36 @@ const RaceTrack = ({
       ) + " Z"
     );
   }, [trackOutline, project]);
+
+  // The outline starts at the start/finish line, so the sector ends are the outline points
+  // nearest the two marks; each sector is the stretch of outline between them.
+  const sectors = useMemo(() => {
+    if (!sectorMarks || sectorMarks.length < 2 || trackOutline.length < 10) return null;
+    const pts = trackOutline.map((p) => project(p.x, p.y));
+    const nearest = (m: TrackPoint) => {
+      const q = project(m.x, m.y);
+      let bi = 0, bd = Infinity;
+      pts.forEach((p, i) => { const d = Math.hypot(p.x - q.x, p.y - q.y); if (d < bd) { bd = d; bi = i; } });
+      return bi;
+    };
+    const i1 = nearest(sectorMarks[0]);
+    const i2 = nearest(sectorMarks[1]);
+    if (!(i1 > 0 && i2 > i1 && i2 < pts.length - 1)) return null;
+    const path = (a: number, b: number) =>
+      pts.slice(a, b + 1).map((p, k) => `${k ? "L" : "M"} ${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join(" ");
+    const tick = (i: number) => {
+      const a = pts[Math.max(0, i - 2)], b = pts[Math.min(pts.length - 1, i + 2)];
+      const len = Math.hypot(b.x - a.x, b.y - a.y) || 1;
+      const nx = -(b.y - a.y) / len, ny = (b.x - a.x) / len;
+      return { x: pts[i].x, y: pts[i].y, x1: pts[i].x + nx * 15, y1: pts[i].y + ny * 15, x2: pts[i].x - nx * 15, y2: pts[i].y - ny * 15 };
+    };
+    const mid = (a: number, b: number) => pts[Math.round((a + b) / 2)];
+    return {
+      paths: [path(0, i1), path(i1, i2), path(i2, pts.length - 1)],
+      ticks: [tick(i1), tick(i2)],
+      labels: [mid(0, i1), mid(i1, i2), mid(i2, pts.length - 1)],
+    };
+  }, [sectorMarks, trackOutline, project]);
 
   const safeFlag   = (flag || "clear").toLowerCase().trim();
   const trackColor = FLAG_TRACK_COLOR[safeFlag] ?? FLAG_TRACK_COLOR.clear;
@@ -265,6 +301,25 @@ const RaceTrack = ({
         {/* Kerb highlight */}
         <path d={trackPathD} stroke="#ffffff" strokeWidth="2" fill="none"
           strokeLinejoin="round" strokeLinecap="round" opacity="0.08" />
+
+        {sectors && (
+          <g pointerEvents="none">
+            {sectors.paths.map((d, i) => sectorColors?.[i] && (
+              <path key={i} d={d} stroke={sectorColors[i]!} strokeWidth="6" fill="none"
+                strokeLinejoin="round" strokeLinecap="round" opacity="0.95" />
+            ))}
+            {sectors.ticks.map((t, i) => (
+              <line key={i} x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2} stroke="#ffffff" strokeWidth="2" opacity="0.55" />
+            ))}
+            {sectors.labels.map((p, i) => (
+              <text key={i} x={p.x} y={p.y} fontSize="10" fontWeight="900" fill="#ffffff" opacity="0.7"
+                textAnchor="middle" dominantBaseline="middle" stroke="#000" strokeWidth="3" paintOrder="stroke"
+                dy="-20">
+                S{i + 1}
+              </text>
+            ))}
+          </g>
+        )}
 
         {startLine && (
           <FinishLineMark

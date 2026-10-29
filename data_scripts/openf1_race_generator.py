@@ -30,6 +30,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import sys
 import time
 from datetime import datetime
@@ -47,7 +48,8 @@ from full_race_generator import (
 )
 
 API = "https://api.openf1.org/v1"
-SESSION_NAMES = {"R": "Race", "S": "Sprint"}
+SESSION_NAMES = {"R": "Race", "S": "Sprint", "Q": "Qualifying", "SQ": "Sprint Qualifying",
+                 "FP1": "Practice 1", "FP2": "Practice 2", "FP3": "Practice 3"}
 MAX_GAP_SECONDS = 2.0
 MIN_OUTLINE_POINTS = 200
 # OpenF1's free tier is rate limited; stay well under it and back off when told to.
@@ -101,7 +103,7 @@ def find_session(api, year, gp, session_type, session_key):
         return found[0]
 
     if session_type not in SESSION_NAMES:
-        raise SystemExit("OpenF1 generator supports Race (R) and Sprint (S) sessions only")
+        raise SystemExit(f"Unknown session {session_type!r}; use one of {sorted(SESSION_NAMES)}")
 
     wanted = gp.lower().strip()
     meetings = api.get("meetings", year=year)
@@ -201,6 +203,150 @@ def build_track_status_timeline(race_control, t0):
     return events or [{"t": 0.0, "status": "clear"}]
 
 
+QUALI_SESSIONS = ("Q", "SQ")
+# Cars that go through Q1 and Q2 (22 on the grid: the slowest six drop in each).
+QUALI_ADVANCE = (16, 10)
+# A break between segments is never shorter than this; a restart after a red flag inside
+# a segment is, and must not split it in two.
+MIN_BREAK_S = 150.0
+DELETED_RE = re.compile(r"CAR (\d+) \(\w+\) TIME (\d+):(\d+\.\d+) DELETED")
+
+
+def format_lap(sec):
+    if not sec:
+        return None
+    minutes = int(sec // 60)
+    return f"{minutes}:{sec - minutes * 60:06.3f}" if minutes else f"{sec:.3f}"
+
+
+def build_quali_segments(race_control, t0):
+    """[(start, end)] seconds from t0 for Q1/Q2/Q3: SESSION STARTED..SESSION FINISHED pairs,
+    merging any restart that follows a stoppage closer than a real break."""
+    events = sorted(
+        (parse_ts(r["date"]) - t0, r["message"].strip().upper())
+        for r in race_control if r.get("category") == "SessionStatus")
+    spans, open_at = [], None
+    for t, msg in events:
+        if msg == "SESSION STARTED" and open_at is None:
+            open_at = t
+        elif msg == "SESSION FINISHED" and open_at is not None:
+            spans.append([open_at, t])
+            open_at = None
+    merged = []
+    for a, b in spans:
+        if merged and a - merged[-1][1] < MIN_BREAK_S:
+            merged[-1][1] = b
+        else:
+            merged.append([a, b])
+    return merged
+
+
+def deleted_laps(race_control):
+    """{(driver_number, lap_time_ms)} for times the stewards deleted (track limits)."""
+    out = set()
+    for r in race_control:
+        m = DELETED_RE.search(r.get("message", ""))
+        if m:
+            out.add((int(m.group(1)), round((int(m.group(2)) * 60 + float(m.group(3))) * 1000)))
+    return out
+
+
+def build_quali_file(session_name, spans, loaded, results, race_control, numbers_to_abbr, status_events):
+    """quali.json: the segment windows plus every driver's timed laps, from which the
+    simulator derives the running order at any moment (best time so far in the segment)."""
+    deleted = deleted_laps(race_control)
+    n_segments = len(spans)
+    prefix = "SQ" if session_name == "SQ" else "Q"
+
+    # A lap belongs to the segment it STARTED in (cars crossing the line after the clock
+    # hits zero still set a time); the segment's visible window runs to the last of them.
+    def segment_of(t):
+        for i, (a, b) in enumerate(spans):
+            if a - 60 <= t <= b:
+                return i
+        return None
+
+    drivers = {}
+    ends = [b for _, b in spans]
+    fastest_official = min((d for r in results for d in (r.get("duration") or []) if d), default=None)
+    slow_limit = fastest_official * 1.10 if fastest_official else float("inf")
+    for abbr, v in loaded.items():
+        laps = []
+        for r in v["rows"]:
+            if r["start"] is None or r["duration"] is None or r["out_lap"]:
+                continue
+            seg = segment_of(r["start"])
+            if seg is None:
+                continue
+            samples = [status_at_time(status_events, t, [0])
+                       for t in np.linspace(r["start"], r["start"] + r["duration"], 8)]
+            if samples.count("red") + samples.count("safety_car") >= 3:
+                continue
+            laps.append({
+                "segment": seg + 1,
+                "start": round(r["start"], 2),
+                "end": round(r["start"] + r["duration"], 2),
+                "time": round(r["duration"], 3),
+                "deleted": (v["number"], round(r["duration"] * 1000)) in deleted,
+                "in_lap": bool(r["in_lap"]),
+                "sectors": r["sectors"] if all(r["sectors"]) else None,
+            })
+            # Only a timed attempt can hold the segment open: an in-lap that wanders through the
+            # garage during the break would otherwise swallow it.
+            if r["duration"] <= slow_limit:
+                ends[seg] = max(ends[seg], laps[-1]["end"])
+        drivers[abbr] = {"laps": laps}
+
+    official = {}
+    for res in results:
+        abbr = numbers_to_abbr.get(res["driver_number"])
+        dur = (res.get("duration") or [])
+        if abbr in drivers:
+            official[abbr] = [d for d in dur] + [None] * (3 - len(dur))
+
+    for abbr, d in drivers.items():
+        times = official.get(abbr, [None, None, None])
+        d["official"] = [round(t, 3) if t else None for t in times]
+        # The last segment this driver set a time in (None = reached the final one).
+        reached = max((i + 1 for i, t in enumerate(times) if t), default=0)
+        d["out_in"] = reached if 0 < reached < n_segments else None
+        # Laps that don't match the official time of a segment where they're the best are
+        # still shown; only deleted ones are excluded from the order.
+        res = next((x for x in results if numbers_to_abbr.get(x["driver_number"]) == abbr), None)
+        d["position"] = res["position"] if res and isinstance(res["position"], int) else None
+        # The final order decides who went through, not who set a time: a driver who
+        # qualified for the last segment but didn't run is still in it.
+        if d["position"] and n_segments == len(QUALI_ADVANCE) + 1:
+            d["out_in"] = next((i + 1 for i, k in enumerate(QUALI_ADVANCE) if d["position"] > k), None)
+
+    segments = []
+    for i, (a, b) in enumerate(spans):
+        segments.append({
+            "name": f"{prefix}{i + 1}",
+            "start": round(a, 2),
+            "clock_end": round(b, 2),
+            "end": round(min(ends[i], spans[i + 1][0] - 1) if i + 1 < n_segments else ends[i], 2),
+        })
+    # Where S1 and S2 end on the circuit: the position of the quickest complete lap's car at
+    # its own sector split times (same coordinates as the track outline).
+    marks = []
+    best = None
+    for abbr, v in loaded.items():
+        for r in v["rows"]:
+            if r["start"] is None or not r["duration"] or r["out_lap"]:
+                continue
+            sec = r.get("sectors")
+            if sec and all(sec) and (best is None or r["duration"] < best[0]):
+                best = (r["duration"], abbr, r["start"], sec)
+    if best:
+        _, abbr, start, sec = best
+        tel = loaded[abbr]["tel"]
+        for split in (start + sec[0], start + sec[0] + sec[1]):
+            marks.append({"x": float(np.interp(split, tel["t_loc"], tel["x"])),
+                          "y": float(np.interp(split, tel["t_loc"], tel["y"]))})
+    return {"version": 2, "session": session_name, "segments": segments, "sector_marks": marks, "drivers": drivers}
+
+
 def build_weather_timeline(weather, t0):
     events = [
         {
@@ -258,7 +404,8 @@ def build_driver_laps(laps, stints, pits, positions, t0):
         start = parse_ts(raw["date_start"]) - t0 if raw.get("date_start") else prev_end
         duration = raw.get("lap_duration")
         rows.append({"n": n, "start": start, "duration": duration,
-                     "out_lap": bool(raw.get("is_pit_out_lap"))})
+                     "out_lap": bool(raw.get("is_pit_out_lap")),
+                     "sectors": [raw.get(f"duration_sector_{i}") for i in (1, 2, 3)]})
         prev_end = start + duration if (start is not None and duration) else None
 
     # A missing start is recovered from the following lap, which starts when this one ends.
@@ -443,6 +590,12 @@ def main():
 
     t_min = min(v["t_start"] for v in loaded.values())
     t_max = max(v["t_end"] for v in loaded.values())
+    if args.session in QUALI_SESSIONS:
+        # Stop shortly after the last segment's chequered flag, not when the last car is
+        # finally parked.
+        spans_for_end = build_quali_segments(race_control, t0)
+        if spans_for_end:
+            t_max = min(t_max, spans_for_end[-1][1] + 180.0)
     master_timeline = np.arange(t_min, t_max, args.sample_ms / 1000.0)
     print(f"Master timeline: {len(master_timeline)} frames "
           f"({args.sample_ms}ms steps, {(t_max - t_min):.0f}s total)")
@@ -496,6 +649,15 @@ def main():
     outline, bounds, avg_lap_length = build_track_outline(loaded, outline_candidates)
 
     print("Building per-driver lap tables...")
+    quali_spans = build_quali_segments(race_control, t0) if args.session in QUALI_SESSIONS else []
+
+    def segment_number(start):
+        # Laps are tagged by the segment they started in (Q1/Q2/Q3 = 1/2/3).
+        for i, (a, b) in enumerate(quali_spans):
+            if start is not None and a - 60 <= start <= b:
+                return i + 1
+        return None
+
     for abbr, v in loaded.items():
         table = []
         for r in v["rows"]:
@@ -523,7 +685,7 @@ def main():
                 "stint": r["stint"],
                 "is_accurate": bool(clean),
                 "position": r["position"],
-                "segment": None,
+                "segment": segment_number(r["start"]),
             })
         timed = [l for l in table if l["lap_time_s"] is not None]
         fastest = None
@@ -551,7 +713,23 @@ def main():
     print(f"Done. Wrote {n} per-driver files to {os.path.join(out_dir, 'drivers')}")
 
     write_track_file(outline, bounds, avg_lap_length, total_laps, args.session, [], out_dir)
-    write_laps_file(lap_tables, driver_names, team_colors, {}, out_dir)
+    quali_times = {}
+    if args.session in QUALI_SESSIONS:
+        for res in results:
+            abbr = numbers_to_abbr.get(res["driver_number"])
+            dur = (res.get("duration") or []) + [None] * 3
+            if abbr:
+                quali_times[abbr] = {f"q{i + 1}": format_lap(dur[i]) for i in range(3)}
+    write_laps_file(lap_tables, driver_names, team_colors, quali_times, out_dir)
+    if args.session in QUALI_SESSIONS:
+        spans = build_quali_segments(race_control, t0)
+        if not spans:
+            raise SystemExit("No SESSION STARTED/FINISHED pairs in race control: cannot split into segments")
+        quali = build_quali_file(args.session, spans, loaded, results, race_control,
+                                 numbers_to_abbr, status_events)
+        with open(os.path.join(out_dir, "quali.json"), "w") as f:
+            json.dump(quali, f)
+        print("Segments:", [(g["name"], round(g["start"]), round(g["end"])) for g in quali["segments"]])
     write_conditions_file(frames, args.sample_ms, out_dir)
     print(f"Done. Wrote track.json, laps.json, conditions.json to {out_dir}")
 

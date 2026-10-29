@@ -6,7 +6,7 @@ const OUTLINE_D = pathD(SNAP.outline, true);
 
 /** Small uppercase technical label. */
 export function Tag({ children, tone = 'muted', className = '' }: { children: ReactNode; tone?: 'muted' | 'red' | 'text'; className?: string }) {
-  const color = tone === 'red' ? 'text-[#FF2D24]' : tone === 'text' ? 'text-[#F5F5F5]' : 'text-[#969BA5]';
+  const color = tone === 'red' ? 'text-[#FF2D24]' : tone === 'text' ? 'text-[#F5F5F5]' : 'text-[#C5C9D1]';
   return (
     <span className={`font-mono text-[10px] font-semibold uppercase tracking-[0.18em] ${color} ${className}`}>
       {children}
@@ -17,8 +17,8 @@ export function Tag({ children, tone = 'muted', className = '' }: { children: Re
 /** Honest provenance marker for every preview: what session, and that it is a recording. */
 export function HistoricalBadge({ className = '' }: { className?: string }) {
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-sm border border-[#24262B] bg-[#0B0D10]/80 px-2 py-1 font-mono text-[9px] font-semibold uppercase tracking-[0.16em] text-[#969BA5] ${className}`}>
-      <span className="h-1.5 w-1.5 rounded-full bg-[#969BA5]" aria-hidden />
+    <span className={`inline-flex items-center gap-1.5 rounded-sm border border-[#24262B] bg-[#0B0D10]/80 px-2 py-1 font-mono text-[9px] font-semibold uppercase tracking-[0.16em] text-[#C5C9D1] ${className}`}>
+      <span className="h-1.5 w-1.5 rounded-full bg-[#C5C9D1]" aria-hidden />
       Historical · {SNAP.session.year} {SNAP.session.name.replace(' Grand Prix', ' GP')}
     </span>
   );
@@ -30,7 +30,7 @@ export function Panel({ title, meta, children, className = '' }: { title: string
     <div className={`relative flex flex-col border border-[#24262B] bg-[#0B0D10] ${className}`}>
       <div className="flex items-center justify-between gap-3 border-b border-[#24262B] px-3 py-2">
         <Tag>{title}</Tag>
-        {meta && <div className="font-mono text-[10px] text-[#969BA5] tabular-nums">{meta}</div>}
+        {meta && <div className="font-mono text-[10px] text-[#C5C9D1] tabular-nums">{meta}</div>}
       </div>
       <div className="relative flex-1 min-h-0">{children}</div>
     </div>
@@ -123,7 +123,7 @@ export function SectionHead({ index, kicker, title, children, align = 'left' }: 
       <h2 className="text-[clamp(1.75rem,3.2vw,2.75rem)] font-black leading-[1.05] tracking-[-0.03em] text-[#F5F5F5]">
         {title}
       </h2>
-      {children && <p className="mt-4 text-[15px] leading-relaxed text-[#969BA5]">{children}</p>}
+      {children && <p className="mt-4 text-[15px] leading-relaxed text-[#C5C9D1]">{children}</p>}
     </div>
   );
 }

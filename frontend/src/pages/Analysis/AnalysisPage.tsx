@@ -326,7 +326,7 @@ export default function AnalysisPage() {
               ) : mode === 'laptimes' ? (
                 <LapTimes year={year} gp={resolvedRace.name} session={apiSession} drivers={selected} manifest={manifest} colorOverrides={colorOverrides} />
               ) : (
-                <TyreStrategy year={year} gp={resolvedRace.name} session={apiSession} drivers={selected} manifest={manifest} colorOverrides={colorOverrides} />
+                <TyreStrategy year={year} gp={resolvedRace.name} session={apiSession} round={resolvedRace.round} drivers={selected} manifest={manifest} colorOverrides={colorOverrides} />
               )}
             </div>
           </>

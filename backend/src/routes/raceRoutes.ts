@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { generateRace, listRaces, getSchedule, listSessionDrivers, getDriverData, getTrackData, getLapsData, getConditionsData } from '../controllers/raceController.js';
+import { generateRace, listRaces, getSchedule, listSessionDrivers, getDriverData, getTrackData, getLapsData, getConditionsData, getQualiData } from '../controllers/raceController.js';
 
 const router = Router();
 
@@ -15,6 +15,7 @@ router.get('/data/:year/:gp/:session/drivers/:abbr', getDriverData);
 router.get('/data/:year/:gp/:session/track', getTrackData);
 router.get('/data/:year/:gp/:session/laps', getLapsData);
 router.get('/data/:year/:gp/:session/conditions', getConditionsData);
+router.get('/data/:year/:gp/:session/quali', getQualiData);
 
 router.get('/schedule/:year', getSchedule);
 

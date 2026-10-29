@@ -36,6 +36,15 @@ export const checkConditionsCache = (year: string, gp: string, session: string):
     return fs.existsSync(targetFilePath) ? targetFilePath : null;
 };
 
+// Qualifying only: segment windows and each driver's timed laps (quali.json), from which
+// the simulator derives the Q1/Q2/Q3 running order. Sessions without one have no file.
+export const checkQualiCache = (year: string, gp: string, session: string): string | null => {
+    const safeGpName = gp.toLowerCase().replace(/ /g, "_");
+    const safeSession = session.toUpperCase();
+    const targetFilePath = path.join(CACHE_DIR, year, safeGpName, safeSession, 'quali.json');
+    return fs.existsSync(targetFilePath) ? targetFilePath : null;
+};
+
 // Session-wide lap tables for ALL drivers (lap/position/lap_time/compound/stint —
 // no telemetry arrays), written by write_laps_file(). Powers the Position Chart
 // without needing to download every driver's full per-driver telemetry file.

@@ -3,9 +3,12 @@ import { useParams, useNavigate } from "react-router-dom";
 import RaceTrack from "./components/RaceTrack";
 import { trackRotation } from "../../lib/trackRotation";
 import Leaderboard from "./components/Leaderboard";
+import QualiBoard from "./components/QualiBoard";
+import DriverTimingBar from "./components/DriverTimingBar";
+import { qualiStateAt, driverTimingAt, formatClock, TONE_HEX, type QualiData } from "../../lib/quali";
 import { DataSourceNote } from "../../components/DataSourceNote";
 import {
-  driversManifestUrl, driverDataUrl, trackUrl, conditionsUrl, unwrapManifest,
+  driversManifestUrl, driverDataUrl, trackUrl, conditionsUrl, qualiUrl, unwrapManifest,
 } from "../../lib/telemetry";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
@@ -85,7 +88,18 @@ const SESSION_LABELS: Record<string, string> = {
   r: "RACE",
   q: "QUALIFYING",
   s: "SPRINT",
-  sq: "SPRINT SHOOTOUT",
+  sq: "SPRINT QUALIFYING",
+};
+
+// Frames advanced per tick while the replay is inside a qualifying break.
+const BREAK_SKIP_FRAMES = 8;
+
+const QUALI_BAND_STYLE: Record<string, React.CSSProperties> = {
+  segment: { background: "rgba(225,6,0,0.28)", borderColor: "rgba(225,6,0,0.55)" },
+  break: {
+    background: "repeating-linear-gradient(135deg, rgba(250,204,21,0.18) 0 4px, rgba(250,204,21,0.04) 4px 8px)",
+    borderColor: "rgba(250,204,21,0.35)",
+  },
 };
 
 function formatTime(seconds: number): string {
@@ -111,13 +125,15 @@ const LiveSimulator = () => {
   const navigate = useNavigate();
 
   const [raceData, setRaceData] = useState<any>(null);
+  const [quali, setQuali] = useState<QualiData | null>(null);
   const [frameIndex, setFrameIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [playbackSpeed, setPlaybackSpeed] = useState<number>(5);
   const [isPlaying, setIsPlaying] = useState(true);
-  const [showNames, setShowNames] = useState<boolean>(false);
   const [selectedDriver, setSelectedDriver] = useState<string | null>(null);
+  // Qualifying pins up to three drivers to the timing strip (newest last).
+  const [pinned, setPinned] = useState<string[]>([]);
 
   // Parse raceId → year / gp / session
   const { year, gp, session } = useMemo(() => {
@@ -233,7 +249,18 @@ const LiveSimulator = () => {
           frames,
         };
 
+        // Qualifying carries its segment windows and timed laps in one extra file; without
+        // it the session still plays, just with the race-style board.
+        let qualiData: QualiData | null = null;
+        if (session === "q" || session === "sq") {
+          try {
+            const qRes = await fetch(qualiUrl(year, gp, session));
+            if (qRes.ok) qualiData = await qRes.json();
+          } catch { /* fall back to the plain board */ }
+        }
+
         if (cancelled) return;
+        setQuali(qualiData);
         setRaceData(data);
         setFrameIndex(0);
         setLoading(false);
@@ -285,6 +312,24 @@ const LiveSimulator = () => {
     return out;
   }, [raceData]);
 
+  // Q1 / break / Q2 / break / Q3 as frame ranges for the playbar.
+  const qualiBands = useMemo(() => {
+    if (!raceData || !quali) return [];
+    const t0: number = raceData.frames[0].t;
+    const dt: number = (raceData.meta.sample_interval_ms || 300) / 1000;
+    const last = raceData.frames.length - 1;
+    const at = (t: number) => Math.min(last, Math.max(0, Math.round((t - t0) / dt)));
+    const out: { kind: "segment" | "break"; label: string; start: number; end: number }[] = [];
+    quali.segments.forEach((seg, i) => {
+      out.push({ kind: "segment", label: seg.name, start: at(seg.start), end: at(seg.end) });
+      const next = quali.segments[i + 1];
+      if (next) {
+        out.push({ kind: "break", label: `${next.name} in ${formatClock(next.start - seg.end)}`, start: at(seg.end), end: at(next.start) });
+      }
+    });
+    return out;
+  }, [raceData, quali]);
+
   const retiredDrivers = useMemo(() => {
     if (!raceData) return new Set<string>();
     const frame = raceData.frames[frameIndex];
@@ -302,13 +347,17 @@ const LiveSimulator = () => {
 
     const t = setInterval(
       () =>
-        setFrameIndex((p) =>
-          p + 1 >= raceData.frames.length ? (setIsPlaying(false), p) : p + 1
-        ),
+        setFrameIndex((p) => {
+          if (p + 1 >= raceData.frames.length) { setIsPlaying(false); return p; }
+          // The wait between qualifying segments is minutes of parked cars: run through
+          // it quickly (the playbar still shows how long it lasts) unless the viewer paused.
+          const inBreak = quali && qualiStateAt(quali, raceData.frames[p].t).phase === "break";
+          return Math.min(p + (inBreak ? BREAK_SKIP_FRAMES : 1), raceData.frames.length - 1);
+        }),
       currentTransitionMs
     );
     return () => clearInterval(t);
-  }, [raceData, loading, error, isPlaying, currentTransitionMs]);
+  }, [raceData, quali, loading, error, isPlaying, currentTransitionMs]);
 
   // ── keyboard ──────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -323,7 +372,6 @@ const LiveSimulator = () => {
       else if (e.code === "ArrowRight")
         setFrameIndex((f) => Math.min(total - 1, f + 50));
       else if (e.code === "KeyR") setFrameIndex(0);
-      else if (e.code === "KeyL") setShowNames((p) => !p);
       else if (e.code === "Digit1") setPlaybackSpeed(1);
       else if (e.code === "Digit2") setPlaybackSpeed(2);
       else if (e.code === "Digit3") setPlaybackSpeed(5);
@@ -369,6 +417,17 @@ const LiveSimulator = () => {
   const elapsedSec = currentFrame.t - raceData.frames[0].t;
   const flag = (currentFrame.flag as string) || "clear";
   const flagMeta = FLAG_META[flag] || FLAG_META.clear;
+  const qualiState = quali ? qualiStateAt(quali, currentFrame.t) : null;
+  // The selected driver's sector colours, drawn on the track while they are on a push lap.
+  const sectorColors = (() => {
+    if (!quali) return null;
+    // Follows the most recently pinned driver who is on a timed lap right now.
+    for (let i = pinned.length - 1; i >= 0; i--) {
+      const timing = driverTimingAt(quali, pinned[i], currentFrame.t);
+      if (timing?.push && timing.sectors.length) return timing.sectors.map((sec) => TONE_HEX[sec.tone]);
+    }
+    return null;
+  })();
   const gpLabel = humaniseGp(gp);
   const sessionLabel = SESSION_LABELS[session] || session.toUpperCase();
 
@@ -477,7 +536,7 @@ const LiveSimulator = () => {
 
         {/* ── TRACK AREA ── */}
         <div className="flex-1 min-h-0 relative">
-          {selectedDriver && currentFrame.cars[selectedDriver] && (
+          {selectedDriver && !quali && currentFrame.cars[selectedDriver] && (
             <div className="absolute top-4 left-4 z-40 w-52 bg-neutral-900/90 border border-neutral-700 rounded-xl p-3.5 shadow-2xl backdrop-blur-md">
               <div className="flex justify-between items-center mb-3">
                 <span className="text-xl font-black text-white">{selectedDriver}</span>
@@ -502,6 +561,32 @@ const LiveSimulator = () => {
             </div>
           )}
 
+          {qualiState?.phase === "break" && quali && (
+            <div className="absolute inset-x-0 top-4 z-30 flex justify-center pointer-events-none">
+              <div className="pointer-events-auto flex items-center gap-4 rounded-xl border border-yellow-500/30 bg-neutral-900/90 px-5 py-3 shadow-2xl backdrop-blur-md">
+                <div>
+                  <div className="text-[10px] font-black uppercase tracking-[0.2em] text-yellow-400">
+                    {quali.segments[qualiState.segIdx].name} complete
+                  </div>
+                  <div className="text-sm font-black text-white">
+                    {quali.segments[qualiState.segIdx + 1].name} starts in{" "}
+                    <span className="font-mono tabular-nums">{formatClock(qualiState.countdown ?? 0)}</span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    const dt = (raceData.meta.sample_interval_ms || 300) / 1000;
+                    const target = quali.segments[qualiState.segIdx + 1].start - 3;
+                    setFrameIndex(Math.min(totalFrames - 1, Math.max(0, Math.round((target - raceData.frames[0].t) / dt))));
+                  }}
+                  className="rounded-lg bg-white px-3 py-1.5 text-[11px] font-black uppercase tracking-wider text-black hover:bg-neutral-200"
+                >
+                  Skip →
+                </button>
+              </div>
+            </div>
+          )}
+
           <RaceTrack
             drivers={drivers}
             positions={currentFrame.cars}
@@ -510,13 +595,42 @@ const LiveSimulator = () => {
             rotation={trackRotation(gp)}
             flag={flag}
             transitionMs={currentTransitionMs}
-            showNames={showNames}
+            showNames
             retiredDrivers={retiredDrivers}
+            sectorMarks={quali?.sector_marks ?? null}
+            sectorColors={sectorColors}
           />
         </div>
 
+        {quali && (
+          <DriverTimingBar
+            quali={quali}
+            codes={pinned}
+            colors={raceData.meta.team_colors}
+            currentTime={currentFrame.t}
+            onClose={(code) => setPinned((p) => p.filter((c) => c !== code))}
+          />
+        )}
+
         {/* ── PLAYBAR ── */}
         <div className="flex-shrink-0 px-6 pb-5 pt-3 bg-[#080808] border-t border-neutral-800/50">
+          {qualiBands.length > 0 && (
+            <div className="relative mb-2 h-5" aria-hidden>
+              {qualiBands.map((b, i) => (
+                <div
+                  key={i}
+                  className="absolute top-0 h-5 overflow-hidden rounded-[2px] border flex items-center justify-center text-[9px] font-black uppercase tracking-widest text-neutral-200 whitespace-nowrap"
+                  style={{
+                    left: `${(b.start / Math.max(totalFrames - 1, 1)) * 100}%`,
+                    width: `${((b.end - b.start) / Math.max(totalFrames - 1, 1)) * 100}%`,
+                    ...QUALI_BAND_STYLE[b.kind],
+                  }}
+                >
+                  {b.kind === "break" ? <span className="text-yellow-300/90">{b.label}</span> : b.label}
+                </div>
+              ))}
+            </div>
+          )}
           {flagSegments.length > 0 && (
             <div className="mb-1.5 flex flex-wrap items-center justify-end gap-x-4 gap-y-1 text-[9px] font-bold uppercase tracking-widest text-neutral-500">
               {FLAG_BAND_ORDER.filter((k) => flagSegments.some((seg) => seg.kind === k)).map((k) => (
@@ -640,24 +754,32 @@ const LiveSimulator = () => {
               ))}
             </div>
           </div>
-
-          <p className="mt-2 text-center text-[10px] text-neutral-700 tracking-widest">
-            SPACE · ← → · 1–4 · R · L (LABELS)
-          </p>
         </div>
       </div>
 
       {/* RIGHT COLUMN — leaderboard */}
       <div className="w-[300px] flex-shrink-0 h-full border-l border-neutral-800 bg-neutral-950 overflow-hidden">
-        <Leaderboard
-          drivers={drivers}
-          positions={currentFrame.cars}
-          totalLaps={totalLaps}
-          currentLap={currentLap}
-          currentTime={currentFrame.t}
-          onDriverSelect={setSelectedDriver}
-          selectedDriver={selectedDriver}
-        />
+        {quali ? (
+          <QualiBoard
+            quali={quali}
+            colors={raceData.meta.team_colors}
+            currentTime={currentFrame.t}
+            onDriverSelect={(code) =>
+              setPinned((p) => (p.includes(code) ? p.filter((c) => c !== code) : [...p, code].slice(-3)))
+            }
+            selected={pinned}
+          />
+        ) : (
+          <Leaderboard
+            drivers={drivers}
+            positions={currentFrame.cars}
+            totalLaps={totalLaps}
+            currentLap={currentLap}
+            currentTime={currentFrame.t}
+            onDriverSelect={setSelectedDriver}
+            selectedDriver={selectedDriver}
+          />
+        )}
       </div>
     </div>
   );

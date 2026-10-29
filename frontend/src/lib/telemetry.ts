@@ -128,6 +128,9 @@ export const lapsUrl = (y: string, g: string, s: string) =>
 export const conditionsUrl = (y: string, g: string, s: string) =>
   usingObjectStorage() ? `${objectBase(y, g, s)}/conditions.json` : `${apiBase(y, g, s)}/conditions`;
 
+export const qualiUrl = (y: string, g: string, s: string) =>
+  usingObjectStorage() ? `${objectBase(y, g, s)}/quali.json` : `${apiBase(y, g, s)}/quali`;
+
 /** The driver manifest is the one payload whose shape differs between sources: the API
  *  wraps it as `{ success, drivers }`, while object storage serves the generator's
  *  drivers/index.json unchanged, which is the bare `{ VER: {...}, HAM: {...} }` map.

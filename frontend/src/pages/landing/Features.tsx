@@ -35,7 +35,7 @@ export function TelemetryFeature() {
                 <div key={d.code} className="flex items-center gap-3 border border-[#24262B] bg-[#0B0D10] px-3 py-2">
                   <svg width="22" height="6" aria-hidden><line x1="0" y1="3" x2="22" y2="3" stroke={i ? COLOR_B : COLOR_A} strokeWidth="2" strokeDasharray={i ? '4 3' : undefined} /></svg>
                   <span className="text-[13px] font-bold text-[#F5F5F5]">{d.name}</span>
-                  <span className="font-mono text-[11px] tabular-nums text-[#969BA5]">L{d.lap} · {fmtLap(d.lap_time)}</span>
+                  <span className="font-mono text-[11px] tabular-nums text-[#C5C9D1]">L{d.lap} · {fmtLap(d.lap_time)}</span>
                 </div>
               ))}
             </div>
@@ -54,12 +54,12 @@ export function TelemetryFeature() {
             {SNAP.compare.brakeZones.map((z, i) => (
               <div key={z.d} className="font-mono text-[11px] tabular-nums">
                 <span className="text-[#FF2D24]">B{i + 1}</span>
-                <span className="ml-2 text-[#969BA5]">{(z.d / 1000).toFixed(2)} km</span>
+                <span className="ml-2 text-[#C5C9D1]">{(z.d / 1000).toFixed(2)} km</span>
                 <span className="ml-2 text-[#F5F5F5]">min {z.v} km/h</span>
               </div>
             ))}
           </div>
-          <p className="mt-3 text-[12px] text-[#6B7079]">Braking zones B1–B{SNAP.compare.brakeZones.length} are found from the data itself, where {C.a.code}'s brake is applied and speed bottoms out.</p>
+          <p className="mt-3 text-[12px] text-[#A7ACB6]">Braking zones B1–B{SNAP.compare.brakeZones.length} are found from the data itself, where {C.a.code}'s brake is applied and speed bottoms out.</p>
         </Reveal>
       </div>
     </section>
@@ -95,7 +95,7 @@ export function SimulatorFeature() {
               <li key={t} className="flex gap-3"><span className="mt-2 h-px w-4 shrink-0 bg-[#E10600]" aria-hidden />{t}</li>
             ))}
           </ul>
-          <button type="button" onClick={() => navigate('/simulator-setup')} className="mt-8 border border-[#24262B] px-5 py-3 text-[11px] font-black uppercase tracking-[0.14em] text-[#F5F5F5] transition-colors hover:border-[#969BA5] focus-visible:outline-2 focus-visible:outline-[#FF2D24]">
+          <button type="button" onClick={() => navigate('/simulator-setup')} className="mt-8 border border-[#24262B] px-5 py-3 text-[11px] font-black uppercase tracking-[0.14em] text-[#F5F5F5] transition-colors hover:border-[#C5C9D1] focus-visible:outline-2 focus-visible:outline-[#FF2D24]">
             Open the simulator →
           </button>
         </div>
@@ -118,7 +118,7 @@ export function SimulatorFeature() {
                     {STATUS_META[e.s].label} L{e.from}{e.to > e.from ? `–${e.to}` : ''}
                   </span>
                 ))}
-                <div className="absolute inset-x-0 top-7 flex justify-between font-mono text-[9px] text-[#6B7079]">
+                <div className="absolute inset-x-0 top-7 flex justify-between font-mono text-[9px] text-[#A7ACB6]">
                   {[1, 10, 20, 30, 40, 50].map((l) => <span key={l}>L{l}</span>)}
                 </div>
               </div>
@@ -127,7 +127,7 @@ export function SimulatorFeature() {
               <div className="mt-6 space-y-2.5">
                 {pits.map((p, i) => (
                   <div key={p.code} className="flex items-center gap-3">
-                    <span className="w-12 font-mono text-[11px] font-bold text-[#F5F5F5]"><span className="text-[#6B7079]">P{i + 1} </span>{p.code}</span>
+                    <span className="w-12 font-mono text-[11px] font-bold text-[#F5F5F5]"><span className="text-[#A7ACB6]">P{i + 1} </span>{p.code}</span>
                     <div className="relative h-[3px] flex-1 bg-[#1A1C20]">
                       <div className="absolute inset-y-0 left-0 right-0" style={{ background: `linear-gradient(90deg, ${p.color}55, ${p.color})` }} />
                       {p.laps.map((l) => (
@@ -136,13 +136,13 @@ export function SimulatorFeature() {
                     </div>
                   </div>
                 ))}
-                <p className="pt-1 font-mono text-[10px] text-[#6B7079]">◆ tyre change · the lap {SNAP.lapStatus.indexOf('red') + 1} stops were taken under the red flag</p>
+                <p className="pt-1 font-mono text-[10px] text-[#A7ACB6]">◆ tyre change · the lap {SNAP.lapStatus.indexOf('red') + 1} stops were taken under the red flag</p>
               </div>
             </div>
             <div className="grid grid-cols-2 border-t border-[#24262B] sm:grid-cols-4">
               {SNAP.strategy.slice(0, 4).map((r) => (
                 <div key={r.code} className="border-r border-[#24262B] px-4 py-3 last:border-r-0">
-                  <div className="font-mono text-[10px] text-[#6B7079]">P{r.pos} · from P{r.grid ?? '–'}</div>
+                  <div className="font-mono text-[10px] text-[#A7ACB6]">P{r.pos} · from P{r.grid ?? '–'}</div>
                   <div className="mt-1 flex items-center gap-2">
                     <span className="text-[15px] font-black text-[#F5F5F5]">{r.code}</span>
                     <span className="flex gap-1">{r.stints.map((s, k) => <CompoundDot key={k} compound={s.c} size={14} />)}</span>
@@ -173,7 +173,7 @@ export function EngineerFeature() {
             </div>
             <div className="space-y-5 p-5">
               <div className="ml-auto max-w-[85%]">
-                <div className="mb-1 text-right font-mono text-[9px] uppercase tracking-[0.16em] text-[#6B7079]">Analyst</div>
+                <div className="mb-1 text-right font-mono text-[9px] uppercase tracking-[0.16em] text-[#A7ACB6]">Analyst</div>
                 <p className="border border-[#24262B] bg-[#111318] px-4 py-3 text-[14px] text-[#F5F5F5]">
                   Where did Driver A lose time compared with Driver B?
                 </p>
@@ -186,13 +186,13 @@ export function EngineerFeature() {
                   Review the telemetry traces to identify the braking zones, acceleration phases, and corners responsible for the lap-time difference.
                 </div>
               </div>
-              <div className="flex items-center gap-2 border border-[#24262B] px-3 py-2.5 text-[13px] text-[#6B7079]">
+              <div className="flex items-center gap-2 border border-[#24262B] px-3 py-2.5 text-[13px] text-[#A7ACB6]">
                 <span className="flex-1">Ask about strategy, rules, history…</span>
                 <span className="font-mono text-[10px]">↵</span>
               </div>
             </div>
           </div>
-          <p className="mt-3 font-mono text-[10px] text-[#6B7079]">Example conversation for illustration — not a recorded analysis.</p>
+          <p className="mt-3 font-mono text-[10px] text-[#A7ACB6]">Example conversation for illustration — not a recorded analysis.</p>
         </Reveal>
         <div className="order-1 lg:order-2 lg:col-span-5 lg:col-start-8" id="ai-title">
           <SectionHead index="04" kicker="Race Engineer AI" title="Ask the questions the timing screens cannot answer.">
@@ -220,11 +220,11 @@ export function DrivingStateFeature() {
           <dl className="grid grid-cols-2 gap-px self-end border border-[#24262B] bg-[#24262B] sm:grid-cols-4 lg:col-span-7">
             {order.map((k) => (
               <div key={k} className="bg-[#0B0D10] px-4 py-4">
-                <dt className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.14em] text-[#969BA5]">
+                <dt className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.14em] text-[#C5C9D1]">
                   <span className="h-2 w-2" style={{ background: STATE_META[k].color }} aria-hidden />{STATE_META[k].label}
                 </dt>
                 <dd className="mt-2 font-mono text-[26px] font-bold tabular-nums tracking-[-0.03em] text-[#F5F5F5]">
-                  {(shares[k] * 100).toFixed(0)}<span className="text-[14px] text-[#6B7079]">%</span>
+                  {(shares[k] * 100).toFixed(0)}<span className="text-[14px] text-[#A7ACB6]">%</span>
                 </dd>
               </div>
             ))}
@@ -243,14 +243,14 @@ export function DrivingStateFeature() {
             <div className="lg:col-span-5">
               <Tag>Along the lap</Tag>
               <StateStrip className="mt-3 h-7" />
-              <div className="mt-1 flex justify-between font-mono text-[9px] text-[#6B7079]">
+              <div className="mt-1 flex justify-between font-mono text-[9px] text-[#A7ACB6]">
                 {[0, 1, 2, 3, 4, 5].map((k) => <span key={k}>{k} km</span>)}
               </div>
               <ul className="mt-6 space-y-2">
                 {SNAP.compare.brakeZones.map((z, i) => (
                   <li key={z.d} className="flex items-center gap-3 border-b border-[#14161A] pb-2 font-mono text-[11px] tabular-nums">
                     <span className="w-6 text-[#FF2D24]">B{i + 1}</span>
-                    <span className="text-[#969BA5]">{(z.d / 1000).toFixed(2)} km</span>
+                    <span className="text-[#C5C9D1]">{(z.d / 1000).toFixed(2)} km</span>
                     <span className="ml-auto text-[#F5F5F5]">brakes to {z.v} km/h</span>
                   </li>
                 ))}
@@ -302,19 +302,19 @@ export function SeasonFeature() {
               <Tag>{standings && standings !== 'error' ? `after round ${standings.meta?.rounds_counted ?? '–'}` : ''}</Tag>
             </div>
             {standings === 'error' ? (
-              <p className="px-4 py-10 text-[13px] text-[#6B7079]">Standings are unavailable right now.</p>
+              <p className="px-4 py-10 text-[13px] text-[#A7ACB6]">Standings are unavailable right now.</p>
             ) : !standings ? (
               <div className="space-y-2 p-4">{Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-7 animate-pulse bg-[#111318]" />)}</div>
             ) : (
               <ol className="p-2">
                 {drivers.map((d, i) => (
                   <li key={d.abbreviation} className="grid grid-cols-[28px_52px_1fr_auto] items-center gap-3 px-2 py-2">
-                    <span className="font-mono text-[12px] text-[#6B7079] tabular-nums">{String(i + 1).padStart(2, '0')}</span>
+                    <span className="font-mono text-[12px] text-[#A7ACB6] tabular-nums">{String(i + 1).padStart(2, '0')}</span>
                     <span className="font-mono text-[13px] font-bold text-[#F5F5F5]">{d.abbreviation}</span>
                     <div className="h-[6px] bg-[#14161A]">
                       <div className="h-full" style={{ width: `${(d.points / maxPts) * 100}%`, background: `#${d.team_color}` }} />
                     </div>
-                    <span className="w-16 text-right font-mono text-[13px] tabular-nums text-[#F5F5F5]">{d.points} <span className="text-[10px] text-[#6B7079]">pts</span></span>
+                    <span className="w-16 text-right font-mono text-[13px] tabular-nums text-[#F5F5F5]">{d.points} <span className="text-[10px] text-[#A7ACB6]">pts</span></span>
                   </li>
                 ))}
               </ol>
@@ -325,14 +325,14 @@ export function SeasonFeature() {
             <Reveal className="border border-[#24262B] bg-[#0B0D10]" delay={80}>
               <div className="border-b border-[#24262B] px-4 py-2.5"><Tag tone="text">Constructors</Tag></div>
               {standings === 'error' ? (
-                <p className="px-4 py-6 text-[13px] text-[#6B7079]">Unavailable right now.</p>
+                <p className="px-4 py-6 text-[13px] text-[#A7ACB6]">Unavailable right now.</p>
               ) : (
                 <ol className="divide-y divide-[#14161A]">
                   {(teams.length ? teams : Array.from({ length: 5 }).map(() => null)).map((t, i) => (
                     <li key={t?.name ?? i} className="flex items-center gap-3 px-4 py-2">
                       <span className="h-3 w-[3px]" style={{ background: t ? `#${t.color}` : '#24262B' }} aria-hidden />
                       <span className="text-[13px] font-semibold text-[#F5F5F5]">{t?.name ?? '—'}</span>
-                      <span className="ml-auto font-mono text-[12px] tabular-nums text-[#969BA5]">{t ? `${t.points} pts` : ''}</span>
+                      <span className="ml-auto font-mono text-[12px] tabular-nums text-[#C5C9D1]">{t ? `${t.points} pts` : ''}</span>
                     </li>
                   ))}
                 </ol>
@@ -382,7 +382,7 @@ export function StrategyFeature() {
             <div className="flex items-center justify-between border-b border-[#24262B] px-4 py-2.5">
               <Tag tone="text">Stints · top ten finishers</Tag>
               <span className="flex gap-3 font-mono text-[10px]">
-                {(['SOFT', 'MEDIUM', 'HARD'] as const).map((c) => <span key={c} className="flex items-center gap-1.5 text-[#969BA5]"><CompoundDot compound={c} size={12} />{c.toLowerCase()}</span>)}
+                {(['SOFT', 'MEDIUM', 'HARD'] as const).map((c) => <span key={c} className="flex items-center gap-1.5 text-[#C5C9D1]"><CompoundDot compound={c} size={12} />{c.toLowerCase()}</span>)}
               </span>
             </div>
             <div className="overflow-x-auto p-4"><div className="min-w-[520px]"><StintChart /></div></div>

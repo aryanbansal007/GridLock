@@ -32,12 +32,12 @@ export function PlatformPreview() {
             <div className="flex items-center gap-2">
               <span className="h-2 w-2 bg-[#E10600]" aria-hidden />
               <span className="text-[13px] font-black tracking-[-0.01em] text-[#F5F5F5]">{SNAP.session.name}</span>
-              <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-[#969BA5]">{SNAP.session.year} · Race · Monza</span>
+              <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-[#C5C9D1]">{SNAP.session.year} · Race · Monza</span>
             </div>
-            <div className="font-mono text-[11px] tabular-nums text-[#F5F5F5]">LAP {SNAP.replay.lap}<span className="text-[#6B7079]">/{SNAP.session.total_laps}</span></div>
+            <div className="font-mono text-[11px] tabular-nums text-[#F5F5F5]">LAP {SNAP.replay.lap}<span className="text-[#A7ACB6]">/{SNAP.session.total_laps}</span></div>
             <dl className="ml-auto hidden items-center gap-5 font-mono text-[10px] tabular-nums sm:flex">
               {[['AIR', `${w.air_temp.toFixed(1)}°C`], ['TRACK', `${w.track_temp.toFixed(1)}°C`], ['HUM', `${w.humidity.toFixed(0)}%`], ['WIND', `${w.wind_speed.toFixed(1)} m/s`]].map(([k, v]) => (
-                <div key={k} className="flex gap-1.5"><dt className="text-[#6B7079]">{k}</dt><dd className="text-[#F5F5F5]">{v}</dd></div>
+                <div key={k} className="flex gap-1.5"><dt className="text-[#A7ACB6]">{k}</dt><dd className="text-[#F5F5F5]">{v}</dd></div>
               ))}
             </dl>
           </div>
@@ -52,11 +52,11 @@ export function PlatformPreview() {
               <ol>
                 {order.map((c, i) => (
                   <li key={c.code} className="flex items-center gap-2.5 border-b border-[#14161A] px-3 py-[7px] font-mono text-[12px] tabular-nums">
-                    <span className="w-4 text-right text-[#6B7079]">{i + 1}</span>
+                    <span className="w-4 text-right text-[#A7ACB6]">{i + 1}</span>
                     <span className="h-3.5 w-[3px]" style={{ background: c.color }} aria-hidden />
                     <span className="w-9 font-bold text-[#F5F5F5]">{c.code}</span>
                     <CompoundDot compound={c.compound} size={15} />
-                    <span className="ml-auto text-[#969BA5]">
+                    <span className="ml-auto text-[#C5C9D1]">
                       {i === 0 ? 'Leader' : c.interval != null ? `+${c.interval.toFixed(1)}` : '—'}
                     </span>
                   </li>
@@ -93,7 +93,7 @@ export function PlatformPreview() {
                   {SPEEDS.map((s) => (
                     <button
                       key={s} type="button" onClick={() => setSpeed(s)} aria-pressed={speed === s}
-                      className={`px-2 py-1 font-mono text-[10px] font-bold ${speed === s ? 'bg-[#E10600] text-white' : 'text-[#969BA5] hover:text-[#F5F5F5]'}`}
+                      className={`px-2 py-1 font-mono text-[10px] font-bold ${speed === s ? 'bg-[#E10600] text-white' : 'text-[#C5C9D1] hover:text-[#F5F5F5]'}`}
                     >
                       {s}×
                     </button>
@@ -113,7 +113,7 @@ export function PlatformPreview() {
               </div>
               <div className="p-3">
                 <TelemetryStack compact rows={['speed', 'throttle', 'brake', 'delta']} width={420} />
-                <p className="mt-2 font-mono text-[9.5px] text-[#6B7079]">Hover for values · laps {SNAP.compare.a.lap} and {SNAP.compare.b.lap} on a shared distance axis</p>
+                <p className="mt-2 font-mono text-[9.5px] text-[#A7ACB6]">Hover for values · laps {SNAP.compare.a.lap} and {SNAP.compare.b.lap} on a shared distance axis</p>
               </div>
             </div>
 

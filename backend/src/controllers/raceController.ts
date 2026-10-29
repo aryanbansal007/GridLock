@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import fs from 'fs';
 import path from 'path';
 import { exec } from 'child_process';
-import { checkDriverCache, checkTrackCache, checkLapsCache, checkConditionsCache, checkLapsHaveSegments, getDriverManifest, runPythonGenerator, getAvailableRaces } from '../services/raceService.js';
+import { checkDriverCache, checkTrackCache, checkLapsCache, checkConditionsCache, checkQualiCache, checkLapsHaveSegments, getDriverManifest, runPythonGenerator, getAvailableRaces } from '../services/raceService.js';
 import { CACHE_DIR, SCRIPT_DIR, PYTHON_BIN } from '../config/paths.js';
 
 export const generateRace = async (req: Request, res: Response) => {
@@ -163,6 +163,17 @@ export const getConditionsData = (req: Request, res: Response) => {
     }
 
     sendCachedJson(res, conditionsPath, "Failed to read conditions data.");
+};
+
+// GET /api/races/data/:year/:gp/:session/quali
+// Streams the qualifying segment windows and timed laps for the simulator's Q1/Q2/Q3 view.
+export const getQualiData = (req: Request, res: Response) => {
+    const qualiPath = checkQualiCache(String(req.params.year), String(req.params.gp), String(req.params.session));
+    if (!qualiPath) {
+        return res.status(404).json({ error: "No qualifying file found for this session." });
+    }
+
+    sendCachedJson(res, qualiPath, "Failed to read qualifying data.");
 };
 
 // GET /api/races/data/:year/:gp/:session/laps

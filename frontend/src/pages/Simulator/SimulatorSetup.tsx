@@ -7,7 +7,7 @@ import { API_BASE, SEASON_YEAR, flagFor, findRaceById, type CalendarResponse, se
 
 interface CachedRace { year: string; gp: string; session: string }
 
-const SESSION_LABELS: Record<string, string> = { Q: 'Qualifying', SQ: 'Sprint Shootout', S: 'Sprint', R: 'Race' };
+const SESSION_LABELS: Record<string, string> = { Q: 'Qualifying', SQ: 'Sprint Qualifying', S: 'Sprint', R: 'Race' };
 const SESSION_ORDER = ['Q', 'SQ', 'S', 'R'];
 
 interface RaceGroup {

@@ -7,7 +7,7 @@ login. Prints the same JSON to stdout, so the same redirect works:
     python openf1_session_results.py --year 2026 --gp "Italian Grand Prix" --round 13 \
         > ../gridlock-data/session_results/2026/13/R.json
 
-Race and Sprint only. `--round` is the number used in the output path/JSON (the
+Race, Sprint, Qualifying (Q/SQ) and Practice (FP1-3). `--round` is the number used in the output path/JSON (the
 championship round FastF1 numbered the event by), which OpenF1 does not provide.
 """
 import argparse
@@ -25,6 +25,51 @@ def starting_grid(api, key, race_start):
             break
         grid[p["driver_number"]] = p["position"]
     return grid
+
+
+def fmt_lap(sec):
+    if not sec:
+        return None
+    minutes = int(sec // 60)
+    return f"{minutes}:{sec - minutes * 60:06.3f}" if minutes else f"{sec:.3f}"
+
+
+def session_table(api, key, session_code, drivers, raw):
+    """Qualifying (Q1/Q2/Q3 per driver) and practice (best lap) tables."""
+    is_quali = session_code in ("Q", "SQ")
+    rows = []
+    best = {}
+    if not is_quali:
+        for l in api.get("laps", session_key=key):
+            if l.get("lap_duration") and not l.get("is_pit_out_lap"):
+                n = l["driver_number"]
+                if n not in best or l["lap_duration"] < best[n]:
+                    best[n] = l["lap_duration"]
+    for r in raw:
+        d = drivers.get(r["driver_number"])
+        if not d:
+            continue
+        entry = {
+            # OpenF1 uses text such as "RT" for a car with no classified position.
+            "position": r["position"] if isinstance(r["position"], int) else None,
+            "abbreviation": d["name_acronym"],
+            "driver": clean_name(d),
+            "team": d.get("team_name") or "",
+            "team_color": d.get("team_colour") or "808080",
+        }
+        if is_quali:
+            dur = (r.get("duration") or []) + [None, None, None]
+            entry.update({"status": "", "q1": fmt_lap(dur[0]), "q2": fmt_lap(dur[1]), "q3": fmt_lap(dur[2])})
+        else:
+            entry["best_lap"] = fmt_lap(best.get(r["driver_number"]) or (r.get("duration") if isinstance(r.get("duration"), (int, float)) else None)) or ""
+        rows.append(entry)
+    if not is_quali:
+        rows.sort(key=lambda e: (e["best_lap"] == "", e["best_lap"]))
+        for i, e in enumerate(rows, start=1):
+            e["position"] = i
+    else:
+        rows.sort(key=lambda e: (e["position"] is None, e["position"] or 0))
+    return rows
 
 
 def main():
@@ -45,6 +90,14 @@ def main():
     drivers = {d["driver_number"]: d for d in api.get("drivers", session_key=key)}
     numbers_to_abbr = {n: d["name_acronym"] for n, d in drivers.items()}
     raw = api.get("session_result", session_key=key)
+    if args.session not in ("R", "S"):
+        print(json.dumps({
+            "year": args.year, "round": args.round, "session": args.session,
+            "event_name": meeting["meeting_name"],
+            "results": session_table(api, key, args.session, drivers, raw),
+            "fastest_lap": None,
+        }, ensure_ascii=False))
+        return
     statuses = build_results_map(raw, numbers_to_abbr)
 
     # Classified position for every car: OpenF1 leaves it null for retirements, which

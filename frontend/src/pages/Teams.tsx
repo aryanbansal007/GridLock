@@ -88,7 +88,7 @@ export default function Teams() {
             </div>
 
             <div className="mt-10 border border-[#24262B] bg-[#0B0D10]">
-              <div className="hidden grid-cols-[2.5rem_1fr_repeat(2,3.5rem)_4rem_9rem] items-center gap-4 border-b border-[#24262B] px-4 py-2.5 font-mono text-[9px] font-semibold uppercase tracking-[0.16em] text-[#6B7079] sm:grid">
+              <div className="hidden grid-cols-[2.5rem_1fr_repeat(2,3.5rem)_4rem_9rem] items-center gap-4 border-b border-[#24262B] px-4 py-2.5 font-mono text-[9px] font-semibold uppercase tracking-[0.16em] text-[#A7ACB6] sm:grid">
                 <span className="text-center">Pos</span>
                 <span>Team</span>
                 <span className="text-right">Wins</span>
@@ -140,14 +140,14 @@ function LeaderCard({ team: t, drivers }: { team: ConstructorStanding; drivers: 
             <span aria-hidden>▲</span> Constructors' leader
           </div>
           <h2 className="mt-8 font-black uppercase leading-[0.92] tracking-[-0.04em]" style={{ fontSize: nameSize(t.name, true) }}>{t.name}</h2>
-          <div className="mt-2 font-mono text-[11px] uppercase tracking-[0.12em] text-[#969BA5]">
+          <div className="mt-2 font-mono text-[11px] uppercase tracking-[0.12em] text-[#C5C9D1]">
             {drivers.slice(0, 2).map((d) => lastName(d.name)).join(' · ')}
           </div>
         </div>
         <div className="mt-8">
           <div className="flex items-baseline gap-2">
             <span className="font-mono text-[clamp(3rem,6vw,4.5rem)] font-black leading-none tracking-[-0.04em] tabular-nums">{t.points}</span>
-            <span className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-[#969BA5]">pts</span>
+            <span className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-[#C5C9D1]">pts</span>
             <PointsDelta value={t.points_last_race} />
           </div>
           <div className="mt-5 grid grid-cols-2 gap-4 border-t border-white/10 pt-4">
@@ -183,12 +183,12 @@ function SideCard({ team: t, drivers, gap }: { team: ConstructorStanding; driver
       <div className="relative z-10 flex flex-col justify-between p-5">
         <div>
           <h3 className="font-black uppercase leading-[0.95] tracking-[-0.03em]" style={{ fontSize: nameSize(t.name, false) }}>{t.name}</h3>
-          <div className="mt-1.5 truncate font-mono text-[10px] uppercase tracking-[0.12em] text-[#969BA5]">{drivers.slice(0, 2).map((d) => lastName(d.name)).join(' · ')}</div>
+          <div className="mt-1.5 truncate font-mono text-[10px] uppercase tracking-[0.12em] text-[#C5C9D1]">{drivers.slice(0, 2).map((d) => lastName(d.name)).join(' · ')}</div>
         </div>
         <div>
           <div className="flex items-baseline gap-1.5">
             <span className="font-mono text-4xl font-black leading-none tracking-[-0.03em] tabular-nums">{t.points}</span>
-            <span className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-[#969BA5]">pts</span>
+            <span className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-[#C5C9D1]">pts</span>
             <PointsDelta value={t.points_last_race} />
           </div>
           <div className="mt-3 grid grid-cols-3 gap-2 border-t border-white/10 pt-3">
@@ -212,13 +212,13 @@ function TeamRow({ team: t, drivers, gap, max, mounted, index }: {
       style={rise(index + 3)}
     >
       <span className="absolute inset-y-0 left-0 w-[3px] opacity-70 transition-opacity group-hover:opacity-100" style={{ background: color }} aria-hidden />
-      <span className="text-center font-mono text-[15px] font-black tabular-nums text-[#6B7079] transition-colors group-hover:text-[#F5F5F5]">{t.position}</span>
+      <span className="text-center font-mono text-[15px] font-black tabular-nums text-[#A7ACB6] transition-colors group-hover:text-[#F5F5F5]">{t.position}</span>
 
       <div className="flex min-w-0 items-center gap-3.5">
         <TeamLogo src={logoFor(t.name)} name={t.name} color={t.color} size={38} />
         <div className="min-w-0">
           <div className="truncate text-[15px] font-black uppercase tracking-[-0.01em]">{t.name}</div>
-          <div className="mt-0.5 truncate text-[12px] text-[#969BA5]">{drivers.slice(0, 2).map((d) => lastName(d.name)).join(' · ')}</div>
+          <div className="mt-0.5 truncate text-[12px] text-[#C5C9D1]">{drivers.slice(0, 2).map((d) => lastName(d.name)).join(' · ')}</div>
         </div>
       </div>
 

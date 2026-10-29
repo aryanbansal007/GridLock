@@ -181,7 +181,7 @@ export const TopNav: React.FC = () => {
               <span style={{ fontSize: 12, fontWeight: 700, color: '#22c55e', letterSpacing: '0.02em' }}>
                 FINISHED · {justFinishedRace.name.replace(' Grand Prix', ' GP')}
               </span>
-              <span className="hidden md:inline" style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>
+              <span className="hidden md:inline" style={{ fontSize: 11, color: 'rgba(255,255,255,0.72)' }}>
                 — full results &amp; standings updating, check back in a few hours
               </span>
             </div>
@@ -191,17 +191,17 @@ export const TopNav: React.FC = () => {
             <div className="hidden md:flex" style={{ alignItems: 'center', gap: 10 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)' }}>Next Race</span>
-                  <span style={{ color: 'rgba(255,255,255,0.15)', fontSize: 9 }}>·</span>
-                  <span style={{ fontSize: 9, fontWeight: 500, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.04em' }}>
+                  <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.72)' }}>Next Race</span>
+                  <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 9 }}>·</span>
+                  <span style={{ fontSize: 9, fontWeight: 500, color: 'rgba(255,255,255,0.68)', letterSpacing: '0.04em' }}>
                     {nextRace.name.replace(' Grand Prix', ' GP')} · {nextRace.circuit}
                   </span>
                 </div>
                 <div style={{ fontFamily: '"JetBrains Mono",monospace', fontSize: 13, fontWeight: 700, letterSpacing: '0.05em', color: '#ffffff', fontVariantNumeric: 'tabular-nums' }}>
-                  {pad(d)}<span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11 }}>d </span>
-                  {pad(h)}<span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11 }}>h </span>
-                  {pad(m)}<span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11 }}>m </span>
-                  {pad(s)}<span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11 }}>s</span>
+                  {pad(d)}<span style={{ color: 'rgba(255,255,255,0.72)', fontSize: 11 }}>d </span>
+                  {pad(h)}<span style={{ color: 'rgba(255,255,255,0.72)', fontSize: 11 }}>h </span>
+                  {pad(m)}<span style={{ color: 'rgba(255,255,255,0.72)', fontSize: 11 }}>m </span>
+                  {pad(s)}<span style={{ color: 'rgba(255,255,255,0.72)', fontSize: 11 }}>s</span>
                 </div>
               </div>
             </div>
@@ -253,7 +253,7 @@ export const TopNav: React.FC = () => {
                   onClick={() => { navigate('/profile'); setProfileOpen(false); }}
                   style={{ width: '100%', textAlign: 'left', padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.05)', background: 'transparent', border: 'none', cursor: 'pointer' }}
                 >
-                  <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.2)' }}>Signed in as</div>
+                  <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)' }}>Signed in as</div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', marginTop: 2 }}>{username ?? 'Guest'}</div>
                 </button>
                 <DropdownItem
@@ -288,7 +288,7 @@ function NavLink({ label, active, onClick }: { label: string; active: boolean; o
         position: 'relative', border: 'none', cursor: 'pointer', borderRadius: 8,
         padding: '0 18px', height: 60, display: 'flex', alignItems: 'center',
         fontSize: 13, fontWeight: active ? 600 : 500, letterSpacing: '0.01em',
-        color: active ? '#ffffff' : hovered ? 'rgba(255,255,255,0.78)' : 'rgba(255,255,255,0.36)',
+        color: active ? '#ffffff' : hovered ? 'rgba(255,255,255,0.78)' : 'rgba(255,255,255,0.66)',
         background: hovered && !active ? 'rgba(255,255,255,0.04)' : 'transparent',
         transition: 'color 0.25s ease, background 0.3s ease', whiteSpace: 'nowrap',
       }}
@@ -298,7 +298,7 @@ function NavLink({ label, active, onClick }: { label: string; active: boolean; o
           popping in/out — grows from the center outward rather than a hard cut. */}
       <span style={{
         position: 'absolute', bottom: 0, left: 14, right: 14, height: active ? 2 : 1.5, borderRadius: 2,
-        background: active ? '#e10600' : 'rgba(255,255,255,0.55)',
+        background: active ? '#e10600' : 'rgba(255,255,255,0.2)',
         transform: active || hovered ? 'scaleX(1)' : 'scaleX(0)',
         opacity: active ? 1 : hovered ? 1 : 0,
         transformOrigin: 'center',
@@ -316,7 +316,7 @@ function ConnectionDot({ connected }: { connected: boolean }) {
     >
       <span style={{ position: 'relative', display: 'flex', width: 7, height: 7 }}>
         {connected && <span style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: '#22c55e', opacity: 0.5, animation: 'gl-ping 1.6s ease-out infinite' }} />}
-        <span style={{ position: 'relative', width: 7, height: 7, borderRadius: '50%', background: connected ? '#22c55e' : 'rgba(255,255,255,0.25)', display: 'inline-flex' }} />
+        <span style={{ position: 'relative', width: 7, height: 7, borderRadius: '50%', background: connected ? '#22c55e' : 'rgba(255,255,255,0.68)', display: 'inline-flex' }} />
       </span>
     </div>
   );
@@ -334,7 +334,7 @@ function RaceEngineerButton({ active, onClick }: { active: boolean; onClick: () 
         borderRadius: 7, cursor: 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase',
         background: active ? 'rgba(225,6,0,0.1)' : hovered ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.025)',
         border: active ? '1px solid rgba(225,6,0,0.35)' : hovered ? '1px solid rgba(255,255,255,0.14)' : '1px solid rgba(255,255,255,0.07)',
-        color: active ? '#e10600' : hovered ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.42)',
+        color: active ? '#e10600' : hovered ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.7)',
         transition: 'all 0.25s ease',
       }}
     >

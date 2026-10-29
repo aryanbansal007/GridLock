@@ -61,7 +61,7 @@ export function TelemetryStack({
             <g key={row.key} transform={`translate(${labelW} ${top})`}>
               <rect width={plotW} height={row.h} fill="#08090B" stroke="#1A1C20" />
               {!compact && (
-                <text x={-10} y={row.h / 2 + 3} textAnchor="end" fontSize="9.5" fill="#969BA5" fontFamily='"JetBrains Mono",Menlo,monospace' letterSpacing="0.06em">
+                <text x={-10} y={row.h / 2 + 3} textAnchor="end" fontSize="9.5" fill="#C5C9D1" fontFamily='"JetBrains Mono",Menlo,monospace' letterSpacing="0.06em">
                   {row.label.toUpperCase()}
                 </text>
               )}
@@ -81,7 +81,7 @@ export function TelemetryStack({
         {/* Distance axis */}
         <g transform={`translate(${labelW} ${y})`}>
           {[0, 1000, 2000, 3000, 4000, 5000].filter((m) => m < LAP_M).map((m) => (
-            <text key={m} x={(m / LAP_M) * plotW} y={12} fontSize="9" fill="#6B7079" fontFamily='"JetBrains Mono",Menlo,monospace'>
+            <text key={m} x={(m / LAP_M) * plotW} y={12} fontSize="9" fill="#A7ACB6" fontFamily='"JetBrains Mono",Menlo,monospace'>
               {m === 0 ? '0 m' : `${m / 1000} km`}
             </text>
           ))}
@@ -97,7 +97,7 @@ export function TelemetryStack({
           className="pointer-events-none absolute top-1 z-10 border border-[#24262B] bg-[#050505]/95 px-2.5 py-2 font-mono text-[10px] tabular-nums text-[#F5F5F5] shadow-xl"
           style={{ left: `clamp(0px, calc(${((labelW + (hover / (N - 1)) * plotW) / width) * 100}% + 10px), calc(100% - 150px))` }}
         >
-          <div className="mb-1 text-[#969BA5]">{(C.dist[hover] / 1000).toFixed(2)} km</div>
+          <div className="mb-1 text-[#C5C9D1]">{(C.dist[hover] / 1000).toFixed(2)} km</div>
           <div style={{ color: COLOR_A }}>{C.a.code} {C.speedA[hover]} km/h · T{C.throttleA[hover]}% · G{C.gearA[hover]}{C.brakeA[hover] ? ' · BRK' : ''}</div>
           <div style={{ color: COLOR_B }}>{C.b.code} {C.speedB[hover]} km/h · T{C.throttleB[hover]}%{C.brakeB[hover] ? ' · BRK' : ''}</div>
           <div className="mt-1 text-[#FF2D24]">Δ {C.delta[hover] >= 0 ? '+' : ''}{C.delta[hover].toFixed(3)} s</div>
@@ -157,7 +157,7 @@ function RowPlot({ row, w, h, dMax }: { row: string; w: number; h: number; dMax:
       <>
         <line x1={0} x2={w} y1={mid} y2={mid} stroke="#ffffff" strokeOpacity="0.12" />
         <path d={d} transform="translate(0 2)" fill="none" stroke="#FF2D24" strokeWidth="1.4" />
-        <text x={w - 4} y={10} textAnchor="end" fontSize="8.5" fill="#6B7079" fontFamily='"JetBrains Mono",Menlo,monospace'>{C.b.code} behind ↑</text>
+        <text x={w - 4} y={10} textAnchor="end" fontSize="8.5" fill="#A7ACB6" fontFamily='"JetBrains Mono",Menlo,monospace'>{C.b.code} behind ↑</text>
       </>
     );
   }
@@ -185,14 +185,14 @@ export function StintChart({ rows = 10, width = 760, className = '', showStatus 
         ) : null,
       )}
       {[1, 10, 20, 30, 40, 50].filter((l) => l <= total).map((l) => (
-        <text key={l} x={x(l)} y={11} fontSize="9" fill="#6B7079" fontFamily='"JetBrains Mono",Menlo,monospace'>L{l}</text>
+        <text key={l} x={x(l)} y={11} fontSize="9" fill="#A7ACB6" fontFamily='"JetBrains Mono",Menlo,monospace'>L{l}</text>
       ))}
       {data.map((r, i) => {
         const yy = top + i * (rowH + gap);
         return (
           <g key={r.code}>
             <text x={0} y={yy + 13} fontSize="10.5" fontWeight="700" fill="#F5F5F5" fontFamily='"JetBrains Mono",Menlo,monospace'>
-              <tspan fill="#6B7079">{String(r.pos).padStart(2, '0')} </tspan>{r.code}
+              <tspan fill="#A7ACB6">{String(r.pos).padStart(2, '0')} </tspan>{r.code}
             </text>
             {r.stints.map((s, k) => {
               const c = COMPOUND[s.c]?.color ?? '#6B7280';

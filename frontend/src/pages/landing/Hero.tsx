@@ -33,7 +33,7 @@ export function Hero() {
           <p className="gl-rise mt-5 text-[clamp(1.1rem,1.7vw,1.4rem)] font-bold tracking-[-0.01em] text-[#FF2D24]" style={{ animationDelay: '120ms' }}>
             Find it. Compare it. Own the data.
           </p>
-          <p className="gl-rise mt-5 max-w-[34rem] text-[15px] leading-relaxed text-[#969BA5]" style={{ animationDelay: '180ms' }}>
+          <p className="gl-rise mt-5 max-w-[34rem] text-[15px] leading-relaxed text-[#C5C9D1]" style={{ animationDelay: '180ms' }}>
             Explore real Formula 1 telemetry, replay entire races, compare driver performance,
             uncover tyre strategy, and investigate every lap with your personal AI race engineer.
           </p>
@@ -49,13 +49,13 @@ export function Hero() {
             </button>
             <a
               href="#platform"
-              className="inline-flex items-center gap-2 border border-[#24262B] bg-[#0B0D10]/70 px-6 py-3.5 text-[12px] font-black uppercase tracking-[0.14em] text-[#F5F5F5] transition-colors hover:border-[#969BA5] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF2D24]"
+              className="inline-flex items-center gap-2 border border-[#24262B] bg-[#0B0D10]/70 px-6 py-3.5 text-[12px] font-black uppercase tracking-[0.14em] text-[#F5F5F5] transition-colors hover:border-[#C5C9D1] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF2D24]"
             >
               Explore the platform
             </a>
           </div>
 
-          <p className="gl-rise mt-8 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-[#6B7079]" style={{ animationDelay: '300ms' }}>
+          <p className="gl-rise mt-8 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-[#A7ACB6]" style={{ animationDelay: '300ms' }}>
             <span className="h-1 w-1 rounded-full bg-[#E10600]" aria-hidden />
             Built on FastF1 &amp; OpenF1 timing data
           </p>
@@ -73,14 +73,14 @@ export function Hero() {
             <div className="gl-rise border border-[#24262B] bg-[#050505]/80 backdrop-blur-sm" style={{ animationDelay: '380ms' }}>
               <div className="flex items-center justify-between border-b border-[#24262B] px-3 py-2">
                 <Tag tone="text">Race replay</Tag>
-                <span className="font-mono text-[10px] text-[#969BA5] tabular-nums">LAP {SNAP.replay.lap}/{SNAP.session.total_laps}</span>
+                <span className="font-mono text-[10px] text-[#C5C9D1] tabular-nums">LAP {SNAP.replay.lap}/{SNAP.session.total_laps}</span>
               </div>
               <div className="flex items-center gap-2 px-2 pt-1">
                 <button
                   type="button"
                   onClick={() => replay.setPlaying(!replay.playing)}
                   aria-label={replay.playing ? 'Pause replay' : 'Play replay'}
-                  className="flex h-7 w-7 shrink-0 items-center justify-center border border-[#24262B] text-[#F5F5F5] hover:border-[#969BA5] focus-visible:outline-2 focus-visible:outline-[#FF2D24]"
+                  className="flex h-7 w-7 shrink-0 items-center justify-center border border-[#24262B] text-[#F5F5F5] hover:border-[#C5C9D1] focus-visible:outline-2 focus-visible:outline-[#FF2D24]"
                 >
                   {replay.playing ? (
                     <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden><rect x="1" y="1" width="3" height="8" fill="currentColor" /><rect x="6" y="1" width="3" height="8" fill="currentColor" /></svg>
@@ -96,16 +96,16 @@ export function Hero() {
             <div className="gl-rise border border-[#24262B] bg-[#050505]/80 backdrop-blur-sm" style={{ animationDelay: '460ms' }}>
               <div className="flex items-center justify-between border-b border-[#24262B] px-3 py-2">
                 <Tag tone="text">{C.a.code} / {C.b.code} · speed</Tag>
-                <span className="font-mono text-[10px] text-[#969BA5]">fastest laps</span>
+                <span className="font-mono text-[10px] text-[#C5C9D1]">fastest laps</span>
               </div>
               <svg viewBox="0 0 300 70" className="block h-[62px] w-full px-2 pt-2" preserveAspectRatio="none" aria-label={`Speed traces of ${C.a.code} and ${C.b.code} over one lap`} role="img">
                 <path d={seriesD(C.speedB, 300, 64, 60, 340)} fill="none" stroke={COLOR_B} strokeWidth="1.2" strokeDasharray="3 2" vectorEffect="non-scaling-stroke" />
                 <path className="gl-draw" d={seriesD(C.speedA, 300, 64, 60, 340)} fill="none" stroke={COLOR_A} strokeWidth="1.6" vectorEffect="non-scaling-stroke" pathLength={1} />
               </svg>
               <dl className="grid grid-cols-3 gap-2 border-t border-[#24262B] px-3 py-2 font-mono text-[11px] tabular-nums">
-                <div><dt className="text-[9px] uppercase tracking-[0.14em] text-[#969BA5]">{C.a.code}</dt><dd style={{ color: COLOR_A }}>{fmtLap(C.a.lap_time)}</dd></div>
-                <div><dt className="text-[9px] uppercase tracking-[0.14em] text-[#969BA5]">{C.b.code}</dt><dd className="text-[#E8E8EA]">{fmtLap(C.b.lap_time)}</dd></div>
-                <div><dt className="text-[9px] uppercase tracking-[0.14em] text-[#969BA5]">Δ</dt><dd className="text-[#FF2D24]">+{(C.b.lap_time - C.a.lap_time).toFixed(3)}</dd></div>
+                <div><dt className="text-[9px] uppercase tracking-[0.14em] text-[#C5C9D1]">{C.a.code}</dt><dd style={{ color: COLOR_A }}>{fmtLap(C.a.lap_time)}</dd></div>
+                <div><dt className="text-[9px] uppercase tracking-[0.14em] text-[#C5C9D1]">{C.b.code}</dt><dd className="text-[#E8E8EA]">{fmtLap(C.b.lap_time)}</dd></div>
+                <div><dt className="text-[9px] uppercase tracking-[0.14em] text-[#C5C9D1]">Δ</dt><dd className="text-[#FF2D24]">+{(C.b.lap_time - C.a.lap_time).toFixed(3)}</dd></div>
               </dl>
             </div>
           </div>

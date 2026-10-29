@@ -89,7 +89,7 @@ export default function Drivers() {
 
             {/* Rest of the field */}
             <div className="mt-10 border border-[#24262B] bg-[#0B0D10]">
-              <div className="hidden grid-cols-[2.5rem_1fr_repeat(3,3.5rem)_4rem_9rem] items-center gap-4 border-b border-[#24262B] px-4 py-2.5 font-mono text-[9px] font-semibold uppercase tracking-[0.16em] text-[#6B7079] sm:grid">
+              <div className="hidden grid-cols-[2.5rem_1fr_repeat(3,3.5rem)_4rem_9rem] items-center gap-4 border-b border-[#24262B] px-4 py-2.5 font-mono text-[9px] font-semibold uppercase tracking-[0.16em] text-[#A7ACB6] sm:grid">
                 <span className="text-center">Pos</span>
                 <span>Driver</span>
                 <span className="text-right">Wins</span>
@@ -132,19 +132,19 @@ function LeaderCard({ driver: d, onSelect }: { driver: DriverStanding; onSelect:
           <div className="flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: MEDAL[0] }}>
             <span aria-hidden>▲</span> Championship leader
           </div>
-          <div className="mt-6 font-mono text-[11px] uppercase tracking-[0.16em] text-[#969BA5]">{first}</div>
+          <div className="mt-6 font-mono text-[11px] uppercase tracking-[0.16em] text-[#C5C9D1]">{first}</div>
           <h2 className="mt-0.5 font-black uppercase leading-[0.92] tracking-[-0.04em]" style={{ fontSize: surnameSize(last, true) }}>{last}</h2>
           <div className="mt-3 flex items-center gap-2.5 text-[13px] text-[#C9CCD1]">
             <span className="h-3 w-[3px]" style={{ background: color }} aria-hidden />
             {d.team}
-            <span className="font-mono text-[11px] text-[#6B7079]">#{d.number}</span>
+            <span className="font-mono text-[11px] text-[#A7ACB6]">#{d.number}</span>
           </div>
         </div>
 
         <div className="mt-8">
           <div className="flex items-baseline gap-2">
             <span className="font-mono text-[clamp(3rem,6vw,4.5rem)] font-black leading-none tracking-[-0.04em] tabular-nums">{d.points}</span>
-            <span className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-[#969BA5]">pts</span>
+            <span className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-[#C5C9D1]">pts</span>
             <PointsDelta value={d.points_last_race} />
           </div>
           <div className="mt-5 grid grid-cols-3 gap-4 border-t border-white/10 pt-4">
@@ -189,7 +189,7 @@ function SideCard({ driver: d, gap, onSelect }: { driver: DriverStanding; gap: n
 
       <div className="relative z-10 flex flex-col justify-between p-5">
         <div>
-          <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-[#969BA5]">{first}</div>
+          <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-[#C5C9D1]">{first}</div>
           <h3 className="font-black uppercase leading-[0.95] tracking-[-0.03em]" style={{ fontSize: surnameSize(last, false) }}>{last}</h3>
           <div className="mt-2 flex items-center gap-2 text-[12px] text-[#C9CCD1]">
             <span className="h-2.5 w-[3px]" style={{ background: color }} aria-hidden />
@@ -199,7 +199,7 @@ function SideCard({ driver: d, gap, onSelect }: { driver: DriverStanding; gap: n
         <div>
           <div className="flex items-baseline gap-1.5">
             <span className="font-mono text-4xl font-black leading-none tracking-[-0.03em] tabular-nums">{d.points}</span>
-            <span className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-[#969BA5]">pts</span>
+            <span className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-[#C5C9D1]">pts</span>
             <PointsDelta value={d.points_last_race} />
           </div>
           <div className="mt-3 grid grid-cols-4 gap-2 border-t border-white/10 pt-3">
@@ -227,17 +227,17 @@ function DriverRow({ driver: d, gap, max, mounted, index, onSelect }: {
       style={rise(index + 3)}
     >
       <span className="absolute inset-y-0 left-0 w-[3px] opacity-70 transition-opacity group-hover:opacity-100" style={{ background: color }} aria-hidden />
-      <span className="text-center font-mono text-[15px] font-black tabular-nums text-[#6B7079] transition-colors group-hover:text-[#F5F5F5]">{d.position}</span>
+      <span className="text-center font-mono text-[15px] font-black tabular-nums text-[#A7ACB6] transition-colors group-hover:text-[#F5F5F5]">{d.position}</span>
 
       <div className="flex min-w-0 items-center gap-3.5">
         <DriverAvatar src={d.image_url} name={d.name} abbr={d.abbreviation} number={d.number} teamColor={d.team_color} size={40} rounded="lg" />
         <div className="min-w-0">
           <div className="flex items-baseline gap-2">
-            <span className="hidden font-mono text-[10px] uppercase tracking-[0.12em] text-[#6B7079] sm:inline">{first}</span>
+            <span className="hidden font-mono text-[10px] uppercase tracking-[0.12em] text-[#A7ACB6] sm:inline">{first}</span>
             <span className="truncate text-[15px] font-black uppercase tracking-[-0.01em]">{last}</span>
-            <span className="font-mono text-[10px] text-[#6B7079]">#{d.number}</span>
+            <span className="font-mono text-[10px] text-[#A7ACB6]">#{d.number}</span>
           </div>
-          <div className="mt-0.5 truncate text-[12px] text-[#969BA5]">{d.team}</div>
+          <div className="mt-0.5 truncate text-[12px] text-[#C5C9D1]">{d.team}</div>
         </div>
       </div>
 
