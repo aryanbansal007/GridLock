@@ -9,7 +9,7 @@ import LandingPage from './pages/LandingPage';
 import SimulatorSetup from './pages/Simulator/SimulatorSetup';
 import LiveSimulator from './pages/Simulator/LiveSimulator';
 
-import RaceEngineer from './pages/RaceEngineer';
+import RaceEngineerSoon from './pages/RaceEngineerSoon';
 import Dashboard from './pages/Dashboard';
 import Drivers from './pages/Drivers';
 import Teams from './pages/Teams';
@@ -101,7 +101,7 @@ export default function App() {
           <Route path="/teams" element={<Teams />} />
 
           {/* Account-only: needs a login (see ProtectedRoute) */}
-          <Route path="/race-engineer" element={<ProtectedRoute><RaceEngineer /></ProtectedRoute>} />
+          <Route path="/race-engineer" element={<RaceEngineerSoon />} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
 
           {/* Full season calendar */}

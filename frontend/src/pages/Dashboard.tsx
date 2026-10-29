@@ -249,7 +249,7 @@ function CommandBar({ onRaceEngineer, onSimulator, onAnalysis, latestName }: {
   onRaceEngineer: () => void; onSimulator: () => void; onAnalysis: (() => void) | null; latestName: string | null;
 }) {
   const items = [
-    { label: 'Race Engineer AI', sub: 'Ask about strategy, rules, history', onClick: onRaceEngineer, icon: <path d="M4 5h16v10H9l-5 4V5Z M8 9h8 M8 12h5" /> },
+    { label: 'Race Engineer AI', sub: 'In development · coming soon', onClick: onRaceEngineer, icon: <path d="M4 5h16v10H9l-5 4V5Z M8 9h8 M8 12h5" /> },
     { label: 'Race Simulator', sub: 'Replay any race on track', onClick: onSimulator, icon: <path d="M5 4l14 8-14 8V4Z" /> },
     ...(onAnalysis ? [{ label: 'Latest Analysis', sub: latestName ? `${latestName} · telemetry & strategy` : 'Telemetry & strategy', onClick: onAnalysis, icon: <path d="M3 3v18h18 M7 15l4-6 4 3 4-8" /> }] : []),
   ];

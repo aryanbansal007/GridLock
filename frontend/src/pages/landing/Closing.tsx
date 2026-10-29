@@ -15,7 +15,7 @@ const STAGES = [
   },
   {
     n: '03', title: 'Investigate', body: 'GridLock presents it as comparisons, race replay, visualizations and analysis tools.',
-    spec: ['Telemetry comparison', 'Full race replay', 'Strategy & dominance', 'Race Engineer AI'],
+    spec: ['Telemetry comparison', 'Full race replay', 'Strategy & dominance', 'Race Engineer (soon)'],
   },
 ];
 
@@ -62,7 +62,7 @@ export function Pipeline() {
 const STEPS = [
   { n: '1', title: 'Select a race session', body: 'Pick any generated race from the season calendar.' },
   { n: '2', title: 'Explore and compare', body: 'Overlay drivers, laps and channels on one distance axis.' },
-  { n: '3', title: 'Replay and investigate', body: 'Run the race back, scrub to any moment, ask the engineer why.' },
+  { n: '3', title: 'Replay and investigate', body: 'Run the race back, scrub to any moment and compare the drivers.' },
 ];
 
 export function HowItWorks() {

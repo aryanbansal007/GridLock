@@ -63,3 +63,15 @@
 @media (prefers-reduced-motion: reduce) {
   @keyframes gl-notice-life { 0% { opacity: 0; } 6%, 92% { opacity: 1; } 100% { opacity: 0; } }
 }
+
+@keyframes gl-sc-blink {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50% { opacity: 0; transform: scale(1.5); }
+}
+@keyframes gl-sc-blink-fill {
+  0%, 100% { fill: #facc15; }
+  50% { fill: #fef08a; }
+}
+.gl-sc-blink { transform-box: fill-box; transform-origin: center; animation: gl-sc-blink 0.9s ease-in-out infinite; }
+.gl-sc-blink-fill { animation: gl-sc-blink-fill 0.9s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .gl-sc-blink, .gl-sc-blink-fill { animation: none; } }

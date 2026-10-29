@@ -169,7 +169,7 @@ export function EngineerFeature() {
                 <span className="h-1.5 w-1.5 rounded-full bg-[#2EB84B]" aria-hidden />
                 <Tag tone="text">Race engineer · private channel</Tag>
               </div>
-              <Tag>Illustrative</Tag>
+              <Tag>In development</Tag>
             </div>
             <div className="space-y-5 p-5">
               <div className="ml-auto max-w-[85%]">
@@ -196,7 +196,7 @@ export function EngineerFeature() {
         </Reveal>
         <div className="order-1 lg:order-2 lg:col-span-5 lg:col-start-8" id="ai-title">
           <SectionHead index="04" kicker="Race Engineer AI" title="Ask the questions the timing screens cannot answer.">
-            Investigate race strategy, driver comparisons, regulations, and historical performance with an AI assistant grounded in available data.
+            Investigate race strategy, driver comparisons, regulations, and historical performance with an AI race engineer. Under development: it is being trained on race data and past seasons.
           </SectionHead>
         </div>
       </div>

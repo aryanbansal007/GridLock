@@ -428,6 +428,9 @@ const LiveSimulator = () => {
   const elapsedSec = currentFrame.t - raceData.frames[0].t;
   const flag = (currentFrame.flag as string) || "clear";
   const flagMeta = FLAG_META[flag] || FLAG_META.clear;
+  // Seconds since the current safety-car period began (null when none is running).
+  const scSeg = flagSegments.find((seg) => seg.kind === "safety_car" && frameIndex >= seg.start && frameIndex <= seg.end);
+  const safetyCarSince = scSeg ? (frameIndex - scSeg.start) * ((raceData.meta.sample_interval_ms || 300) / 1000) : null;
   const liveNotices = activeNotices(notices, currentFrame.t, playbackSpeed);
   // The selected driver's sector colours, drawn on the track while they are on a push lap.
   const sectorColors = (() => {
@@ -548,31 +551,6 @@ const LiveSimulator = () => {
         {/* ── TRACK AREA ── */}
         <div className="flex-1 min-h-0 relative">
           <RaceControlNotices notices={liveNotices} colors={raceData.meta.team_colors} />
-          {selectedDriver && !quali && currentFrame.cars[selectedDriver] && (
-            <div className="absolute top-4 left-4 z-40 w-52 bg-neutral-900/90 border border-neutral-700 rounded-xl p-3.5 shadow-2xl backdrop-blur-md">
-              <div className="flex justify-between items-center mb-3">
-                <span className="text-xl font-black text-white">{selectedDriver}</span>
-                <button onClick={() => setSelectedDriver(null)} className="text-neutral-500 hover:text-white">✕</button>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="bg-neutral-800 p-2 rounded text-center">
-                  <div className="text-[9px] text-neutral-400">SPEED</div>
-                  <div className="text-lg font-mono font-bold text-white">{currentFrame.cars[selectedDriver].speed} <span className="text-[10px]">KM/H</span></div>
-                </div>
-                <div className="bg-neutral-800 p-2 rounded text-center">
-                  <div className="text-[9px] text-neutral-400">GEAR</div>
-                  <div className="text-lg font-mono font-bold text-white">{currentFrame.cars[selectedDriver].gear}</div>
-                </div>
-              </div>
-              <div className="mt-3 space-y-1">
-                <div className="flex justify-between text-[10px] text-neutral-400"><span>THROTTLE</span><span>{currentFrame.cars[selectedDriver].throttle}%</span></div>
-                <div className="h-1.5 bg-neutral-800 rounded-full overflow-hidden">
-                  <div className="h-full bg-emerald-500" style={{ width: `${currentFrame.cars[selectedDriver].throttle}%` }} />
-                </div>
-              </div>
-            </div>
-          )}
-
           <RaceTrack
             drivers={drivers}
             positions={currentFrame.cars}
@@ -581,6 +559,7 @@ const LiveSimulator = () => {
             rotation={trackRotation(gp)}
             reserveTop={notices.length > 0 ? 34 : 0}
             flag={flag}
+            safetyCarSince={safetyCarSince}
             transitionMs={currentTransitionMs}
             showNames
             retiredDrivers={retiredDrivers}
@@ -763,7 +742,7 @@ const LiveSimulator = () => {
             totalLaps={totalLaps}
             currentLap={currentLap}
             currentTime={currentFrame.t}
-            onDriverSelect={setSelectedDriver}
+            onDriverSelect={(code) => setSelectedDriver((p) => (p === code ? null : code))}
             selectedDriver={selectedDriver}
           />
         )}

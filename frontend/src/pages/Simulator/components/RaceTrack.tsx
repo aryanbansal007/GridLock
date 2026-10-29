@@ -46,6 +46,8 @@ export interface RaceTrackProps {
   // Pixels at the top kept clear of track, for a message that drops in over the map.
   reserveTop?: number;
   flag?: string;
+  // Seconds since the safety car was deployed; null when it is not out.
+  safetyCarSince?: number | null;
   showNames?: boolean;
   finishLine?: FinishLine | null;
   transitionMs?: number;
@@ -68,6 +70,9 @@ const PADDING   = 48;
 
 // Car sizes
 const CAR_R_RACING = 7;
+
+// Seconds the safety car takes to come out of the pit and reach the front of the field.
+const SC_EMERGE_S = 25;
 const CAR_R_PIT    = 4.5;
 
 // Pit debounce: how many consecutive in_pit=true frames before we confirm pit state.
@@ -169,6 +174,7 @@ const RaceTrack = ({
   reserveLeft     = 0,
   reserveTop      = 0,
   flag            = "clear",
+  safetyCarSince  = null,
   showNames       = false,
   finishLine      = null,
   transitionMs    = 300,
@@ -243,6 +249,32 @@ const RaceTrack = ({
       labels: [mid(0, i1), mid(i1, i2), mid(i2, pts.length - 1)],
     };
   }, [sectorMarks, trackOutline, project]);
+
+  // ── safety car ──
+  // Leaves the pit exit (the start/finish line) when deployed, takes SC_EMERGE_S to reach the
+  // front of the field, then leads it. It is a function of the time since deployment, so it
+  // is right after scrubbing too.
+  const safetyCar = useMemo(() => {
+    if (safetyCarSince == null || trackOutline.length < 20) return null;
+    const pts = trackOutline.map((p) => project(p.x, p.y));
+    const n = pts.length;
+    let lead: { x: number; y: number } | null = null, best = -Infinity;
+    for (const d of drivers) {
+      if (retiredDrivers.has(d.code)) continue;
+      const pos = positions[d.code];
+      if (!pos || isNaN(pos.x) || isNaN(pos.y)) continue;
+      const dist = pos.dist ?? pos.distance ?? 0;
+      if (dist > best) { best = dist; lead = project(pos.x, pos.y); }
+    }
+    if (!lead) return null;
+    let li = 0, bd = Infinity;
+    pts.forEach((p, i) => { const dd = Math.hypot(p.x - lead!.x, p.y - lead!.y); if (dd < bd) { bd = dd; li = i; } });
+    const target = (li + Math.round(n * 0.03)) % n;
+    const p = Math.min(1, safetyCarSince / SC_EMERGE_S);
+    const at = p >= 1 ? target : Math.round(target * p);
+    const from = pts[at], to = pts[(at + 3) % n];
+    return { x: from.x, y: from.y, angle: (Math.atan2(to.y - from.y, to.x - from.x) * 180) / Math.PI };
+  }, [safetyCarSince, trackOutline, project, drivers, positions, retiredDrivers]);
 
   const safeFlag   = (flag || "clear").toLowerCase().trim();
   const trackColor = FLAG_TRACK_COLOR[safeFlag] ?? FLAG_TRACK_COLOR.clear;
@@ -402,6 +434,13 @@ const RaceTrack = ({
             </g>
           );
         })}
+        {safetyCar && (
+          <g pointerEvents="none" style={{ transform: `translate(${safetyCar.x}px, ${safetyCar.y}px)`, transition: labelTransform }}>
+            <circle r="22" fill="#facc15" className="gl-sc-blink" />
+            <circle r="13" fill="#facc15" stroke="#000" strokeWidth="2" className="gl-sc-blink-fill" />
+            <text textAnchor="middle" dominantBaseline="central" fontSize="10" fontWeight="900" fill="#000">SC</text>
+          </g>
+        )}
       </svg>
     </div>
   );

@@ -343,6 +343,7 @@ function RaceEngineerButton({ active, onClick }: { active: boolean; onClick: () 
         <span style={{ position: 'relative', width: 7, height: 7, borderRadius: '50%', background: '#e10600', display: 'inline-flex' }} />
       </span>
       Race Engineer
+      <span style={{ fontSize: 8, letterSpacing: '0.12em', padding: '2px 5px', borderRadius: 3, border: '1px solid rgba(255,255,255,0.18)', color: 'rgba(255,255,255,0.6)' }}>SOON</span>
     </button>
   );
 }

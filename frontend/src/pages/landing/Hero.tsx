@@ -35,7 +35,7 @@ export function Hero() {
           </p>
           <p className="gl-rise mt-5 max-w-[34rem] text-[15px] leading-relaxed text-[#C5C9D1]" style={{ animationDelay: '180ms' }}>
             Explore real Formula 1 telemetry, replay entire races, compare driver performance,
-            uncover tyre strategy, and investigate every lap with your personal AI race engineer.
+            and uncover tyre strategy lap by lap.
           </p>
 
           <div className="gl-rise mt-8 flex flex-wrap items-center gap-3" style={{ animationDelay: '240ms' }}>
